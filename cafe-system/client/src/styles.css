@@ -177,7 +177,8 @@ h1, h2, h3 { font-weight: 800; }
 /* ============ الإيصال ============ */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; z-index: 50; }
 .receipt { background: #fff; border-radius: 16px; width: 340px; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
-.receipt-body { text-align: center; font-family: 'Courier New', monospace; }
+.receipt-body { text-align: center; }
+.receipt-table td, .rc-row { font-variant-numeric: tabular-nums; }
 .receipt-logo { font-size: 40px; }
 .receipt-body h3 { margin: 4px 0; }
 .receipt-no { font-weight: 700; margin-top: 6px; }
