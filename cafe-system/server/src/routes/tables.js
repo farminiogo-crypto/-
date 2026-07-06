@@ -26,6 +26,16 @@ router.post('/', requireAuth, requireAdmin, (req, res) => {
   res.status(201).json(db.prepare('SELECT * FROM tables WHERE id = ?').get(info.lastInsertRowid));
 });
 
+// إعادة تسمية ترابيزة (مدير)
+router.put('/:id', requireAuth, requireAdmin, (req, res) => {
+  const table = db.prepare('SELECT * FROM tables WHERE id = ?').get(req.params.id);
+  if (!table) return res.status(404).json({ error: 'الترابيزة غير موجودة' });
+  const { name } = req.body || {};
+  if (!name?.trim()) return res.status(400).json({ error: 'اسم الترابيزة مطلوب' });
+  db.prepare('UPDATE tables SET name = ? WHERE id = ?').run(name.trim(), req.params.id);
+  res.json(db.prepare('SELECT * FROM tables WHERE id = ?').get(req.params.id));
+});
+
 // حذف ترابيزة (مدير) — لا تُحذف لو عليها فاتورة مفتوحة
 router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
   const open = db

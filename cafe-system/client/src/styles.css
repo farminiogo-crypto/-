@@ -338,6 +338,63 @@ h1, h2, h3 { font-weight: 800; }
 
 .stat-card.accent-red { border-color: var(--danger); }
 
+/* ============ تنبيه أصفر ============ */
+.alert-warn {
+  background: #fff8e6; color: #8a6100; border: 1px solid #f3dfa8;
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 14px; font-size: 14px; font-weight: 700;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.alert-warn .dismiss { background: none; border: none; font-size: 14px; color: #8a6100; }
+
+/* ============ اختيار الأيقونة ============ */
+.picked-emoji { font-size: 22px; }
+.emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; margin-top: 6px; max-width: 560px; }
+.emoji-btn {
+  font-size: 22px; padding: 7px 0; background: #f8f4ee; border: 2px solid transparent; border-radius: 10px;
+  transition: .12s;
+}
+.emoji-btn:hover { background: #efe6d8; }
+.emoji-btn.selected { border-color: var(--accent); background: #fbf0e1; }
+
+/* ============ الوصفات ============ */
+.btn-recipe {
+  background: #eef4fb; color: var(--blue); border: 1px solid #d5e4f3;
+  padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 13px;
+}
+.btn-recipe:hover { background: #e0edf9; }
+.recipe-modal, .mini-modal {
+  background: #fff; border-radius: 16px; padding: 22px; width: 440px; max-width: 92vw;
+  max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+.recipe-modal h3, .mini-modal h3 { margin-bottom: 8px; }
+.recipe-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.recipe-row select { flex: 1; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 8px; }
+.recipe-row input { width: 90px; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 8px; }
+.recipe-unit { min-width: 40px; font-size: 13px; color: var(--muted); font-weight: 700; }
+.add-ing { margin-top: 14px; width: 100%; }
+.mini-modal label { display: block; font-size: 13px; font-weight: 700; margin: 12px 0 6px; }
+.mini-modal input { width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 15px; }
+
+/* ============ المخزون: تقديرات وعبوات ============ */
+.usage-line { font-size: 13px; }
+.usage-count { color: var(--brand); font-weight: 800; }
+.btn-package {
+  background: #fdf3ec; color: #b4560f; border: 1px solid #f3d9c2;
+  padding: 7px 12px; border-radius: 9px; font-weight: 700; font-size: 12.5px;
+}
+.btn-package:hover { background: #fae7d7; }
+
+/* ============ إدارة الترابيزات ============ */
+.add-table-form .form-row { align-items: stretch; }
+.rename-inline { display: inline-flex; gap: 6px; align-items: center; }
+.rename-inline input { padding: 7px 10px; border: 1.5px solid var(--accent); border-radius: 8px; font-size: 14px; }
+.icon-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ============ نواقص لوحة التحكم ============ */
+.low-panel { border: 2px solid #f3dfa8; background: #fffcf4; }
+.low-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.low-chip { background: #fdecea; color: var(--danger); padding: 7px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+
 /* ============ استجابة الشاشات ============ */
 @media (max-width: 900px) {
   .pos { grid-template-columns: 1fr; height: auto; }

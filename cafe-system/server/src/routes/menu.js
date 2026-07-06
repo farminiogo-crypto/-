@@ -55,4 +55,46 @@ router.delete('/products/:id', requireAuth, requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// وصفة منتج: المكونات المرتبطة به (مدير)
+router.get('/products/:id/ingredients', requireAuth, requireAdmin, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT pi.id, pi.inventory_id, pi.qty_per_unit, i.name, i.unit
+       FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
+       WHERE pi.product_id = ? ORDER BY pi.id`
+    )
+    .all(req.params.id);
+  res.json(rows);
+});
+
+// حفظ وصفة منتج بالكامل (استبدال) — مدير
+router.put('/products/:id/ingredients', requireAuth, requireAdmin, (req, res) => {
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+  if (!product) return res.status(404).json({ error: 'المنتج غير موجود' });
+
+  const items = Array.isArray(req.body?.items) ? req.body.items : [];
+  for (const it of items) {
+    if (!it.inventory_id || !(Number(it.qty_per_unit) > 0))
+      return res.status(400).json({ error: 'كل مكوّن لازم يكون له صنف مخزون وكمية أكبر من صفر' });
+  }
+
+  const tx = db.transaction(() => {
+    db.prepare('DELETE FROM product_ingredients WHERE product_id = ?').run(product.id);
+    const ins = db.prepare(
+      'INSERT INTO product_ingredients (product_id, inventory_id, qty_per_unit) VALUES (?, ?, ?)'
+    );
+    for (const it of items) ins.run(product.id, it.inventory_id, Number(it.qty_per_unit));
+  });
+  tx();
+
+  const rows = db
+    .prepare(
+      `SELECT pi.id, pi.inventory_id, pi.qty_per_unit, i.name, i.unit
+       FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
+       WHERE pi.product_id = ? ORDER BY pi.id`
+    )
+    .all(product.id);
+  res.json(rows);
+});
+
 export default router;

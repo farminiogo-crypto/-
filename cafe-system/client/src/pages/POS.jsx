@@ -11,6 +11,7 @@ export default function POS() {
   const [activeCat, setActiveCat] = useState('all');
   const [order, setOrder] = useState(null); // الفاتورة المفتوحة حالياً
   const [receipt, setReceipt] = useState(null);
+  const [lowStock, setLowStock] = useState([]);
   const [error, setError] = useState('');
 
   const fmt = (n) => Number(n || 0).toFixed(2);
@@ -68,6 +69,7 @@ export default function POS() {
     try {
       const paid = await api.payOrder(order.id);
       setReceipt(paid);
+      setLowStock(paid.low_stock || []);
       setOrder(null);
       loadTables();
     } catch (e) {
@@ -172,6 +174,12 @@ export default function POS() {
         </div>
       </header>
       {error && <div className="alert-error">{error}</div>}
+      {lowStock.length > 0 && (
+        <div className="alert-warn">
+          ⚠️ مخزون قرب يخلص: {lowStock.map((l) => l.name).join('، ')}
+          <button className="dismiss" onClick={() => setLowStock([])}>✖</button>
+        </div>
+      )}
 
       <div className="tables-grid">
         {tables.map((t) => (

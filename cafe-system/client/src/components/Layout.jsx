@@ -29,12 +29,13 @@ export default function Layout() {
           <NavLink to="/pos" className="nav-item"><span>🍽️</span> الترابيزات</NavLink>
           <NavLink to="/shift" className="nav-item"><span>🕐</span> الشيفت</NavLink>
           <NavLink to="/expenses" className="nav-item"><span>💸</span> المصروفات</NavLink>
+          <NavLink to="/inventory" className="nav-item"><span>📦</span> المخزون</NavLink>
           {isAdmin && (
             <>
               <div className="nav-divider">الإدارة</div>
               <NavLink to="/dashboard" className="nav-item"><span>📊</span> لوحة التحكم</NavLink>
-              <NavLink to="/inventory" className="nav-item"><span>📦</span> المخزون</NavLink>
-              <NavLink to="/menu" className="nav-item"><span>🍰</span> إدارة المنيو</NavLink>
+              <NavLink to="/menu" className="nav-item"><span>🍹</span> إدارة المنيو</NavLink>
+              <NavLink to="/tables-admin" className="nav-item"><span>🪑</span> إدارة الترابيزات</NavLink>
             </>
           )}
         </nav>

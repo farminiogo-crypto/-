@@ -53,7 +53,13 @@ export const api = {
   // الترابيزات
   tables: () => request('/tables'),
   addTable: (name) => request('/tables', { method: 'POST', body: { name } }),
+  renameTable: (id, name) => request('/tables/' + id, { method: 'PUT', body: { name } }),
   deleteTable: (id) => request('/tables/' + id, { method: 'DELETE' }),
+
+  // الوصفات
+  ingredients: (productId) => request(`/products/${productId}/ingredients`),
+  saveIngredients: (productId, items) =>
+    request(`/products/${productId}/ingredients`, { method: 'PUT', body: { items } }),
 
   // الفواتير
   openTab: (table_id) => request('/orders/open', { method: 'POST', body: { table_id } }),
@@ -83,10 +89,12 @@ export const api = {
 
   // المخزون
   inventory: () => request('/inventory'),
+  inventoryMoves: (limit = 50) => request('/inventory/moves?limit=' + limit),
   addInventory: (item) => request('/inventory', { method: 'POST', body: item }),
   updateInventory: (id, item) => request('/inventory/' + id, { method: 'PUT', body: item }),
-  adjustInventory: (id, delta) =>
-    request(`/inventory/${id}/adjust`, { method: 'POST', body: { delta } }),
+  restockInventory: (id, qty) =>
+    request(`/inventory/${id}/restock`, { method: 'POST', body: { qty } }),
+  consumePackage: (id) => request(`/inventory/${id}/consume-package`, { method: 'POST' }),
   deleteInventory: (id) => request('/inventory/' + id, { method: 'DELETE' }),
 
   // التقارير

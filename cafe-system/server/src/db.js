@@ -80,14 +80,36 @@ export const SCHEMA = `
     qty        INTEGER NOT NULL
   );
 
-  -- المخزون
+  -- المخزون (الكمية بوحدة أساسية: جرام / مل / قطعة ...)
   CREATE TABLE IF NOT EXISTS inventory (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    unit          TEXT NOT NULL DEFAULT 'وحدة',
+    quantity      REAL NOT NULL DEFAULT 0,
+    min_quantity  REAL NOT NULL DEFAULT 0,
+    package_label TEXT,                    -- اسم العبوة: كيس / كرتونة / علبة
+    package_size  REAL,                    -- حجم العبوة بالوحدة الأساسية (كيس سكر = 1000 جرام)
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+
+  -- وصفات المنتجات: كل منتج ومكوناته وكمية كل مكون للوحدة الواحدة
+  CREATE TABLE IF NOT EXISTS product_ingredients (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    name         TEXT NOT NULL,
-    unit         TEXT NOT NULL DEFAULT 'وحدة',
-    quantity     REAL NOT NULL DEFAULT 0,
-    min_quantity REAL NOT NULL DEFAULT 0,
-    updated_at   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    product_id   INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    inventory_id INTEGER NOT NULL REFERENCES inventory(id) ON DELETE CASCADE,
+    qty_per_unit REAL NOT NULL,            -- الكمية المستهلكة لكل قطعة مباعة
+    UNIQUE(product_id, inventory_id)
+  );
+
+  -- سجل حركة المخزون: كل خصم أو إضافة لها أثر
+  CREATE TABLE IF NOT EXISTS inventory_moves (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    inventory_id INTEGER NOT NULL REFERENCES inventory(id) ON DELETE CASCADE,
+    delta        REAL NOT NULL,            -- سالب = خصم، موجب = إضافة
+    reason       TEXT NOT NULL,            -- بيع / شراء / استهلاك عبوة / تسوية
+    ref_order_id INTEGER,
+    user_name    TEXT,
+    created_at   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
   );
 
   -- المصروفات (فلوس تخرج من الدرج)

@@ -47,6 +47,19 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {data.lowStock?.length > 0 && (
+        <div className="panel low-panel">
+          <h3>⚠️ نواقص المخزون — محتاجة شراء</h3>
+          <div className="low-chips">
+            {data.lowStock.map((l) => (
+              <span key={l.id} className="low-chip">
+                {l.name}: باقي {l.quantity} {l.unit}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="dash-grid">
         <div className="panel">
           <h3>مبيعات آخر 7 أيام</h3>

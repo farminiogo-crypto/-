@@ -9,6 +9,7 @@ import MenuManager from './pages/MenuManager.jsx';
 import ShiftPage from './pages/ShiftPage.jsx';
 import Expenses from './pages/Expenses.jsx';
 import Inventory from './pages/Inventory.jsx';
+import TablesManager from './pages/TablesManager.jsx';
 import Layout from './components/Layout.jsx';
 import './styles.css';
 
@@ -35,7 +36,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/dashboard" element={<Protected adminOnly><Dashboard /></Protected>} />
           <Route path="/menu" element={<Protected adminOnly><MenuManager /></Protected>} />
-          <Route path="/inventory" element={<Protected adminOnly><Inventory /></Protected>} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/tables-admin" element={<Protected adminOnly><TablesManager /></Protected>} />
         </Route>
         <Route path="*" element={<Navigate to="/pos" replace />} />
       </Routes>

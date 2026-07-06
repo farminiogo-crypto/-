@@ -107,22 +107,52 @@ router.delete('/:id/items/:itemId', requireAuth, (req, res) => {
   res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id)));
 });
 
-// دفع الفاتورة (كاش) وتحرير الترابيزة
+// دفع الفاتورة (كاش) + خصم المكونات من المخزون تلقائياً + تحرير الترابيزة
 router.post('/:id/pay', requireAuth, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
   if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
 
-  const items = db.prepare('SELECT COUNT(*) AS c FROM order_items WHERE order_id = ?').get(order.id).c;
-  if (items === 0) return res.status(400).json({ error: 'الفاتورة فارغة' });
+  const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
+  if (items.length === 0) return res.status(400).json({ error: 'الفاتورة فارغة' });
 
   const shift = currentShift();
-  recalc(order.id);
-  db.prepare(
-    "UPDATE orders SET status = 'paid', shift_id = ?, paid_at = datetime('now','localtime') WHERE id = ?"
-  ).run(shift?.id || null, order.id);
-  if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
+  const getIngredients = db.prepare(
+    'SELECT inventory_id, qty_per_unit FROM product_ingredients WHERE product_id = ?'
+  );
+  const deduct = db.prepare(
+    "UPDATE inventory SET quantity = MAX(0, quantity - ?), updated_at = datetime('now','localtime') WHERE id = ?"
+  );
+  const logMove = db.prepare(
+    'INSERT INTO inventory_moves (inventory_id, delta, reason, ref_order_id, user_name) VALUES (?, ?, ?, ?, ?)'
+  );
 
-  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
+  const tx = db.transaction(() => {
+    recalc(order.id);
+    db.prepare(
+      "UPDATE orders SET status = 'paid', shift_id = ?, paid_at = datetime('now','localtime') WHERE id = ?"
+    ).run(shift?.id || null, order.id);
+    if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
+
+    // خصم مكونات كل صنف مباع من المخزون
+    for (const it of items) {
+      if (!it.product_id) continue;
+      for (const ing of getIngredients.all(it.product_id)) {
+        const used = ing.qty_per_unit * it.qty;
+        deduct.run(used, ing.inventory_id);
+        logMove.run(ing.inventory_id, -used, `بيع: ${it.name} ×${it.qty}`, order.id, req.user.name);
+      }
+    }
+  });
+  tx();
+
+  // أصناف نزلت تحت الحد الأدنى بعد الخصم (لتنبيه الكاشير فوراً)
+  const lowStock = db
+    .prepare('SELECT name, quantity, unit FROM inventory WHERE quantity <= min_quantity')
+    .all();
+
+  const paid = withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id));
+  paid.low_stock = lowStock;
+  res.json(paid);
 });
 
 // إلغاء فاتورة مفتوحة وتحرير الترابيزة

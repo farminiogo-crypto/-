@@ -1,18 +1,28 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api.js';
+import { auth, api } from '../api.js';
 
-const empty = { name: '', unit: 'كجم', quantity: '', min_quantity: '' };
+const empty = { name: '', unit: 'جرام', quantity: '', min_quantity: '', package_label: '', package_size: '' };
+
+// عرض الكمية بشكل مقروء: 5000 جرام → 5 كجم
+function fmtQty(qty, unit) {
+  if (unit === 'جرام' && qty >= 1000) return `${+(qty / 1000).toFixed(2)} كجم`;
+  if (unit === 'مل' && qty >= 1000) return `${+(qty / 1000).toFixed(2)} لتر`;
+  return `${Number.isInteger(qty) ? qty : qty.toFixed(1)} ${unit}`;
+}
 
 export default function Inventory() {
+  const isAdmin = auth.user?.role === 'admin';
   const [items, setItems] = useState([]);
+  const [moves, setMoves] = useState([]);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
+  const [restockFor, setRestockFor] = useState(null); // {id, name}
+  const [restockQty, setRestockQty] = useState('');
   const [error, setError] = useState('');
-
-  const fmt = (n) => (Number.isInteger(Number(n)) ? Number(n) : Number(n).toFixed(1));
 
   function load() {
     api.inventory().then(setItems).catch((e) => setError(e.message));
+    api.inventoryMoves(30).then(setMoves).catch(() => {});
   }
   useEffect(load, []);
 
@@ -27,6 +37,8 @@ export default function Inventory() {
         unit: form.unit.trim() || 'وحدة',
         quantity: Number(form.quantity) || 0,
         min_quantity: Number(form.min_quantity) || 0,
+        package_label: form.package_label.trim() || null,
+        package_size: Number(form.package_size) || null,
       };
       if (editing) await api.updateInventory(editing, payload);
       else await api.addInventory(payload);
@@ -40,17 +52,37 @@ export default function Inventory() {
 
   function startEdit(it) {
     setEditing(it.id);
-    setForm({ name: it.name, unit: it.unit, quantity: it.quantity, min_quantity: it.min_quantity });
+    setForm({
+      name: it.name, unit: it.unit, quantity: it.quantity, min_quantity: it.min_quantity,
+      package_label: it.package_label || '', package_size: it.package_size || '',
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  async function adjust(it, delta) {
-    await api.adjustInventory(it.id, delta).catch((e) => setError(e.message));
-    load();
+  async function consumePackage(it) {
+    if (!confirm(`تأكيد: خلّصت ${it.package_label || 'عبوة'} ${it.name}؟ هيتخصم ${fmtQty(it.package_size, it.unit)}`)) return;
+    try {
+      await api.consumePackage(it.id);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function doRestock(e) {
+    e.preventDefault();
+    try {
+      await api.restockInventory(restockFor.id, Number(restockQty));
+      setRestockFor(null);
+      setRestockQty('');
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
   }
 
   async function remove(it) {
-    if (!confirm(`حذف "${it.name}"؟`)) return;
+    if (!confirm(`حذف "${it.name}"؟ هيتشال من كل الوصفات المرتبطة بيه.`)) return;
     await api.deleteInventory(it.id);
     load();
   }
@@ -60,71 +92,135 @@ export default function Inventory() {
       <header className="page-head row">
         <div>
           <h1>📦 مخزون الكافيه</h1>
-          <p className="muted">تابع كميات الخامات وحدّها الأدنى</p>
+          <p className="muted">المكونات بتتخصم تلقائياً مع كل بيع حسب الوصفات — والعبوات تُخصم يدوياً لما تخلص</p>
         </div>
-        {lowCount > 0 && <span className="low-alert">⚠️ {lowCount} صنف تحت الحد الأدنى</span>}
+        {lowCount > 0 && <span className="low-alert">⚠️ {lowCount} صنف قرب يخلص</span>}
       </header>
       {error && <div className="alert-error">{error}</div>}
 
-      <form className="panel product-form" onSubmit={submit}>
-        <h3>{editing ? '✏️ تعديل صنف' : '➕ إضافة صنف مخزون'}</h3>
-        <div className="form-row">
-          <div className="field grow">
-            <label>الاسم</label>
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+      {isAdmin && (
+        <form className="panel product-form" onSubmit={submit}>
+          <h3>{editing ? '✏️ تعديل صنف' : '➕ إضافة صنف مخزون'}</h3>
+          <div className="form-row">
+            <div className="field grow">
+              <label>الاسم</label>
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            </div>
+            <div className="field small">
+              <label>وحدة القياس</label>
+              <input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} placeholder="جرام / مل / قطعة" />
+            </div>
+            <div className="field small">
+              <label>الكمية</label>
+              <input type="number" min="0" step="any" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
+            </div>
+            <div className="field small">
+              <label>حد التنبيه</label>
+              <input type="number" min="0" step="any" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
+            </div>
+            <div className="field small">
+              <label>اسم العبوة</label>
+              <input value={form.package_label} onChange={(e) => setForm({ ...form, package_label: e.target.value })} placeholder="كيس / كرتونة" />
+            </div>
+            <div className="field small">
+              <label>حجم العبوة</label>
+              <input type="number" min="0" step="any" value={form.package_size} onChange={(e) => setForm({ ...form, package_size: e.target.value })} placeholder="1000" />
+            </div>
           </div>
-          <div className="field small">
-            <label>الوحدة</label>
-            <input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} placeholder="كجم / لتر" />
+          <div className="form-actions">
+            <button className="btn-primary">{editing ? 'حفظ' : 'إضافة'}</button>
+            {editing && <button type="button" className="btn-ghost" onClick={() => { setEditing(null); setForm(empty); }}>إلغاء</button>}
           </div>
-          <div className="field small">
-            <label>الكمية</label>
-            <input type="number" min="0" step="0.5" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
-          </div>
-          <div className="field small">
-            <label>الحد الأدنى</label>
-            <input type="number" min="0" step="0.5" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
-          </div>
-        </div>
-        <div className="form-actions">
-          <button className="btn-primary">{editing ? 'حفظ' : 'إضافة'}</button>
-          {editing && <button type="button" className="btn-ghost" onClick={() => { setEditing(null); setForm(empty); }}>إلغاء</button>}
-        </div>
-      </form>
+        </form>
+      )}
 
       <div className="panel">
         <table className="products-table">
           <thead>
             <tr>
-              <th>الصنف</th><th>الكمية الحالية</th><th>الحد الأدنى</th><th>الحالة</th><th>تعديل سريع</th><th>إجراءات</th>
+              <th>الصنف</th><th>الرصيد</th><th>يكفي تقريباً لـ</th><th>الحالة</th><th>العبوة</th>{isAdmin && <th>إجراءات</th>}
             </tr>
           </thead>
           <tbody>
             {items.map((it) => (
               <tr key={it.id} className={it.low ? 'row-low' : ''}>
                 <td className="strong">{it.name}</td>
-                <td>{fmt(it.quantity)} {it.unit}</td>
-                <td className="muted">{fmt(it.min_quantity)} {it.unit}</td>
                 <td>
-                  <span className={'chip ' + (it.low ? 'chip-low' : 'chip-on')}>
-                    {it.low ? 'ناقص' : 'متوفر'}
-                  </span>
+                  {fmtQty(it.quantity, it.unit)}
+                  <div className="muted small">التنبيه عند {fmtQty(it.min_quantity, it.unit)}</div>
                 </td>
                 <td>
-                  <div className="qty-ctrl inline">
-                    <button onClick={() => adjust(it, -1)}>−</button>
-                    <button onClick={() => adjust(it, 1)}>+</button>
-                  </div>
+                  {it.usages.length === 0 && <span className="muted">غير مرتبط بوصفة</span>}
+                  {it.usages.slice(0, 3).map((u) => (
+                    <div key={u.product} className="usage-line">
+                      <span className="usage-count">≈{u.servings_left}</span> {u.product}
+                    </div>
+                  ))}
+                  {it.usages.length > 3 && <span className="muted small">+{it.usages.length - 3} مشروبات أخرى</span>}
                 </td>
-                <td className="actions-cell">
-                  <button className="icon-btn" onClick={() => startEdit(it)}>✏️</button>
-                  <button className="icon-btn danger" onClick={() => remove(it)}>🗑️</button>
+                <td>
+                  <span className={'chip ' + (it.low ? 'chip-low' : 'chip-on')}>{it.low ? '⚠️ قرب يخلص' : 'متوفر'}</span>
                 </td>
+                <td>
+                  {it.package_size ? (
+                    <button className="btn-package" onClick={() => consumePackage(it)}>
+                      🗑️ خلّصت {it.package_label} ({fmtQty(it.package_size, it.unit)})
+                    </button>
+                  ) : (
+                    <span className="muted small">—</span>
+                  )}
+                </td>
+                {isAdmin && (
+                  <td className="actions-cell">
+                    <button className="icon-btn" title="توريد كمية" onClick={() => { setRestockFor(it); setRestockQty(''); }}>📥</button>
+                    <button className="icon-btn" title="تعديل" onClick={() => startEdit(it)}>✏️</button>
+                    <button className="icon-btn danger" title="حذف" onClick={() => remove(it)}>🗑️</button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* سجل الحركة */}
+      <div className="panel">
+        <h3>📜 آخر حركات المخزون</h3>
+        <table className="orders-table">
+          <thead>
+            <tr><th>الصنف</th><th>الحركة</th><th>السبب</th><th>بواسطة</th><th>الوقت</th></tr>
+          </thead>
+          <tbody>
+            {moves.length === 0 && <tr><td colSpan="5" className="muted center">لا توجد حركات بعد</td></tr>}
+            {moves.map((m) => (
+              <tr key={m.id}>
+                <td className="strong">{m.item_name}</td>
+                <td className={m.delta < 0 ? 'diff-bad' : 'diff-ok'}>
+                  {m.delta > 0 ? '+' : '−'} {fmtQty(Math.abs(m.delta), m.unit)}
+                </td>
+                <td>{m.reason}</td>
+                <td className="muted">{m.user_name}</td>
+                <td className="muted">{(m.created_at || '').slice(5, 16)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* نافذة التوريد */}
+      {restockFor && (
+        <div className="modal-overlay" onClick={() => setRestockFor(null)}>
+          <form className="mini-modal" onClick={(e) => e.stopPropagation()} onSubmit={doRestock}>
+            <h3>📥 توريد: {restockFor.name}</h3>
+            <label>الكمية المضافة ({restockFor.unit})</label>
+            <input type="number" min="0.1" step="any" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} autoFocus required />
+            <div className="form-actions">
+              <button className="btn-primary">إضافة للرصيد</button>
+              <button type="button" className="btn-ghost" onClick={() => setRestockFor(null)}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
