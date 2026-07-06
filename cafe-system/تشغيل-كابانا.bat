@@ -1,37 +1,36 @@
-﻿@echo off
-chcp 65001 >nul
-title تشغيل كافيه كابانا
+@echo off
+title Cabana Cafe
 cd /d "%~dp0"
 
-rem البرنامج شغال؟ افتح المتصفح وخلاص
-powershell -command "try{Invoke-WebRequest -UseBasicParsing http://localhost:4000/api/health -TimeoutSec 2|Out-Null;exit 0}catch{exit 1}" >nul 2>&1
+rem --- already running? just open the browser ---
+node -e "require('http').get('http://127.0.0.1:4000/api/health',function(r){process.exit(0)}).on('error',function(){process.exit(1)})" >nul 2>&1
 if %errorlevel%==0 goto openbrowser
 
-echo جاري تشغيل كابانا... (اول مرة ممكن ياخد دقايق)
+echo Starting Cabana... (first time may take a few minutes)
 
-rem تجهيز اول مرة فقط
+rem --- first-time setup only (server packages + database) ---
 if not exist "server\node_modules" ( cd server & call npm install & cd .. )
-if not exist "client\node_modules" ( cd client & call npm install & cd .. )
-if not exist "client\dist"         ( cd client & call npm run build & cd .. )
 if not exist "server\data\cafe.db" ( cd server & call npm run seed & cd .. )
 
-rem تشغيل الخادم في نافذة مصغرة في الخلفية
+rem --- start server minimized in background ---
 cd server
 start "Cabana Server" /min cmd /c "node src\index.js > data\server.log 2>&1"
 cd ..
 
-rem استنى لحد ما يقوم
+rem --- wait until it responds ---
 set /a tries=0
 :waitloop
-timeout /t 1 /nobreak >nul
-powershell -command "try{Invoke-WebRequest -UseBasicParsing http://localhost:4000/api/health -TimeoutSec 2|Out-Null;exit 0}catch{exit 1}" >nul 2>&1
+ping -n 2 127.0.0.1 >nul
+node -e "require('http').get('http://127.0.0.1:4000/api/health',function(r){process.exit(0)}).on('error',function(){process.exit(1)})" >nul 2>&1
 if %errorlevel%==0 goto openbrowser
 set /a tries+=1
-if %tries% lss 15 goto waitloop
-echo في مشكلة في التشغيل - كلم الدعم (محمود) وابعتله الملف server\data\server.log
+if %tries% lss 20 goto waitloop
+
+echo.
+echo ERROR: server did not start. Call Mahmoud and send file: server\data\server.log
 pause
 exit /b 1
 
 :openbrowser
-start http://localhost:4000
+start http://127.0.0.1:4000
 exit /b 0

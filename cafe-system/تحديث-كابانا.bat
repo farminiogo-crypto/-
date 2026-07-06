@@ -1,27 +1,22 @@
-﻿@echo off
-chcp 65001 >nul
-title تحديث كافيه كابانا
+@echo off
+title Cabana Update
 cd /d "%~dp0"
 
-echo جاري تنزيل اخر تحديث...
+echo Downloading latest version...
 git pull
-if errorlevel 1 ( echo فشل التنزيل - اتاكد من النت & pause & exit /b 1 )
+if errorlevel 1 ( echo FAILED: check internet connection & pause & exit /b 1 )
 
-echo تحديث المكتبات...
+echo Updating server packages...
 cd server & call npm install & cd ..
-cd client & call npm install & cd ..
 
-echo بناء الواجهة...
-cd client & call npm run build & cd ..
-
-echo اعادة تشغيل الخادم...
+echo Restarting server...
 taskkill /f /im node.exe >nul 2>&1
-timeout /t 1 /nobreak >nul
+ping -n 2 127.0.0.1 >nul
 cd server
 start "Cabana Server" /min cmd /c "node src\index.js > data\server.log 2>&1"
 cd ..
-timeout /t 3 /nobreak >nul
+ping -n 4 127.0.0.1 >nul
 
-start http://localhost:4000
-echo التحديث خلص!
+start http://127.0.0.1:4000
+echo Update done!
 pause
