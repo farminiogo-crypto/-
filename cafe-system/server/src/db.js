@@ -10,8 +10,8 @@ const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
-// إنشاء الجداول لو مش موجودة
-db.exec(`
+// مخطط قاعدة البيانات
+export const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT UNIQUE NOT NULL,
@@ -35,18 +35,40 @@ db.exec(`
     active      INTEGER NOT NULL DEFAULT 1
   );
 
+  -- الترابيزات
+  CREATE TABLE IF NOT EXISTS tables (
+    id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    name   TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'free'   -- 'free' | 'occupied'
+  );
+
+  -- الشيفتات
+  CREATE TABLE IF NOT EXISTS shifts (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    name         TEXT NOT NULL,
+    user_id      INTEGER REFERENCES users(id),
+    user_name    TEXT,
+    opening_cash REAL NOT NULL DEFAULT 0,
+    closing_cash REAL,                        -- الفعلي المعدود عند القفل
+    status       TEXT NOT NULL DEFAULT 'open', -- 'open' | 'closed'
+    notes        TEXT,
+    opened_at    TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    closed_at    TEXT
+  );
+
+  -- الفواتير (فاتورة لكل ترابيزة)
   CREATE TABLE IF NOT EXISTS orders (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_no       TEXT NOT NULL,
-    subtotal       REAL NOT NULL,
-    tax            REAL NOT NULL DEFAULT 0,
-    discount       REAL NOT NULL DEFAULT 0,
-    total          REAL NOT NULL,
-    payment_method TEXT NOT NULL,                    -- 'cash' | 'card' | 'wallet'
-    cashier_id     INTEGER REFERENCES users(id),
-    cashier_name   TEXT,
-    status         TEXT NOT NULL DEFAULT 'paid',
-    created_at     TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_no     TEXT NOT NULL,
+    table_id     INTEGER REFERENCES tables(id),
+    table_name   TEXT,
+    shift_id     INTEGER REFERENCES shifts(id),
+    total        REAL NOT NULL DEFAULT 0,
+    status       TEXT NOT NULL DEFAULT 'open', -- 'open' | 'paid' | 'cancelled'
+    cashier_id   INTEGER REFERENCES users(id),
+    cashier_name TEXT,
+    opened_at    TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    paid_at      TEXT
   );
 
   CREATE TABLE IF NOT EXISTS order_items (
@@ -57,6 +79,33 @@ db.exec(`
     price      REAL NOT NULL,
     qty        INTEGER NOT NULL
   );
-`);
+
+  -- المخزون
+  CREATE TABLE IF NOT EXISTS inventory (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    name         TEXT NOT NULL,
+    unit         TEXT NOT NULL DEFAULT 'وحدة',
+    quantity     REAL NOT NULL DEFAULT 0,
+    min_quantity REAL NOT NULL DEFAULT 0,
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+
+  -- المصروفات (فلوس تخرج من الدرج)
+  CREATE TABLE IF NOT EXISTS expenses (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    shift_id    INTEGER REFERENCES shifts(id),
+    description TEXT NOT NULL,
+    amount      REAL NOT NULL,
+    user_id     INTEGER REFERENCES users(id),
+    user_name   TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+`;
+
+export function initSchema() {
+  db.exec(SCHEMA);
+}
+
+initSchema();
 
 export default db;

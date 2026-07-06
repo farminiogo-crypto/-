@@ -10,6 +10,10 @@ import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
 import orderRoutes from './routes/orders.js';
 import reportRoutes from './routes/reports.js';
+import tableRoutes from './routes/tables.js';
+import shiftRoutes from './routes/shifts.js';
+import expenseRoutes from './routes/expenses.js';
+import inventoryRoutes from './routes/inventory.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -22,7 +26,11 @@ app.get('/api/health', (req, res) => res.json({ ok: true, time: new Date().toISO
 
 app.use('/api/auth', authRoutes);
 app.use('/api', menuRoutes);
+app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/shifts', shiftRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/inventory', inventoryRoutes);
 app.use('/api/reports', reportRoutes);
 
 // خدمة واجهة الإنتاج (بعد بناء الـ client) لو موجودة

@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
-const PAY_LABELS = { cash: '💵 كاش', card: '💳 فيزا', wallet: '📱 محفظة' };
-
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([api.summary(), api.orders(10)])
+    Promise.all([api.summary(), api.paidOrders(10)])
       .then(([s, o]) => {
         setData(s);
         setOrders(o);
@@ -20,7 +18,7 @@ export default function Dashboard() {
   if (error) return <div className="alert-error">{error}</div>;
   if (!data) return <div className="loading">جاري التحميل...</div>;
 
-  const fmt = (n) => Number(n).toFixed(2);
+  const fmt = (n) => Number(n || 0).toFixed(2);
   const maxDaily = Math.max(1, ...data.daily.map((d) => d.revenue));
 
   return (
@@ -30,28 +28,26 @@ export default function Dashboard() {
         <p className="muted">نظرة عامة على أداء الكافيه</p>
       </header>
 
-      {/* بطاقات الإحصائيات */}
       <div className="stat-cards">
         <div className="stat-card accent-green">
           <span className="stat-label">مبيعات اليوم</span>
           <span className="stat-value">{fmt(data.today.revenue)} ج</span>
         </div>
-        <div className="stat-card accent-blue">
-          <span className="stat-label">طلبات اليوم</span>
-          <span className="stat-value">{data.today.orders}</span>
+        <div className="stat-card accent-red">
+          <span className="stat-label">مصروفات اليوم</span>
+          <span className="stat-value">{fmt(data.today.expenses)} ج</span>
         </div>
-        <div className="stat-card accent-purple">
-          <span className="stat-label">متوسط الفاتورة</span>
-          <span className="stat-value">{fmt(data.today.avg)} ج</span>
+        <div className="stat-card accent-blue">
+          <span className="stat-label">صافي اليوم</span>
+          <span className="stat-value">{fmt(data.today.net)} ج</span>
         </div>
         <div className="stat-card accent-amber">
-          <span className="stat-label">إجمالي المبيعات</span>
-          <span className="stat-value">{fmt(data.all.revenue)} ج</span>
+          <span className="stat-label">فواتير مفتوحة الآن</span>
+          <span className="stat-value">{data.openTabs.c} <small>({fmt(data.openTabs.total)} ج)</small></span>
         </div>
       </div>
 
       <div className="dash-grid">
-        {/* مبيعات آخر 7 أيام */}
         <div className="panel">
           <h3>مبيعات آخر 7 أيام</h3>
           <div className="bar-chart">
@@ -66,7 +62,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* الأكثر مبيعاً */}
         <div className="panel">
           <h3>🔥 الأكثر مبيعاً</h3>
           <ul className="top-list">
@@ -82,34 +77,25 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* آخر الطلبات */}
       <div className="panel">
-        <h3>🧾 آخر الطلبات</h3>
+        <h3>🧾 آخر الفواتير المدفوعة</h3>
         <table className="orders-table">
           <thead>
             <tr>
-              <th>رقم الطلب</th>
-              <th>الكاشير</th>
-              <th>الدفع</th>
-              <th>الإجمالي</th>
-              <th>الوقت</th>
+              <th>رقم الفاتورة</th><th>الترابيزة</th><th>الكاشير</th><th>الإجمالي</th><th>الوقت</th>
             </tr>
           </thead>
           <tbody>
             {orders.length === 0 && (
-              <tr>
-                <td colSpan="5" className="muted center">
-                  لا توجد طلبات بعد
-                </td>
-              </tr>
+              <tr><td colSpan="5" className="muted center">لا توجد فواتير بعد</td></tr>
             )}
             {orders.map((o) => (
               <tr key={o.id}>
                 <td>{o.order_no}</td>
+                <td>{o.table_name}</td>
                 <td>{o.cashier_name}</td>
-                <td>{PAY_LABELS[o.payment_method] || o.payment_method}</td>
                 <td className="strong">{fmt(o.total)} ج</td>
-                <td className="muted">{o.created_at?.slice(11, 16)}</td>
+                <td className="muted">{(o.paid_at || '').slice(11, 16)}</td>
               </tr>
             ))}
           </tbody>

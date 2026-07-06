@@ -1,8 +1,6 @@
-// إيصال قابل للطباعة يظهر بعد الدفع
-const LABELS = { cash: 'كاش', card: 'فيزا', wallet: 'محفظة' };
-
+// إيصال بمقاس طابعة حرارية 80مم — قابل للطباعة مباشرة
 export default function Receipt({ order, onClose }) {
-  const fmt = (n) => Number(n).toFixed(2);
+  const fmt = (n) => Number(n || 0).toFixed(2);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -10,51 +8,43 @@ export default function Receipt({ order, onClose }) {
         <div className="receipt-body" id="receipt-print">
           <div className="receipt-logo">☕</div>
           <h3>كافيه</h3>
-          <p className="receipt-no">رقم الطلب: {order.order_no}</p>
-          <p className="receipt-meta">
-            الكاشير: {order.cashier_name} • {LABELS[order.payment_method]}
-          </p>
-          <hr />
+          <p className="receipt-no">فاتورة: {order.order_no}</p>
+          <p className="receipt-meta">{order.table_name} • {order.cashier_name}</p>
+          <p className="receipt-meta">{(order.paid_at || '').replace('T', ' ')}</p>
+          <div className="receipt-sep" />
           <table className="receipt-table">
+            <thead>
+              <tr>
+                <th>الصنف</th>
+                <th className="c">الكمية</th>
+                <th className="l">السعر</th>
+              </tr>
+            </thead>
             <tbody>
               {order.items.map((it, idx) => (
                 <tr key={idx}>
                   <td>{it.name}</td>
-                  <td className="c">×{it.qty}</td>
+                  <td className="c">{it.qty}</td>
                   <td className="l">{fmt(it.price * it.qty)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <hr />
-          <div className="rc-row">
-            <span>المجموع</span>
-            <span>{fmt(order.subtotal)} ج</span>
-          </div>
-          {order.discount > 0 && (
-            <div className="rc-row">
-              <span>خصم</span>
-              <span>-{fmt(order.discount)} ج</span>
-            </div>
-          )}
-          <div className="rc-row">
-            <span>ضريبة</span>
-            <span>{fmt(order.tax)} ج</span>
-          </div>
+          <div className="receipt-sep" />
           <div className="rc-row total">
             <span>الإجمالي</span>
             <span>{fmt(order.total)} ج</span>
+          </div>
+          <div className="rc-row">
+            <span>طريقة الدفع</span>
+            <span>كاش 💵</span>
           </div>
           <p className="receipt-thanks">شكراً لزيارتكم 🌟</p>
         </div>
 
         <div className="receipt-actions">
-          <button className="btn-primary" onClick={() => window.print()}>
-            🖨️ طباعة
-          </button>
-          <button className="btn-ghost" onClick={onClose}>
-            طلب جديد
-          </button>
+          <button className="btn-primary" onClick={() => window.print()}>🖨️ طباعة الإيصال</button>
+          <button className="btn-ghost" onClick={onClose}>إغلاق</button>
         </div>
       </div>
     </div>

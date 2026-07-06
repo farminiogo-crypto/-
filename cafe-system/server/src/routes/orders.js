@@ -1,69 +1,146 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
+import { currentShift } from './shifts.js';
 
 const router = Router();
 
-const TAX_RATE = 0.14; // ضريبة القيمة المضافة 14%
+// يعيد حساب إجمالي الفاتورة من عناصرها
+function recalc(orderId) {
+  const { total } = db
+    .prepare('SELECT COALESCE(SUM(price * qty),0) AS total FROM order_items WHERE order_id = ?')
+    .get(orderId);
+  db.prepare('UPDATE orders SET total = ? WHERE id = ?').run(total, orderId);
+  return total;
+}
 
-// إنشاء أوردر جديد
-router.post('/', requireAuth, (req, res) => {
-  const { items, payment_method = 'cash', discount = 0 } = req.body || {};
-  if (!Array.isArray(items) || items.length === 0)
-    return res.status(400).json({ error: 'السلة فارغة' });
+// يرفق العناصر بالفاتورة
+function withItems(order) {
+  if (!order) return order;
+  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ? ORDER BY id').all(order.id);
+  return order;
+}
 
-  // احسب الإجماليات من أسعار قاعدة البيانات (مش من العميل) لأمان أكبر
-  const getProduct = db.prepare('SELECT * FROM products WHERE id = ?');
-  let subtotal = 0;
-  const lines = [];
-  for (const it of items) {
-    const p = getProduct.get(it.id);
-    if (!p) return res.status(400).json({ error: `منتج غير موجود: ${it.id}` });
-    const qty = Math.max(1, parseInt(it.qty) || 1);
-    subtotal += p.price * qty;
-    lines.push({ product_id: p.id, name: p.name, price: p.price, qty });
-  }
+// فتح فاتورة لترابيزة (أو إرجاع المفتوحة لو موجودة)
+router.post('/open', requireAuth, (req, res) => {
+  const shift = currentShift();
+  if (!shift) return res.status(400).json({ error: 'افتح شيفت أولاً قبل استقبال الطلبات' });
 
-  const disc = Math.min(Number(discount) || 0, subtotal);
-  const taxable = subtotal - disc;
-  const tax = +(taxable * TAX_RATE).toFixed(2);
-  const total = +(taxable + tax).toFixed(2);
+  const { table_id } = req.body || {};
+  const table = db.prepare('SELECT * FROM tables WHERE id = ?').get(table_id);
+  if (!table) return res.status(404).json({ error: 'الترابيزة غير موجودة' });
+
+  // لو فيه فاتورة مفتوحة على الترابيزة، رجّعها
+  const existing = db
+    .prepare("SELECT * FROM orders WHERE table_id = ? AND status = 'open' ORDER BY id DESC LIMIT 1")
+    .get(table_id);
+  if (existing) return res.json(withItems(existing));
+
   const orderNo = 'ORD-' + Date.now().toString().slice(-6);
+  const info = db
+    .prepare(
+      'INSERT INTO orders (order_no, table_id, table_name, cashier_id, cashier_name) VALUES (?, ?, ?, ?, ?)'
+    )
+    .run(orderNo, table.id, table.name, req.user.id, req.user.name);
+  db.prepare("UPDATE tables SET status = 'occupied' WHERE id = ?").run(table.id);
 
-  const tx = db.transaction(() => {
-    const info = db
-      .prepare(
-        `INSERT INTO orders (order_no, subtotal, tax, discount, total, payment_method, cashier_id, cashier_name)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      )
-      .run(orderNo, subtotal, tax, disc, total, payment_method, req.user.id, req.user.name);
-
-    const insItem = db.prepare(
-      'INSERT INTO order_items (order_id, product_id, name, price, qty) VALUES (?, ?, ?, ?, ?)'
-    );
-    for (const l of lines) insItem.run(info.lastInsertRowid, l.product_id, l.name, l.price, l.qty);
-    return info.lastInsertRowid;
-  });
-
-  const id = tx();
-  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
-  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(id);
-  res.status(201).json(order);
+  res.status(201).json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(info.lastInsertRowid)));
 });
 
-// قائمة الأوردرات (أحدث أولاً)
-router.get('/', requireAuth, (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-  const orders = db.prepare('SELECT * FROM orders ORDER BY id DESC LIMIT ?').all(limit);
-  res.json(orders);
+// كل الفواتير المفتوحة
+router.get('/open', requireAuth, (req, res) => {
+  const orders = db.prepare("SELECT * FROM orders WHERE status = 'open' ORDER BY id").all();
+  res.json(orders.map(withItems));
 });
 
-// تفاصيل أوردر
+// فاتورة واحدة بالتفاصيل
 router.get('/:id', requireAuth, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
-  if (!order) return res.status(404).json({ error: 'الأوردر غير موجود' });
-  order.items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
-  res.json(order);
+  if (!order) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
+  res.json(withItems(order));
+});
+
+// إضافة صنف للفاتورة (يزيد الكمية لو موجود)
+router.post('/:id/items', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
+
+  const { product_id, qty = 1 } = req.body || {};
+  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(product_id);
+  if (!product) return res.status(404).json({ error: 'المنتج غير موجود' });
+
+  const q = Math.max(1, parseInt(qty) || 1);
+  const line = db
+    .prepare('SELECT * FROM order_items WHERE order_id = ? AND product_id = ?')
+    .get(order.id, product_id);
+  if (line) {
+    db.prepare('UPDATE order_items SET qty = qty + ? WHERE id = ?').run(q, line.id);
+  } else {
+    db.prepare(
+      'INSERT INTO order_items (order_id, product_id, name, price, qty) VALUES (?, ?, ?, ?, ?)'
+    ).run(order.id, product.id, product.name, product.price, q);
+  }
+  recalc(order.id);
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
+});
+
+// تعديل كمية صنف (delta موجب أو سالب) — يُحذف لو وصل صفر
+router.patch('/:id/items/:itemId', requireAuth, (req, res) => {
+  const { delta = 0 } = req.body || {};
+  const item = db
+    .prepare('SELECT * FROM order_items WHERE id = ? AND order_id = ?')
+    .get(req.params.itemId, req.params.id);
+  if (!item) return res.status(404).json({ error: 'الصنف غير موجود' });
+
+  const newQty = item.qty + (parseInt(delta) || 0);
+  if (newQty <= 0) db.prepare('DELETE FROM order_items WHERE id = ?').run(item.id);
+  else db.prepare('UPDATE order_items SET qty = ? WHERE id = ?').run(newQty, item.id);
+
+  recalc(req.params.id);
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id)));
+});
+
+// حذف صنف
+router.delete('/:id/items/:itemId', requireAuth, (req, res) => {
+  db.prepare('DELETE FROM order_items WHERE id = ? AND order_id = ?').run(req.params.itemId, req.params.id);
+  recalc(req.params.id);
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id)));
+});
+
+// دفع الفاتورة (كاش) وتحرير الترابيزة
+router.post('/:id/pay', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
+
+  const items = db.prepare('SELECT COUNT(*) AS c FROM order_items WHERE order_id = ?').get(order.id).c;
+  if (items === 0) return res.status(400).json({ error: 'الفاتورة فارغة' });
+
+  const shift = currentShift();
+  recalc(order.id);
+  db.prepare(
+    "UPDATE orders SET status = 'paid', shift_id = ?, paid_at = datetime('now','localtime') WHERE id = ?"
+  ).run(shift?.id || null, order.id);
+  if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
+
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
+});
+
+// إلغاء فاتورة مفتوحة وتحرير الترابيزة
+router.post('/:id/cancel', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
+  db.prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?").run(order.id);
+  if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
+  res.json({ ok: true });
+});
+
+// سجل الفواتير المدفوعة
+router.get('/', requireAuth, (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  const rows = db
+    .prepare("SELECT * FROM orders WHERE status = 'paid' ORDER BY id DESC LIMIT ?")
+    .all(limit);
+  res.json(rows);
 });
 
 export default router;

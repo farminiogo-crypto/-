@@ -6,10 +6,12 @@ import Login from './pages/Login.jsx';
 import POS from './pages/POS.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import MenuManager from './pages/MenuManager.jsx';
+import ShiftPage from './pages/ShiftPage.jsx';
+import Expenses from './pages/Expenses.jsx';
+import Inventory from './pages/Inventory.jsx';
 import Layout from './components/Layout.jsx';
 import './styles.css';
 
-// حماية المسارات
 function Protected({ children, adminOnly }) {
   if (!auth.token) return <Navigate to="/login" replace />;
   if (adminOnly && auth.user?.role !== 'admin') return <Navigate to="/pos" replace />;
@@ -29,22 +31,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           }
         >
           <Route path="/pos" element={<POS />} />
-          <Route
-            path="/dashboard"
-            element={
-              <Protected adminOnly>
-                <Dashboard />
-              </Protected>
-            }
-          />
-          <Route
-            path="/menu"
-            element={
-              <Protected adminOnly>
-                <MenuManager />
-              </Protected>
-            }
-          />
+          <Route path="/shift" element={<ShiftPage />} />
+          <Route path="/expenses" element={<Expenses />} />
+          <Route path="/dashboard" element={<Protected adminOnly><Dashboard /></Protected>} />
+          <Route path="/menu" element={<Protected adminOnly><MenuManager /></Protected>} />
+          <Route path="/inventory" element={<Protected adminOnly><Inventory /></Protected>} />
         </Route>
         <Route path="*" element={<Navigate to="/pos" replace />} />
       </Routes>
