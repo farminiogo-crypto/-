@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import { nextTableName } from './POS.jsx';
 
 export default function TablesManager() {
   const [tables, setTables] = useState([]);
@@ -13,8 +14,21 @@ export default function TablesManager() {
   }
   useEffect(load, []);
 
-  async function add(e) {
+  // إضافة ترابيزة بالترتيب تلقائياً (ترابيزة 13، 14...)
+  async function addNext() {
+    setError('');
+    try {
+      await api.addTable(nextTableName(tables));
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  // إضافة باسم مخصص (اختياري — لو حبوا يسموا ركنة معينة)
+  async function addCustom(e) {
     e.preventDefault();
+    if (!name.trim()) return;
     setError('');
     try {
       await api.addTable(name.trim());
@@ -55,15 +69,18 @@ export default function TablesManager() {
       </header>
       {error && <div className="alert-error">{error}</div>}
 
-      <form className="panel add-table-form" onSubmit={add}>
+      <div className="panel add-table-form">
         <h3>➕ إضافة ترابيزة</h3>
-        <div className="form-row">
-          <div className="field grow">
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: ترابيزة 11 أو ركنة البلكونة" required />
-          </div>
-          <button className="btn-primary">إضافة</button>
+        <div className="add-table-actions">
+          <button className="btn-primary big" onClick={addNext}>
+            ➕ إضافة {nextTableName(tables)}
+          </button>
+          <form className="custom-name-form" onSubmit={addCustom}>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="أو اسم مخصص: ركنة البلكونة" />
+            <button className="btn-ghost">إضافة بالاسم</button>
+          </form>
         </div>
-      </form>
+      </div>
 
       <div className="panel">
         <table className="products-table">

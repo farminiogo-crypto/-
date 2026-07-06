@@ -33,7 +33,7 @@ export default function Login() {
     <div className="login-page">
       <form className="login-card" onSubmit={submit}>
         <div className="login-logo">☕</div>
-        <h1>نظام الكافيه</h1>
+        <h1>كافيه كابانا</h1>
         <p className="login-sub">سجّل دخولك للمتابعة</p>
 
         {error && <div className="alert-error">{error}</div>}

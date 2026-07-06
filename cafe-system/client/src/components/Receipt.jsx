@@ -7,7 +7,7 @@ export default function Receipt({ order, onClose }) {
       <div className="receipt" onClick={(e) => e.stopPropagation()}>
         <div className="receipt-body" id="receipt-print">
           <div className="receipt-logo">☕</div>
-          <h3>كافيه</h3>
+          <h3>كافيه كابانا</h3>
           <p className="receipt-no">فاتورة: {order.order_no}</p>
           <p className="receipt-meta">
             {order.table_name}

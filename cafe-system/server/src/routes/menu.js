@@ -26,7 +26,7 @@ router.post('/products', requireAuth, requireAdmin, (req, res) => {
 
   const info = db
     .prepare('INSERT INTO products (category_id, name, price, emoji) VALUES (?, ?, ?, ?)')
-    .run(category_id, name, Number(price), emoji || '☕');
+    .run(category_id, name, Number(price), emoji?.trim() || null);
   res.status(201).json(db.prepare('SELECT * FROM products WHERE id = ?').get(info.lastInsertRowid));
 });
 
@@ -42,7 +42,7 @@ router.put('/products/:id', requireAuth, requireAdmin, (req, res) => {
     category_id ?? existing.category_id,
     name ?? existing.name,
     price != null ? Number(price) : existing.price,
-    emoji ?? existing.emoji,
+    emoji !== undefined ? emoji?.trim() || null : existing.emoji,
     active != null ? (active ? 1 : 0) : existing.active,
     req.params.id
   );

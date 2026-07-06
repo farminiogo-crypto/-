@@ -163,6 +163,15 @@ router.post('/:id/pay', requireAuth, (req, res) => {
   res.json(paid);
 });
 
+// تعديل اسم الزبون على فاتورة مفتوحة (في أي وقت قبل الدفع)
+router.patch('/:id', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
+  const { customer_name } = req.body || {};
+  db.prepare('UPDATE orders SET customer_name = ? WHERE id = ?').run(customer_name?.trim() || null, order.id);
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
+});
+
 // إلغاء فاتورة مفتوحة وتحرير الترابيزة
 router.post('/:id/cancel', requireAuth, (req, res) => {
   const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);

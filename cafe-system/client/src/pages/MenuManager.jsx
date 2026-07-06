@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
-// مكتبة الأيقونات — مشروبات وأساسيات الكافيه (نفس الأيقونة ممكن تتكرر لأكتر من منتج)
+// مكتبة الأيقونات — أيقونات قديمة مضمونة تظهر على كل الأجهزة والمتصفحات
+// (نفس الأيقونة ممكن تتكرر لأكتر من منتج، والأيقونة اختيارية أصلاً)
 const ICON_SET = [
-  '☕', '🍵', '🫖', '🍃', '🥛', '🧋', '🧃', '🥤', '🍹', '🧉',
-  '🧊', '❄️', '🌺', '🌿', '🫚', '🍋', '🍊', '🍎', '🍉', '🍇',
-  '🍓', '🫐', '🥭', '🍍', '🥥', '🥝', '🍒', '🍑', '🍌', '🥑',
-  '💧', '🥫', '⚡', '🍫', '🍯', '🍬', '🍮', '🧁', '🍰', '🍪',
-  '🍩', '🍨', '🍧', '🍦', '🔥', '✨',
+  '☕', '🍵', '🍃', '🌿', '🥛', '🥤', '🍹', '🍸',
+  '🍋', '🍊', '🍎', '🍉', '🍇', '🍓', '🍍', '🥝',
+  '🍒', '🍑', '🍌', '🥥', '🍐', '🌺', '🌼', '🍂',
+  '🌾', '💧', '⚡', '🔥', '❄️', '✨', '🍫', '🍯',
+  '🍬', '🍮', '🍰', '🍪', '🍩', '🍨', '🍧', '🍦',
 ];
 
 const empty = { category_id: '', name: '', price: '', emoji: '' };
@@ -44,7 +45,7 @@ export default function MenuManager() {
   async function submit(e) {
     e.preventDefault();
     setError('');
-    if (!form.emoji) return setError('اختر أيقونة للمنتج من المكتبة');
+    // الأيقونة اختيارية — لو مفيش، المنتج يظهر ككرت باسمه فقط
     try {
       const payload = {
         category_id: Number(form.category_id),
@@ -146,14 +147,14 @@ export default function MenuManager() {
             <input type="number" min="0" step="0.5" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
           </div>
           <div className="field small">
-            <label>الأيقونة</label>
+            <label>الأيقونة (اختياري)</label>
             <button
               type="button"
               className={'icon-select ' + (form.emoji ? '' : 'placeholder')}
               onClick={() => setPickerOpen(!pickerOpen)}
               title="اختر أيقونة"
             >
-              {form.emoji || '❓ اختر'}
+              {form.emoji || 'اختر'}
             </button>
           </div>
         </div>
@@ -162,6 +163,13 @@ export default function MenuManager() {
         {pickerOpen && (
           <div className="icon-picker">
             <div className="icon-grid">
+              <button
+                type="button"
+                className={'icon-cell icon-none' + (form.emoji === '' ? ' selected' : '')}
+                onClick={() => { setForm({ ...form, emoji: '' }); setPickerOpen(false); }}
+              >
+                بدون
+              </button>
               {ICON_SET.map((icon) => (
                 <button
                   key={icon}

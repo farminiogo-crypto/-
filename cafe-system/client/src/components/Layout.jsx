@@ -27,7 +27,7 @@ export default function Layout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">☕ كافيه</div>
+        <div className="brand">☕ كابانا</div>
 
         <nav className="side-nav">
           <NavLink to="/pos" className="nav-item"><span>🍽️</span> <em>الترابيزات</em></NavLink>
