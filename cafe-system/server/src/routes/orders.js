@@ -86,6 +86,10 @@ router.post('/:id/items', requireAuth, (req, res) => {
 
 // تعديل كمية صنف (delta موجب أو سالب) — يُحذف لو وصل صفر
 router.patch('/:id/items/:itemId', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open')
+    return res.status(400).json({ error: 'لا يمكن تعديل فاتورة غير مفتوحة' });
+
   const { delta = 0 } = req.body || {};
   const item = db
     .prepare('SELECT * FROM order_items WHERE id = ? AND order_id = ?')
@@ -102,6 +106,10 @@ router.patch('/:id/items/:itemId', requireAuth, (req, res) => {
 
 // حذف صنف
 router.delete('/:id/items/:itemId', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open')
+    return res.status(400).json({ error: 'لا يمكن تعديل فاتورة غير مفتوحة' });
+
   db.prepare('DELETE FROM order_items WHERE id = ? AND order_id = ?').run(req.params.itemId, req.params.id);
   recalc(req.params.id);
   res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id)));

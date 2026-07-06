@@ -1,11 +1,11 @@
 // نقطة تشغيل الخادم
 import express from 'express';
 import cors from 'cors';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-import './db.js'; // ينشئ الجداول عند الإقلاع
+import db from './db.js'; // ينشئ الجداول عند الإقلاع
 import authRoutes from './routes/auth.js';
 import menuRoutes from './routes/menu.js';
 import orderRoutes from './routes/orders.js';
@@ -18,6 +18,28 @@ import inventoryRoutes from './routes/inventory.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// ===== نسخ احتياطي تلقائي لقاعدة البيانات =====
+// نسخة يومية في data/backups/ — يحتفظ بآخر 30 نسخة
+const backupsDir = join(__dirname, '..', 'data', 'backups');
+mkdirSync(backupsDir, { recursive: true });
+
+async function backupDatabase() {
+  const today = new Date().toLocaleDateString('sv'); // YYYY-MM-DD بتوقيت الجهاز
+  const dest = join(backupsDir, `cafe-backup-${today}.db`);
+  if (existsSync(dest)) return; // نسخة النهارده موجودة
+  try {
+    await db.backup(dest); // نسخ آمن ومتسق حتى أثناء الاستخدام
+    console.log(`💾 نسخة احتياطية: ${dest}`);
+    // الاحتفاظ بآخر 30 نسخة فقط
+    const files = readdirSync(backupsDir).filter((f) => f.startsWith('cafe-backup-')).sort();
+    while (files.length > 30) unlinkSync(join(backupsDir, files.shift()));
+  } catch (e) {
+    console.error('⚠️ فشل النسخ الاحتياطي:', e.message);
+  }
+}
+backupDatabase();                                   // عند التشغيل
+setInterval(backupDatabase, 6 * 60 * 60 * 1000);    // وكل 6 ساعات (لو اليوم اتغيّر)
 
 app.use(cors());
 app.use(express.json());

@@ -18,21 +18,11 @@ router.get('/products', requireAuth, (req, res) => {
   res.json(rows);
 });
 
-// أيقونة مستخدمة من قبل منتج آخر؟ (منع التكرار)
-function emojiTaken(emoji, exceptId = null) {
-  const row = exceptId
-    ? db.prepare('SELECT id FROM products WHERE emoji = ? AND id != ?').get(emoji, exceptId)
-    : db.prepare('SELECT id FROM products WHERE emoji = ?').get(emoji);
-  return !!row;
-}
-
 // إضافة منتج (مدير)
 router.post('/products', requireAuth, requireAdmin, (req, res) => {
   const { category_id, name, price, emoji } = req.body || {};
   if (!category_id || !name || price == null)
     return res.status(400).json({ error: 'القسم والاسم والسعر مطلوبة' });
-  if (emoji && emojiTaken(emoji))
-    return res.status(400).json({ error: 'هذه الأيقونة مستخدمة بالفعل لمنتج آخر' });
 
   const info = db
     .prepare('INSERT INTO products (category_id, name, price, emoji) VALUES (?, ?, ?, ?)')
@@ -46,8 +36,6 @@ router.put('/products/:id', requireAuth, requireAdmin, (req, res) => {
   if (!existing) return res.status(404).json({ error: 'المنتج غير موجود' });
 
   const { category_id, name, price, emoji, active } = req.body || {};
-  if (emoji && emojiTaken(emoji, existing.id))
-    return res.status(400).json({ error: 'هذه الأيقونة مستخدمة بالفعل لمنتج آخر' });
   db.prepare(
     `UPDATE products SET category_id = ?, name = ?, price = ?, emoji = ?, active = ? WHERE id = ?`
   ).run(

@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
-// مكتبة الأيقونات — مشروبات وأساسيات الكافيه، كل أيقونة تُستخدم لمنتج واحد فقط
+// مكتبة الأيقونات — مشروبات وأساسيات الكافيه (نفس الأيقونة ممكن تتكرر لأكتر من منتج)
 const ICON_SET = [
-  '☕', '🍵', '🫖', '🥛', '🧋', '🧃', '🥤', '🍹', '🧉', '🧊',
-  '🍋', '🍊', '🍎', '🍉', '🍇', '🍓', '🫐', '🥭', '🍍', '🥥',
-  '🥝', '🍒', '🍑', '🍌', '🌿', '❄️', '🔥', '✨', '💧', '🥫',
-  '🍫', '🍯', '🍬', '🍮', '🧁', '🍰', '🍪', '🍩', '🍨', '🍧', '🍦',
+  '☕', '🍵', '🫖', '🍃', '🥛', '🧋', '🧃', '🥤', '🍹', '🧉',
+  '🧊', '❄️', '🌺', '🌿', '🫚', '🍋', '🍊', '🍎', '🍉', '🍇',
+  '🍓', '🫐', '🥭', '🍍', '🥥', '🥝', '🍒', '🍑', '🍌', '🥑',
+  '💧', '🥫', '⚡', '🍫', '🍯', '🍬', '🍮', '🧁', '🍰', '🍪',
+  '🍩', '🍨', '🍧', '🍦', '🔥', '✨',
 ];
 
 const empty = { category_id: '', name: '', price: '', emoji: '' };
@@ -19,7 +20,6 @@ export default function MenuManager() {
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [iconFilter, setIconFilter] = useState('available'); // 'available' | 'all'
   const [recipeFor, setRecipeFor] = useState(null);
   const [recipe, setRecipe] = useState([]);
 
@@ -40,14 +40,6 @@ export default function MenuManager() {
 
   const catName = (id) => categories.find((c) => c.id === id)?.name || '—';
   const invItem = (id) => inventory.find((i) => i.id === Number(id));
-
-  // الأيقونات المستخدمة حالياً (مع استثناء المنتج قيد التعديل)
-  const usedIcons = useMemo(
-    () => new Set(products.filter((p) => p.id !== editing).map((p) => p.emoji)),
-    [products, editing]
-  );
-  const availableCount = ICON_SET.filter((i) => !usedIcons.has(i)).length;
-  const shownIcons = iconFilter === 'available' ? ICON_SET.filter((i) => !usedIcons.has(i)) : ICON_SET;
 
   async function submit(e) {
     e.preventDefault();
@@ -128,7 +120,7 @@ export default function MenuManager() {
     <div className="menu-manager">
       <header className="page-head">
         <h1>🍹 إدارة المنيو</h1>
-        <p className="muted">أضف المشروبات وحدّد وصفة كل مشروب عشان المخزون يتخصم تلقائياً — كل أيقونة لمنتج واحد</p>
+        <p className="muted">أضف المشروبات وحدّد وصفة كل مشروب عشان المخزون يتخصم تلقائياً</p>
       </header>
 
       {error && <div className="alert-error">{error}</div>}
@@ -169,33 +161,17 @@ export default function MenuManager() {
         {/* مكتبة الأيقونات */}
         {pickerOpen && (
           <div className="icon-picker">
-            <div className="picker-head">
-              <div className="picker-tabs">
-                <button type="button" className={iconFilter === 'available' ? 'active' : ''} onClick={() => setIconFilter('available')}>
-                  المتاحة ({availableCount})
-                </button>
-                <button type="button" className={iconFilter === 'all' ? 'active' : ''} onClick={() => setIconFilter('all')}>
-                  الكل ({ICON_SET.length})
-                </button>
-              </div>
-              <span className="muted small">الأيقونات الباهتة مستخدمة بالفعل</span>
-            </div>
             <div className="icon-grid">
-              {shownIcons.map((icon) => {
-                const used = usedIcons.has(icon);
-                return (
-                  <button
-                    key={icon}
-                    type="button"
-                    className={'icon-cell' + (used ? ' used' : '') + (form.emoji === icon ? ' selected' : '')}
-                    disabled={used}
-                    title={used ? 'مستخدمة بالفعل' : ''}
-                    onClick={() => { setForm({ ...form, emoji: icon }); setPickerOpen(false); }}
-                  >
-                    {icon}
-                  </button>
-                );
-              })}
+              {ICON_SET.map((icon) => (
+                <button
+                  key={icon}
+                  type="button"
+                  className={'icon-cell' + (form.emoji === icon ? ' selected' : '')}
+                  onClick={() => { setForm({ ...form, emoji: icon }); setPickerOpen(false); }}
+                >
+                  {icon}
+                </button>
+              ))}
             </div>
           </div>
         )}

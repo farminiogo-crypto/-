@@ -107,4 +107,24 @@ export const api = {
 
   // التقارير
   summary: () => request('/reports/summary'),
+
+  // تنزيل التقرير الشهري Excel (month بصيغة YYYY-MM)
+  async downloadMonthlyReport(month) {
+    const res = await fetch(`/api/reports/monthly.xlsx?month=${month}`, {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'فشل تنزيل التقرير');
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cafe-report-${month}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };

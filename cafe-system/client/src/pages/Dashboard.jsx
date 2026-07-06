@@ -6,6 +6,8 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState('');
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     Promise.all([api.summary(), api.paidOrders({ limit: 8 })])
@@ -16,7 +18,19 @@ export default function Dashboard() {
       .catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <div className="alert-error">{error}</div>;
+  async function exportExcel() {
+    setError('');
+    setExporting(true);
+    try {
+      await api.downloadMonthlyReport(month);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  if (error && !data) return <div className="alert-error">{error}</div>;
   if (!data) return <div className="loading">جاري التحميل...</div>;
 
   const fmt = (n) => Number(n || 0).toFixed(2);
@@ -24,10 +38,19 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
-      <header className="page-head">
-        <h1>📊 لوحة التحكم</h1>
-        <p className="muted">نظرة عامة على أداء الكافيه</p>
+      <header className="page-head row">
+        <div>
+          <h1>📊 لوحة التحكم</h1>
+          <p className="muted">نظرة عامة على أداء الكافيه</p>
+        </div>
+        <div className="export-bar">
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <button className="btn-primary" onClick={exportExcel} disabled={exporting}>
+            {exporting ? 'جاري التحضير...' : '📥 تقرير الشهر Excel'}
+          </button>
+        </div>
       </header>
+      {error && <div className="alert-error">{error}</div>}
 
       <div className="stat-cards">
         <div className="stat-card accent-green">

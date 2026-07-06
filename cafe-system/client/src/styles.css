@@ -531,18 +531,55 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
   .pos-cart { position: static; }
 }
 
-/* ============ الطباعة (طابعة حرارية 80مم) ============ */
+/* ============ شريط تصدير التقرير ============ */
+.export-bar { display: flex; gap: 10px; align-items: center; }
+.export-bar input[type='month'] {
+  padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px;
+  font-family: inherit; font-size: 14px; background: var(--surface);
+}
+.export-bar input[type='month']:focus { outline: none; border-color: var(--accent); }
+
+/* ============ الطباعة (طابعة حرارية — رول 80مم) ============ */
 @media print {
+  /* مقاس الرول 80مم — الارتفاع تلقائي حسب طول الفاتورة (بدون صفحات فارغة) */
   @page { size: 80mm auto; margin: 0; }
+
+  html, body {
+    width: 80mm !important; margin: 0 !important; padding: 0 !important;
+    background: #fff !important; height: auto !important;
+  }
+
+  /* إخفاء كل الواجهة وتصفير أبعادها حتى لا تنتج صفحات فارغة */
   body * { visibility: hidden; }
+  #root { height: 0 !important; overflow: hidden !important; }
+
+  /* إظهار الإيصال فقط */
   #receipt-print, #receipt-print * { visibility: visible; }
   #receipt-print {
-    position: fixed; top: 0; right: 0; left: 0; margin: 0 auto;
-    width: 76mm; padding: 4mm 3mm; color: #000; font-size: 12px;
+    position: absolute; top: 0; right: 0; left: 0;
+    width: 72mm;              /* المساحة القابلة للطباعة فعلياً في رول 80مم */
+    margin: 0 auto; padding: 2mm 2mm 6mm;
+    background: #fff; color: #000;
+    font-size: 13px; line-height: 1.6; font-weight: 600;
   }
-  #receipt-print .receipt-logo { font-size: 28px; }
-  #receipt-print h3 { font-size: 16px; }
-  .receipt-actions { display: none; }
+
+  /* خط أسود سميك واضح مناسب للطباعة الحرارية */
+  #receipt-print .receipt-logo { font-size: 26px; }
+  #receipt-print h3 { font-size: 18px; font-weight: 900; color: #000; }
+  #receipt-print .receipt-no { font-size: 14px; font-weight: 800; color: #000; }
+  #receipt-print .receipt-meta { font-size: 12px; color: #000; }
+  #receipt-print .receipt-sep { border-top: 1px dashed #000; }
+  #receipt-print .receipt-table { width: 100%; font-size: 12.5px; }
+  #receipt-print .receipt-table th { color: #000; border-bottom: 1px solid #000; font-size: 12px; }
+  #receipt-print .receipt-table td { padding: 2px 0; color: #000; }
+  #receipt-print .rc-row { font-size: 13px; color: #000; }
+  #receipt-print .rc-row.total { font-size: 17px; font-weight: 900; }
+  #receipt-print .receipt-thanks { font-size: 12px; margin-top: 8px; color: #000; }
+
+  /* إخفاء الأزرار والخلفيات */
+  .receipt-actions { display: none !important; }
+  .modal-overlay { position: static !important; background: none !important; }
+  .receipt { box-shadow: none !important; width: auto !important; padding: 0 !important; }
 }
 
 /* حدود مقاس الإيصال على الشاشة ليطابق 80مم */
