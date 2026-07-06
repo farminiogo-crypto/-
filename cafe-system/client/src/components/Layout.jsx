@@ -7,13 +7,17 @@ export default function Layout() {
   const user = auth.user;
   const isAdmin = user?.role === 'admin';
   const [shift, setShift] = useState(undefined);
+  const [lowCount, setLowCount] = useState(0);
 
   useEffect(() => {
-    api.currentShift().then(setShift).catch(() => setShift(null));
-    const onChange = () => api.currentShift().then(setShift).catch(() => setShift(null));
-    window.addEventListener('shift-changed', onChange);
-    return () => window.removeEventListener('shift-changed', onChange);
-  }, []);
+    const refresh = () => {
+      api.currentShift().then(setShift).catch(() => setShift(null));
+      api.inventory().then((items) => setLowCount(items.filter((i) => i.level !== 'ok').length)).catch(() => {});
+    };
+    refresh();
+    window.addEventListener('shift-changed', refresh);
+    return () => window.removeEventListener('shift-changed', refresh);
+  }, [isAdmin]);
 
   function logout() {
     auth.clear();
@@ -26,16 +30,20 @@ export default function Layout() {
         <div className="brand">☕ كافيه</div>
 
         <nav className="side-nav">
-          <NavLink to="/pos" className="nav-item"><span>🍽️</span> الترابيزات</NavLink>
-          <NavLink to="/shift" className="nav-item"><span>🕐</span> الشيفت</NavLink>
-          <NavLink to="/expenses" className="nav-item"><span>💸</span> المصروفات</NavLink>
-          <NavLink to="/inventory" className="nav-item"><span>📦</span> المخزون</NavLink>
+          <NavLink to="/pos" className="nav-item"><span>🍽️</span> <em>الترابيزات</em></NavLink>
+          <NavLink to="/shift" className="nav-item"><span>🕐</span> <em>الشيفت</em></NavLink>
+          <NavLink to="/expenses" className="nav-item"><span>💸</span> <em>المصروفات</em></NavLink>
+          <NavLink to="/inventory" className="nav-item">
+            <span>📦</span> <em>المخزون</em>
+            {lowCount > 0 && <b className="nav-badge">{lowCount}</b>}
+          </NavLink>
           {isAdmin && (
             <>
               <div className="nav-divider">الإدارة</div>
-              <NavLink to="/dashboard" className="nav-item"><span>📊</span> لوحة التحكم</NavLink>
-              <NavLink to="/menu" className="nav-item"><span>🍹</span> إدارة المنيو</NavLink>
-              <NavLink to="/tables-admin" className="nav-item"><span>🪑</span> إدارة الترابيزات</NavLink>
+              <NavLink to="/dashboard" className="nav-item"><span>📊</span> <em>لوحة التحكم</em></NavLink>
+              <NavLink to="/invoices" className="nav-item"><span>🧾</span> <em>الفواتير</em></NavLink>
+              <NavLink to="/menu" className="nav-item"><span>🍹</span> <em>إدارة المنيو</em></NavLink>
+              <NavLink to="/tables-admin" className="nav-item"><span>🪑</span> <em>إدارة الترابيزات</em></NavLink>
             </>
           )}
         </nav>
@@ -61,7 +69,9 @@ export default function Layout() {
               <div className="user-role">{isAdmin ? 'مدير' : 'كاشير'}</div>
             </div>
           </div>
-          <button className="btn-logout" onClick={logout}>تسجيل الخروج</button>
+          <button className="btn-logout" onClick={logout}>
+            <span>🚪</span> <em>خروج</em>
+          </button>
         </div>
       </aside>
 

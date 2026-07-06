@@ -44,6 +44,8 @@ const inventoryDefs = [
   ['موز',           'قطعة',  30,    10,   null,      null],
   ['نعناع',         'باقة',  15,    5,    null,      null],
   ['ينسون',         'جرام',  800,   200,  'علبة',    250],
+  ['بيبسي كانز',    'حبة',   24,    12,   'كرتونة',  24],
+  ['مياه معدنية',   'زجاجة', 30,    15,   'شد',      12],
 ];
 const insertInv = db.prepare(
   'INSERT INTO inventory (name, unit, quantity, min_quantity, package_label, package_size) VALUES (?, ?, ?, ?, ?, ?)'
@@ -65,27 +67,31 @@ const cats = {
 const productDefs = [
   // --- ساخنة ---
   { cat: 'hot', name: 'قهوة تركي',      price: 25, emoji: '☕', recipe: { 'بن': 10, 'سكر': 8 } },      // كيلو البن = 100 كوباية
-  { cat: 'hot', name: 'قهوة دبل',       price: 35, emoji: '☕', recipe: { 'بن': 20, 'سكر': 8 } },
-  { cat: 'hot', name: 'إسبريسو',        price: 30, emoji: '☕', recipe: { 'بن': 8 } },
-  { cat: 'hot', name: 'كابتشينو',       price: 45, emoji: '☕', recipe: { 'بن': 8, 'حليب': 120, 'سكر': 8 } },
+  { cat: 'hot', name: 'قهوة دبل',       price: 35, emoji: '🔥', recipe: { 'بن': 20, 'سكر': 8 } },
+  { cat: 'hot', name: 'إسبريسو',        price: 30, emoji: '✨', recipe: { 'بن': 8 } },
+  { cat: 'hot', name: 'كابتشينو',       price: 45, emoji: '🍮', recipe: { 'بن': 8, 'حليب': 120, 'سكر': 8 } },
   { cat: 'hot', name: 'لاتيه',          price: 50, emoji: '🥛', recipe: { 'بن': 8, 'حليب': 180 } },
   { cat: 'hot', name: 'موكا',           price: 55, emoji: '🍫', recipe: { 'بن': 8, 'حليب': 150, 'كاكاو': 20 } },
-  { cat: 'hot', name: 'نسكافيه',        price: 35, emoji: '☕', recipe: { 'نسكافيه': 5, 'حليب': 50, 'سكر': 8 } },
+  { cat: 'hot', name: 'نسكافيه',        price: 35, emoji: '🍬', recipe: { 'نسكافيه': 5, 'حليب': 50, 'سكر': 8 } },
   { cat: 'hot', name: 'شاي',            price: 15, emoji: '🍵', recipe: { 'شاي': 1, 'سكر': 8 } },
   { cat: 'hot', name: 'شاي بالنعناع',   price: 20, emoji: '🌿', recipe: { 'شاي': 1, 'نعناع': 0.1, 'سكر': 8 } },
   { cat: 'hot', name: 'ينسون',          price: 20, emoji: '🫖', recipe: { 'ينسون': 10, 'سكر': 8 } },
-  { cat: 'hot', name: 'هوت شوكليت',     price: 55, emoji: '🍫', recipe: { 'كاكاو': 30, 'حليب': 180 } },
-  { cat: 'hot', name: 'سحلب',           price: 40, emoji: '🥛', recipe: { 'حليب': 200, 'سكر': 10 } },
+  { cat: 'hot', name: 'هوت شوكليت',     price: 55, emoji: '🍩', recipe: { 'كاكاو': 30, 'حليب': 180 } },
+  { cat: 'hot', name: 'سحلب',           price: 40, emoji: '🍯', recipe: { 'حليب': 200, 'سكر': 10 } },
 
   // --- باردة ---
   { cat: 'cold', name: 'آيس كوفي',      price: 55, emoji: '🧊', recipe: { 'بن': 10, 'حليب': 100, 'سكر': 10 } },
-  { cat: 'cold', name: 'آيس لاتيه',     price: 60, emoji: '🧊', recipe: { 'بن': 8, 'حليب': 180 } },
-  { cat: 'cold', name: 'فرابيه',        price: 65, emoji: '🥤', recipe: { 'بن': 10, 'حليب': 150, 'سكر': 12 } },
-  { cat: 'cold', name: 'آيس موكا',      price: 65, emoji: '🍫', recipe: { 'بن': 8, 'حليب': 150, 'كاكاو': 20 } },
-  { cat: 'cold', name: 'ميلك شيك شوكليت', price: 60, emoji: '🧋', recipe: { 'حليب': 200, 'كاكاو': 20, 'سكر': 15 } },
-  { cat: 'cold', name: 'سموزي فراولة',  price: 55, emoji: '🍓', recipe: { 'فراولة': 150, 'سكر': 15 } },
-  { cat: 'cold', name: 'موهيتو',        price: 50, emoji: '🌿', recipe: { 'ليمون': 1, 'نعناع': 0.3, 'سكر': 15 } },
+  { cat: 'cold', name: 'آيس لاتيه',     price: 60, emoji: '❄️', recipe: { 'بن': 8, 'حليب': 180 } },
+  { cat: 'cold', name: 'فرابيه',        price: 65, emoji: '🧋', recipe: { 'بن': 10, 'حليب': 150, 'سكر': 12 } },
+  { cat: 'cold', name: 'آيس موكا',      price: 65, emoji: '🍨', recipe: { 'بن': 8, 'حليب': 150, 'كاكاو': 20 } },
+  { cat: 'cold', name: 'ميلك شيك شوكليت', price: 60, emoji: '🥤', recipe: { 'حليب': 200, 'كاكاو': 20, 'سكر': 15 } },
+  { cat: 'cold', name: 'سموزي فراولة',  price: 55, emoji: '🍧', recipe: { 'فراولة': 150, 'سكر': 15 } },
+  { cat: 'cold', name: 'موهيتو',        price: 50, emoji: '🧉', recipe: { 'ليمون': 1, 'نعناع': 0.3, 'سكر': 15 } },
   { cat: 'cold', name: 'ليمون بالنعناع', price: 40, emoji: '🍋', recipe: { 'ليمون': 2, 'نعناع': 0.2, 'سكر': 15 } },
+
+  // --- مشروبات جاهزة (تُباع كما هي — بدون كوب) ---
+  { cat: 'cold', name: 'بيبسي كانز',    price: 25, emoji: '🥫', recipe: { 'بيبسي كانز': 1 }, no_cup: true },
+  { cat: 'cold', name: 'مياه معدنية',   price: 10, emoji: '💧', recipe: { 'مياه معدنية': 1 }, no_cup: true },
 
   // --- عصائر ---
   { cat: 'juice', name: 'عصير برتقال',  price: 45, emoji: '🍊', recipe: { 'برتقال': 4 } },
@@ -104,7 +110,8 @@ const insertIng = db.prepare(
 let recipeCount = 0;
 for (const p of productDefs) {
   const pid = insertProd.run(cats[p.cat], p.name, p.price, p.emoji).lastInsertRowid;
-  const recipe = { ...p.recipe, 'أكواب ورقية': 1 }; // كل مشروب = كوب
+  // كل مشروب محضّر يستهلك كوب ورقي — المنتجات الجاهزة (كانز/زجاجات) لها no_cup
+  const recipe = p.no_cup ? { ...p.recipe } : { ...p.recipe, 'أكواب ورقية': 1 };
   for (const [ingName, qty] of Object.entries(recipe)) {
     insertIng.run(pid, inv[ingName], qty);
     recipeCount++;

@@ -4,22 +4,27 @@ import { requireAuth, requireAdmin } from '../auth.js';
 
 const router = Router();
 
-// كل الترابيزات مع إجمالي الفاتورة المفتوحة (إن وجدت)
+// كل الترابيزات مع إجمالي الفاتورة المفتوحة واسم الزبون (إن وجد)
 router.get('/', requireAuth, (req, res) => {
   const tables = db.prepare('SELECT * FROM tables ORDER BY id').all();
   const openOrder = db.prepare(
-    "SELECT id, total FROM orders WHERE table_id = ? AND status = 'open' ORDER BY id DESC LIMIT 1"
+    "SELECT id, total, customer_name FROM orders WHERE table_id = ? AND status = 'open' ORDER BY id DESC LIMIT 1"
   );
   res.json(
     tables.map((t) => {
       const o = openOrder.get(t.id);
-      return { ...t, order_id: o?.id || null, order_total: o?.total || 0 };
+      return {
+        ...t,
+        order_id: o?.id || null,
+        order_total: o?.total || 0,
+        customer_name: o?.customer_name || null,
+      };
     })
   );
 });
 
-// إضافة ترابيزة (مدير)
-router.post('/', requireAuth, requireAdmin, (req, res) => {
+// إضافة ترابيزة (متاح للكاشير أيضاً)
+router.post('/', requireAuth, (req, res) => {
   const { name } = req.body || {};
   if (!name?.trim()) return res.status(400).json({ error: 'اسم الترابيزة مطلوب' });
   const info = db.prepare('INSERT INTO tables (name) VALUES (?)').run(name.trim());

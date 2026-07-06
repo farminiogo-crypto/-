@@ -44,11 +44,12 @@ router.post('/open', requireAuth, (req, res) => {
   if (currentShift()) return res.status(400).json({ error: 'يوجد شيفت مفتوح بالفعل، اقفله أولاً' });
 
   const { name, opening_cash = 0 } = req.body || {};
+  if (!name?.trim()) return res.status(400).json({ error: 'اكتب اسم الكاشير المسؤول عن الشيفت' });
   const info = db
     .prepare(
       'INSERT INTO shifts (name, user_id, user_name, opening_cash) VALUES (?, ?, ?, ?)'
     )
-    .run(name?.trim() || 'شيفت', req.user.id, req.user.name, Number(opening_cash) || 0);
+    .run(name.trim(), req.user.id, req.user.name, Number(opening_cash) || 0);
 
   res.status(201).json(shiftSummary(db.prepare('SELECT * FROM shifts WHERE id = ?').get(info.lastInsertRowid)));
 });

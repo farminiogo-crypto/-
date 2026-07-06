@@ -62,7 +62,8 @@ export const api = {
     request(`/products/${productId}/ingredients`, { method: 'PUT', body: { items } }),
 
   // الفواتير
-  openTab: (table_id) => request('/orders/open', { method: 'POST', body: { table_id } }),
+  openTab: (table_id, customer_name = '') =>
+    request('/orders/open', { method: 'POST', body: { table_id, customer_name } }),
   order: (id) => request('/orders/' + id),
   addItem: (id, product_id, qty = 1) =>
     request(`/orders/${id}/items`, { method: 'POST', body: { product_id, qty } }),
@@ -71,7 +72,14 @@ export const api = {
   removeItem: (id, itemId) => request(`/orders/${id}/items/${itemId}`, { method: 'DELETE' }),
   payOrder: (id) => request(`/orders/${id}/pay`, { method: 'POST' }),
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }),
-  paidOrders: (limit = 50) => request('/orders?limit=' + limit),
+  // سجل الفواتير المدفوعة: { rows, count, total } مع فلاتر اختيارية
+  paidOrders: ({ date = '', q = '', limit = 100 } = {}) => {
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (q) params.set('q', q);
+    if (limit) params.set('limit', limit);
+    return request('/orders?' + params.toString());
+  },
 
   // الشيفتات
   currentShift: () => request('/shifts/current'),

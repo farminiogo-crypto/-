@@ -10,7 +10,14 @@ function logMove(inventory_id, delta, reason, user_name) {
   ).run(inventory_id, delta, reason, user_name);
 }
 
-// كل أصناف المخزون + تقدير "يكفي لكام كوباية" من الوصفات المرتبطة
+// مستوى التنبيه: low = وصل/تحت الحد الأدنى، warn = قرب يخلص (أقل من 150% من الحد)
+export function stockLevel(r) {
+  if (r.quantity <= r.min_quantity) return 'low';
+  if (r.quantity <= r.min_quantity * 1.5) return 'warn';
+  return 'ok';
+}
+
+// كل أصناف المخزون (النواقص أولاً) + تقدير "يكفي لكام كوباية" من الوصفات المرتبطة
 router.get('/', requireAuth, (req, res) => {
   const rows = db.prepare('SELECT * FROM inventory ORDER BY name').all();
   const usageStmt = db.prepare(
@@ -19,16 +26,17 @@ router.get('/', requireAuth, (req, res) => {
      WHERE pi.inventory_id = ? AND p.active = 1
      ORDER BY pi.qty_per_unit DESC`
   );
-  res.json(
-    rows.map((r) => {
-      const usages = usageStmt.all(r.id).map((u) => ({
-        product: u.product_name,
-        per_unit: u.qty_per_unit,
-        servings_left: Math.floor(r.quantity / u.qty_per_unit),
-      }));
-      return { ...r, low: r.quantity <= r.min_quantity, usages };
-    })
-  );
+  const withLevel = rows.map((r) => {
+    const usages = usageStmt.all(r.id).map((u) => ({
+      product: u.product_name,
+      per_unit: u.qty_per_unit,
+      servings_left: Math.floor(r.quantity / u.qty_per_unit),
+    }));
+    return { ...r, level: stockLevel(r), low: r.quantity <= r.min_quantity, usages };
+  });
+  const rank = { low: 0, warn: 1, ok: 2 };
+  withLevel.sort((a, b) => rank[a.level] - rank[b.level] || a.name.localeCompare(b.name, 'ar'));
+  res.json(withLevel);
 });
 
 // سجل حركة المخزون (أحدث أولاً)

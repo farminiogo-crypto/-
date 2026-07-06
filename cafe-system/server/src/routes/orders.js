@@ -26,7 +26,7 @@ router.post('/open', requireAuth, (req, res) => {
   const shift = currentShift();
   if (!shift) return res.status(400).json({ error: 'افتح شيفت أولاً قبل استقبال الطلبات' });
 
-  const { table_id } = req.body || {};
+  const { table_id, customer_name } = req.body || {};
   const table = db.prepare('SELECT * FROM tables WHERE id = ?').get(table_id);
   if (!table) return res.status(404).json({ error: 'الترابيزة غير موجودة' });
 
@@ -39,9 +39,9 @@ router.post('/open', requireAuth, (req, res) => {
   const orderNo = 'ORD-' + Date.now().toString().slice(-6);
   const info = db
     .prepare(
-      'INSERT INTO orders (order_no, table_id, table_name, cashier_id, cashier_name) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO orders (order_no, table_id, table_name, customer_name, cashier_id, cashier_name) VALUES (?, ?, ?, ?, ?, ?)'
     )
-    .run(orderNo, table.id, table.name, req.user.id, req.user.name);
+    .run(orderNo, table.id, table.name, customer_name?.trim() || null, req.user.id, req.user.name);
   db.prepare("UPDATE tables SET status = 'occupied' WHERE id = ?").run(table.id);
 
   res.status(201).json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(info.lastInsertRowid)));
@@ -164,13 +164,28 @@ router.post('/:id/cancel', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// سجل الفواتير المدفوعة
+// سجل الفواتير المدفوعة — مع فلتر تاريخ وبحث
 router.get('/', requireAuth, (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-  const rows = db
-    .prepare("SELECT * FROM orders WHERE status = 'paid' ORDER BY id DESC LIMIT ?")
-    .all(limit);
-  res.json(rows);
+  const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+  const { date, q } = req.query;
+
+  let sql = "SELECT * FROM orders WHERE status = 'paid'";
+  const params = [];
+  if (date) {
+    sql += ' AND date(paid_at) = ?';
+    params.push(date);
+  }
+  if (q?.trim()) {
+    sql += ' AND (order_no LIKE ? OR table_name LIKE ? OR customer_name LIKE ?)';
+    const like = `%${q.trim()}%`;
+    params.push(like, like, like);
+  }
+  sql += ' ORDER BY id DESC LIMIT ?';
+  params.push(limit);
+
+  const rows = db.prepare(sql).all(...params);
+  const total = +rows.reduce((s, r) => s + r.total, 0).toFixed(2);
+  res.json({ rows, count: rows.length, total });
 });
 
 export default router;

@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 
-const empty = { category_id: '', name: '', price: '', emoji: '☕' };
-
-// أيقونات المشروبات والإضافات المشهورة
-const EMOJIS = [
-  '☕', '🍵', '🫖', '🥛', '🧋', '🧊', '🥤', '🧃',
-  '🍹', '🍫', '🍯', '🍋', '🍊', '🍓', '🥭', '🍑',
-  '🍎', '🍌', '🫐', '🍉', '🍍', '🥥', '🌿', '❄️',
-  '🍰', '🧁', '🍪', '🥐', '🧇', '💧', '✨', '🔥',
+// مكتبة الأيقونات — مشروبات وأساسيات الكافيه، كل أيقونة تُستخدم لمنتج واحد فقط
+const ICON_SET = [
+  '☕', '🍵', '🫖', '🥛', '🧋', '🧃', '🥤', '🍹', '🧉', '🧊',
+  '🍋', '🍊', '🍎', '🍉', '🍇', '🍓', '🫐', '🥭', '🍍', '🥥',
+  '🥝', '🍒', '🍑', '🍌', '🌿', '❄️', '🔥', '✨', '💧', '🥫',
+  '🍫', '🍯', '🍬', '🍮', '🧁', '🍰', '🍪', '🍩', '🍨', '🍧', '🍦',
 ];
+
+const empty = { category_id: '', name: '', price: '', emoji: '' };
 
 export default function MenuManager() {
   const [categories, setCategories] = useState([]);
@@ -17,9 +17,11 @@ export default function MenuManager() {
   const [inventory, setInventory] = useState([]);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
-  const [recipeFor, setRecipeFor] = useState(null); // المنتج المفتوح وصفته
-  const [recipe, setRecipe] = useState([]); // [{inventory_id, qty_per_unit}]
   const [error, setError] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [iconFilter, setIconFilter] = useState('available'); // 'available' | 'all'
+  const [recipeFor, setRecipeFor] = useState(null);
+  const [recipe, setRecipe] = useState([]);
 
   async function load() {
     try {
@@ -37,22 +39,32 @@ export default function MenuManager() {
   }, []);
 
   const catName = (id) => categories.find((c) => c.id === id)?.name || '—';
-  const invName = (id) => inventory.find((i) => i.id === Number(id));
+  const invItem = (id) => inventory.find((i) => i.id === Number(id));
+
+  // الأيقونات المستخدمة حالياً (مع استثناء المنتج قيد التعديل)
+  const usedIcons = useMemo(
+    () => new Set(products.filter((p) => p.id !== editing).map((p) => p.emoji)),
+    [products, editing]
+  );
+  const availableCount = ICON_SET.filter((i) => !usedIcons.has(i)).length;
+  const shownIcons = iconFilter === 'available' ? ICON_SET.filter((i) => !usedIcons.has(i)) : ICON_SET;
 
   async function submit(e) {
     e.preventDefault();
     setError('');
+    if (!form.emoji) return setError('اختر أيقونة للمنتج من المكتبة');
     try {
       const payload = {
         category_id: Number(form.category_id),
         name: form.name.trim(),
         price: Number(form.price),
-        emoji: form.emoji || '☕',
+        emoji: form.emoji,
       };
       if (editing) await api.updateProduct(editing, payload);
       else await api.createProduct(payload);
       setForm({ ...empty, category_id: categories[0]?.id || '' });
       setEditing(null);
+      setPickerOpen(false);
       load();
     } catch (e) {
       setError(e.message);
@@ -62,7 +74,14 @@ export default function MenuManager() {
   function startEdit(p) {
     setEditing(p.id);
     setForm({ category_id: p.category_id, name: p.name, price: p.price, emoji: p.emoji });
+    setPickerOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    setEditing(null);
+    setForm({ ...empty, category_id: categories[0]?.id || '' });
+    setPickerOpen(false);
   }
 
   async function toggleActive(p) {
@@ -105,17 +124,16 @@ export default function MenuManager() {
     }
   }
 
-  const hasRecipe = (p) => p.id; // كل المنتجات قابلة — العدد يظهر في الجدول عبر inventory usages
-
   return (
     <div className="menu-manager">
       <header className="page-head">
         <h1>🍹 إدارة المنيو</h1>
-        <p className="muted">أضف المشروبات وحدّد وصفة كل مشروب عشان المخزون يتخصم تلقائياً</p>
+        <p className="muted">أضف المشروبات وحدّد وصفة كل مشروب عشان المخزون يتخصم تلقائياً — كل أيقونة لمنتج واحد</p>
       </header>
 
       {error && <div className="alert-error">{error}</div>}
 
+      {/* نموذج الإضافة / التعديل */}
       <form className="product-form panel" onSubmit={submit}>
         <h3>{editing ? '✏️ تعديل مشروب' : '➕ إضافة مشروب'}</h3>
         <div className="form-row">
@@ -135,62 +153,94 @@ export default function MenuManager() {
             <label>السعر</label>
             <input type="number" min="0" step="0.5" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required />
           </div>
-        </div>
-        <div className="field">
-          <label>الأيقونة — المختارة: <span className="picked-emoji">{form.emoji}</span></label>
-          <div className="emoji-grid">
-            {EMOJIS.map((em) => (
-              <button
-                type="button"
-                key={em}
-                className={'emoji-btn ' + (form.emoji === em ? 'selected' : '')}
-                onClick={() => setForm({ ...form, emoji: em })}
-              >
-                {em}
-              </button>
-            ))}
+          <div className="field small">
+            <label>الأيقونة</label>
+            <button
+              type="button"
+              className={'icon-select ' + (form.emoji ? '' : 'placeholder')}
+              onClick={() => setPickerOpen(!pickerOpen)}
+              title="اختر أيقونة"
+            >
+              {form.emoji || '❓ اختر'}
+            </button>
           </div>
         </div>
+
+        {/* مكتبة الأيقونات */}
+        {pickerOpen && (
+          <div className="icon-picker">
+            <div className="picker-head">
+              <div className="picker-tabs">
+                <button type="button" className={iconFilter === 'available' ? 'active' : ''} onClick={() => setIconFilter('available')}>
+                  المتاحة ({availableCount})
+                </button>
+                <button type="button" className={iconFilter === 'all' ? 'active' : ''} onClick={() => setIconFilter('all')}>
+                  الكل ({ICON_SET.length})
+                </button>
+              </div>
+              <span className="muted small">الأيقونات الباهتة مستخدمة بالفعل</span>
+            </div>
+            <div className="icon-grid">
+              {shownIcons.map((icon) => {
+                const used = usedIcons.has(icon);
+                return (
+                  <button
+                    key={icon}
+                    type="button"
+                    className={'icon-cell' + (used ? ' used' : '') + (form.emoji === icon ? ' selected' : '')}
+                    disabled={used}
+                    title={used ? 'مستخدمة بالفعل' : ''}
+                    onClick={() => { setForm({ ...form, emoji: icon }); setPickerOpen(false); }}
+                  >
+                    {icon}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="form-actions">
           <button className="btn-primary">{editing ? 'حفظ التعديل' : 'إضافة'}</button>
           {editing && (
-            <button type="button" className="btn-ghost" onClick={() => { setEditing(null); setForm({ ...empty, category_id: categories[0]?.id || '' }); }}>
-              إلغاء
-            </button>
+            <button type="button" className="btn-ghost" onClick={cancelEdit}>إلغاء</button>
           )}
         </div>
       </form>
 
+      {/* جدول المنتجات */}
       <div className="panel">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th></th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>الوصفة</th><th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className={p.active ? '' : 'row-inactive'}>
-                <td className="emoji-cell">{p.emoji}</td>
-                <td className="strong">{p.name}</td>
-                <td>{catName(p.category_id)}</td>
-                <td>{Number(p.price).toFixed(2)} ج</td>
-                <td>
-                  <button className={'chip ' + (p.active ? 'chip-on' : 'chip-off')} onClick={() => toggleActive(p)}>
-                    {p.active ? 'نشط' : 'مخفي'}
-                  </button>
-                </td>
-                <td>
-                  <button className="btn-recipe" onClick={() => openRecipe(p)}>🧪 المكونات</button>
-                </td>
-                <td className="actions-cell">
-                  <button className="icon-btn" onClick={() => startEdit(p)}>✏️</button>
-                  <button className="icon-btn danger" onClick={() => remove(p)}>🗑️</button>
-                </td>
+        <div className="table-scroll">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th></th><th>الاسم</th><th>القسم</th><th>السعر</th><th>الحالة</th><th>الوصفة</th><th>إجراءات</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p.id} className={p.active ? '' : 'row-inactive'}>
+                  <td className="emoji-cell">{p.emoji}</td>
+                  <td className="strong">{p.name}</td>
+                  <td>{catName(p.category_id)}</td>
+                  <td>{Number(p.price).toFixed(2)} ج</td>
+                  <td>
+                    <button className={'chip ' + (p.active ? 'chip-on' : 'chip-off')} onClick={() => toggleActive(p)}>
+                      {p.active ? 'نشط' : 'مخفي'}
+                    </button>
+                  </td>
+                  <td>
+                    <button className="btn-recipe" onClick={() => openRecipe(p)}>🧪 المكونات</button>
+                  </td>
+                  <td className="actions-cell">
+                    <button className="icon-btn" onClick={() => startEdit(p)}>✏️</button>
+                    <button className="icon-btn danger" onClick={() => remove(p)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* محرر الوصفة */}
@@ -201,7 +251,7 @@ export default function MenuManager() {
             <p className="muted small">الكميات دي بتتخصم من المخزون تلقائياً مع كل كوباية تتباع.</p>
 
             {recipe.map((row, idx) => {
-              const inv = invName(row.inventory_id);
+              const inv = invItem(row.inventory_id);
               return (
                 <div key={idx} className="recipe-row">
                   <select

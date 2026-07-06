@@ -34,7 +34,7 @@ export default function ShiftPage() {
     e.preventDefault();
     setError('');
     try {
-      await api.openShift(name || 'شيفت', Number(openingCash) || 0);
+      await api.openShift(name.trim(), Number(openingCash) || 0);
       setName('');
       setOpeningCash('');
       setClosedResult(null);
@@ -119,8 +119,8 @@ export default function ShiftPage() {
         /* لا يوجد شيفت → نموذج فتح */
         <form className="panel open-form" onSubmit={openShift}>
           <h3>▶️ فتح شيفت جديد</h3>
-          <label>اسم الشيفت</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: شيفت صباحي" />
+          <label>اسم الكاشير المسؤول عن الشيفت *</label>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اكتب اسمك" required />
           <label>رصيد بداية الدرج (كاش)</label>
           <input type="number" min="0" step="0.5" value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} placeholder="0" required />
           <button className="btn-primary">فتح الشيفت</button>

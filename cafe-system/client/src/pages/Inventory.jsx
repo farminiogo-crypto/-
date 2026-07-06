@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { auth, api } from '../api.js';
 
+// وحدات القياس المتاحة — الأساسية (جرام/مل/قطعة) هي المستخدمة في الوصفات
+const UNITS = ['جرام', 'مل', 'قطعة', 'كوب', 'فتلة', 'حبة', 'زجاجة', 'باقة', 'علبة'];
+
 const empty = { name: '', unit: 'جرام', quantity: '', min_quantity: '', package_label: '', package_size: '' };
+
+const LEVELS = {
+  low: { label: '🔴 اطلب فوراً', cls: 'chip-low' },
+  warn: { label: '⚠️ قرب يخلص', cls: 'chip-warn' },
+  ok: { label: '✅ متوفر', cls: 'chip-on' },
+};
 
 // عرض الكمية بشكل مقروء: 5000 جرام → 5 كجم
 function fmtQty(qty, unit) {
@@ -16,17 +25,19 @@ export default function Inventory() {
   const [moves, setMoves] = useState([]);
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState(null);
-  const [restockFor, setRestockFor] = useState(null); // {id, name}
+  const [restockFor, setRestockFor] = useState(null);
   const [restockQty, setRestockQty] = useState('');
   const [error, setError] = useState('');
 
   function load() {
     api.inventory().then(setItems).catch((e) => setError(e.message));
     api.inventoryMoves(30).then(setMoves).catch(() => {});
+    window.dispatchEvent(new Event('shift-changed')); // يحدّث عدّاد النواقص في القائمة الجانبية
   }
   useEffect(load, []);
 
-  const lowCount = items.filter((i) => i.low).length;
+  const lowCount = items.filter((i) => i.level === 'low').length;
+  const warnCount = items.filter((i) => i.level === 'warn').length;
 
   async function submit(e) {
     e.preventDefault();
@@ -92,9 +103,12 @@ export default function Inventory() {
       <header className="page-head row">
         <div>
           <h1>📦 مخزون الكافيه</h1>
-          <p className="muted">المكونات بتتخصم تلقائياً مع كل بيع حسب الوصفات — والعبوات تُخصم يدوياً لما تخلص</p>
+          <p className="muted">المكونات بتتخصم تلقائياً مع كل بيع حسب الوصفات — والنظام ينبهك قبل ما أي صنف يخلص</p>
         </div>
-        {lowCount > 0 && <span className="low-alert">⚠️ {lowCount} صنف قرب يخلص</span>}
+        <div className="stock-alerts">
+          {lowCount > 0 && <span className="low-alert">🔴 {lowCount} لازم يتطلب فوراً</span>}
+          {warnCount > 0 && <span className="warn-alert">⚠️ {warnCount} قرب يخلص</span>}
+        </div>
       </header>
       {error && <div className="alert-error">{error}</div>}
 
@@ -104,11 +118,15 @@ export default function Inventory() {
           <div className="form-row">
             <div className="field grow">
               <label>الاسم</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: بن" required />
             </div>
             <div className="field small">
               <label>وحدة القياس</label>
-              <input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} placeholder="جرام / مل / قطعة" />
+              <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
+                {UNITS.map((u) => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
             </div>
             <div className="field small">
               <label>الكمية</label>
@@ -116,7 +134,7 @@ export default function Inventory() {
             </div>
             <div className="field small">
               <label>حد التنبيه</label>
-              <input type="number" min="0" step="any" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
+              <input type="number" min="0" step="any" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} placeholder="اطلب عنده" />
             </div>
             <div className="field small">
               <label>اسم العبوة</label>
@@ -135,76 +153,80 @@ export default function Inventory() {
       )}
 
       <div className="panel">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>الصنف</th><th>الرصيد</th><th>يكفي تقريباً لـ</th><th>الحالة</th><th>العبوة</th>{isAdmin && <th>إجراءات</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((it) => (
-              <tr key={it.id} className={it.low ? 'row-low' : ''}>
-                <td className="strong">{it.name}</td>
-                <td>
-                  {fmtQty(it.quantity, it.unit)}
-                  <div className="muted small">التنبيه عند {fmtQty(it.min_quantity, it.unit)}</div>
-                </td>
-                <td>
-                  {it.usages.length === 0 && <span className="muted">غير مرتبط بوصفة</span>}
-                  {it.usages.slice(0, 3).map((u) => (
-                    <div key={u.product} className="usage-line">
-                      <span className="usage-count">≈{u.servings_left}</span> {u.product}
-                    </div>
-                  ))}
-                  {it.usages.length > 3 && <span className="muted small">+{it.usages.length - 3} مشروبات أخرى</span>}
-                </td>
-                <td>
-                  <span className={'chip ' + (it.low ? 'chip-low' : 'chip-on')}>{it.low ? '⚠️ قرب يخلص' : 'متوفر'}</span>
-                </td>
-                <td>
-                  {it.package_size ? (
-                    <button className="btn-package" onClick={() => consumePackage(it)}>
-                      🗑️ خلّصت {it.package_label} ({fmtQty(it.package_size, it.unit)})
-                    </button>
-                  ) : (
-                    <span className="muted small">—</span>
-                  )}
-                </td>
-                {isAdmin && (
-                  <td className="actions-cell">
-                    <button className="icon-btn" title="توريد كمية" onClick={() => { setRestockFor(it); setRestockQty(''); }}>📥</button>
-                    <button className="icon-btn" title="تعديل" onClick={() => startEdit(it)}>✏️</button>
-                    <button className="icon-btn danger" title="حذف" onClick={() => remove(it)}>🗑️</button>
-                  </td>
-                )}
+        <div className="table-scroll">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>الصنف</th><th>الرصيد</th><th>يكفي تقريباً لـ</th><th>الحالة</th><th>العبوة</th>{isAdmin && <th>إجراءات</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.id} className={it.level === 'low' ? 'row-low' : it.level === 'warn' ? 'row-warn' : ''}>
+                  <td className="strong">{it.name}</td>
+                  <td>
+                    {fmtQty(it.quantity, it.unit)}
+                    <div className="muted small">التنبيه عند {fmtQty(it.min_quantity, it.unit)}</div>
+                  </td>
+                  <td>
+                    {it.usages.length === 0 && <span className="muted">غير مرتبط بوصفة</span>}
+                    {it.usages.slice(0, 3).map((u) => (
+                      <div key={u.product} className="usage-line">
+                        <span className="usage-count">≈{u.servings_left}</span> {u.product}
+                      </div>
+                    ))}
+                    {it.usages.length > 3 && <span className="muted small">+{it.usages.length - 3} مشروبات أخرى</span>}
+                  </td>
+                  <td>
+                    <span className={'chip ' + LEVELS[it.level].cls}>{LEVELS[it.level].label}</span>
+                  </td>
+                  <td>
+                    {it.package_size ? (
+                      <button className="btn-package" onClick={() => consumePackage(it)}>
+                        🗑️ خلّصت {it.package_label} ({fmtQty(it.package_size, it.unit)})
+                      </button>
+                    ) : (
+                      <span className="muted small">—</span>
+                    )}
+                  </td>
+                  {isAdmin && (
+                    <td className="actions-cell">
+                      <button className="icon-btn" title="توريد كمية" onClick={() => { setRestockFor(it); setRestockQty(''); }}>📥</button>
+                      <button className="icon-btn" title="تعديل" onClick={() => startEdit(it)}>✏️</button>
+                      <button className="icon-btn danger" title="حذف" onClick={() => remove(it)}>🗑️</button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* سجل الحركة */}
       <div className="panel">
         <h3>📜 آخر حركات المخزون</h3>
-        <table className="orders-table">
-          <thead>
-            <tr><th>الصنف</th><th>الحركة</th><th>السبب</th><th>بواسطة</th><th>الوقت</th></tr>
-          </thead>
-          <tbody>
-            {moves.length === 0 && <tr><td colSpan="5" className="muted center">لا توجد حركات بعد</td></tr>}
-            {moves.map((m) => (
-              <tr key={m.id}>
-                <td className="strong">{m.item_name}</td>
-                <td className={m.delta < 0 ? 'diff-bad' : 'diff-ok'}>
-                  {m.delta > 0 ? '+' : '−'} {fmtQty(Math.abs(m.delta), m.unit)}
-                </td>
-                <td>{m.reason}</td>
-                <td className="muted">{m.user_name}</td>
-                <td className="muted">{(m.created_at || '').slice(5, 16)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="table-scroll">
+          <table className="orders-table">
+            <thead>
+              <tr><th>الصنف</th><th>الحركة</th><th>السبب</th><th>بواسطة</th><th>الوقت</th></tr>
+            </thead>
+            <tbody>
+              {moves.length === 0 && <tr><td colSpan="5" className="muted center">لا توجد حركات بعد</td></tr>}
+              {moves.map((m) => (
+                <tr key={m.id}>
+                  <td className="strong">{m.item_name}</td>
+                  <td className={m.delta < 0 ? 'diff-bad' : 'diff-ok'}>
+                    {m.delta > 0 ? '+' : '−'} {fmtQty(Math.abs(m.delta), m.unit)}
+                  </td>
+                  <td>{m.reason}</td>
+                  <td className="muted">{m.user_name}</td>
+                  <td className="muted">{(m.created_at || '').slice(5, 16)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* نافذة التوريد */}
