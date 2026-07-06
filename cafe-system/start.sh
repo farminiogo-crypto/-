@@ -28,12 +28,19 @@ if [ ! -f "server/data/cafe.db" ]; then
   (cd server && npm run seed)
 fi
 
+# 4) اختيار بورت فاضي (يبدأ من 4000، ويزيد لو مشغول)
+PORT="${PORT:-4000}"
+while lsof -ti "tcp:$PORT" >/dev/null 2>&1; do
+  echo "⚠️  البورت $PORT مشغول، بجرّب اللي بعده..."
+  PORT=$((PORT + 1))
+done
+
 echo ""
-echo "✅ جاهز! افتح المتصفح على:  http://localhost:4000"
+echo "✅ جاهز! افتح المتصفح على:  http://localhost:$PORT"
 echo "   👤 مدير:  admin / admin123"
 echo "   👤 كاشير: cashier / cashier123"
 echo "   (اضغط Ctrl+C لإيقاف الخادم)"
 echo ""
 
-# 4) تشغيل الخادم
-cd server && npm start
+# 5) تشغيل الخادم على البورت المختار
+cd server && PORT="$PORT" npm start
