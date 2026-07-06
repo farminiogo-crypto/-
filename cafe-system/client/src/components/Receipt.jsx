@@ -9,7 +9,10 @@ export default function Receipt({ order, onClose }) {
           <div className="receipt-logo">☕</div>
           <h3>كافيه</h3>
           <p className="receipt-no">فاتورة: {order.order_no}</p>
-          <p className="receipt-meta">{order.table_name} • {order.cashier_name}</p>
+          <p className="receipt-meta">
+            {order.table_name}
+            {order.customer_name ? ` • ${order.customer_name}` : ''} • {order.cashier_name}
+          </p>
           <p className="receipt-meta">{(order.paid_at || '').replace('T', ' ')}</p>
           <div className="receipt-sep" />
           <table className="receipt-table">

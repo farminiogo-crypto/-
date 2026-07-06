@@ -47,12 +47,19 @@ router.get('/summary', requireAuth, requireAdmin, (req, res) => {
   // فواتير مفتوحة حالياً
   const openTabs = db.prepare("SELECT COUNT(*) AS c, COALESCE(SUM(total),0) AS total FROM orders WHERE status = 'open'").get();
 
+  // نواقص المخزون (وصل أو قرب يوصل للحد الأدنى) — عشان يطلبوا قبل ما يخلص
+  const lowStock = db
+    .prepare('SELECT * FROM inventory WHERE quantity <= min_quantity * 1.5 ORDER BY quantity / NULLIF(min_quantity,0)')
+    .all()
+    .map((r) => ({ ...r, level: r.quantity <= r.min_quantity ? 'low' : 'warn' }));
+
   res.json({
     today: { ...today, avg, expenses: +expensesToday.toFixed(2), net: +(today.revenue - expensesToday).toFixed(2) },
     all,
     topProducts,
     daily,
     openTabs,
+    lowStock,
     shift: currentShift() || null,
   });
 });

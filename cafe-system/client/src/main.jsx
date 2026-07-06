@@ -9,6 +9,7 @@ import MenuManager from './pages/MenuManager.jsx';
 import ShiftPage from './pages/ShiftPage.jsx';
 import Expenses from './pages/Expenses.jsx';
 import Inventory from './pages/Inventory.jsx';
+import Invoices from './pages/Invoices.jsx';
 import Layout from './components/Layout.jsx';
 import './styles.css';
 
@@ -34,6 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/shift" element={<ShiftPage />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/dashboard" element={<Protected adminOnly><Dashboard /></Protected>} />
+          <Route path="/invoices" element={<Protected adminOnly><Invoices /></Protected>} />
           <Route path="/menu" element={<Protected adminOnly><MenuManager /></Protected>} />
           <Route path="/inventory" element={<Protected adminOnly><Inventory /></Protected>} />
         </Route>

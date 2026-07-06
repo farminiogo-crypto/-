@@ -4,10 +4,20 @@ import { requireAuth, requireAdmin } from '../auth.js';
 
 const router = Router();
 
-// كل أصناف المخزون (مع علامة نقص)
+// مستوى التنبيه: low = وصل/تحت الحد الأدنى، warn = قرب يخلص (أقل من 150% من الحد)
+export function stockLevel(r) {
+  if (r.quantity <= r.min_quantity) return 'low';
+  if (r.quantity <= r.min_quantity * 1.5) return 'warn';
+  return 'ok';
+}
+
+// كل أصناف المخزون (النواقص أولاً)
 router.get('/', requireAuth, (req, res) => {
   const rows = db.prepare('SELECT * FROM inventory ORDER BY name').all();
-  res.json(rows.map((r) => ({ ...r, low: r.quantity <= r.min_quantity })));
+  const withLevel = rows.map((r) => ({ ...r, level: stockLevel(r), low: r.quantity <= r.min_quantity }));
+  const rank = { low: 0, warn: 1, ok: 2 };
+  withLevel.sort((a, b) => rank[a.level] - rank[b.level] || a.name.localeCompare(b.name, 'ar'));
+  res.json(withLevel);
 });
 
 // إضافة صنف مخزون (مدير)

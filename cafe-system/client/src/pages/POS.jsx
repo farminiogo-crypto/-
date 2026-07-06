@@ -13,6 +13,12 @@ export default function POS() {
   const [receipt, setReceipt] = useState(null);
   const [error, setError] = useState('');
 
+  // نوافذ منبثقة
+  const [openingTable, setOpeningTable] = useState(null); // ترابيزة متاحة → اسأل عن اسم الزبون
+  const [customerName, setCustomerName] = useState('');
+  const [addingTable, setAddingTable] = useState(false);
+  const [newTableName, setNewTableName] = useState('');
+
   const fmt = (n) => Number(n || 0).toFixed(2);
 
   async function loadTables() {
@@ -39,10 +45,36 @@ export default function POS() {
     [products, activeCat]
   );
 
-  async function openTable(t) {
+  // الضغط على ترابيزة: مشغولة → افتح فاتورتها فوراً، متاحة → اسأل عن اسم الزبون
+  function clickTable(t) {
     setError('');
+    if (t.status === 'occupied') {
+      api.openTab(t.id).then(setOrder).catch((e) => setError(e.message));
+    } else {
+      setCustomerName('');
+      setOpeningTable(t);
+    }
+  }
+
+  async function confirmOpenTable(e) {
+    e?.preventDefault();
     try {
-      setOrder(await api.openTab(t.id));
+      setOrder(await api.openTab(openingTable.id, customerName));
+      setOpeningTable(null);
+    } catch (e) {
+      setError(e.message);
+      setOpeningTable(null);
+    }
+  }
+
+  async function confirmAddTable(e) {
+    e?.preventDefault();
+    if (!newTableName.trim()) return;
+    try {
+      await api.addTable(newTableName.trim());
+      setNewTableName('');
+      setAddingTable(false);
+      loadTables();
     } catch (e) {
       setError(e.message);
     }
@@ -59,7 +91,7 @@ export default function POS() {
     setOrder(await api.changeItem(order.id, itemId, delta));
   }
 
-  async function back() {
+  function back() {
     setOrder(null);
     loadTables();
   }
@@ -126,6 +158,7 @@ export default function POS() {
             <h2>🧾 {order.table_name}</h2>
             <span className="order-no">{order.order_no}</span>
           </div>
+          {order.customer_name && <div className="customer-tag">👤 {order.customer_name}</div>}
 
           <div className="cart-items">
             {order.items.length === 0 && <p className="muted center">اضغط على منتج لإضافته للفاتورة</p>}
@@ -163,13 +196,20 @@ export default function POS() {
   }
 
   // ===== شبكة الترابيزات =====
+  const occupiedCount = tables.filter((t) => t.status === 'occupied').length;
+
   return (
     <div className="tables-page">
       <header className="page-head row">
         <div>
           <h1>🍽️ الترابيزات</h1>
-          <p className="muted">اختر ترابيزة لفتح أو متابعة فاتورتها</p>
+          <p className="muted">
+            {tables.length} ترابيزة • {occupiedCount} مشغولة • {tables.length - occupiedCount} متاحة
+          </p>
         </div>
+        <button className="btn-primary" onClick={() => { setNewTableName(''); setAddingTable(true); }}>
+          ➕ إضافة ترابيزة
+        </button>
       </header>
       {error && <div className="alert-error">{error}</div>}
 
@@ -178,18 +218,62 @@ export default function POS() {
           <button
             key={t.id}
             className={'table-card ' + (t.status === 'occupied' ? 'occupied' : 'free')}
-            onClick={() => openTable(t)}
+            onClick={() => clickTable(t)}
           >
             <span className="table-icon">{t.status === 'occupied' ? '🔴' : '🟢'}</span>
             <span className="table-name">{t.name}</span>
             {t.status === 'occupied' ? (
-              <span className="table-total">{fmt(t.order_total)} ج</span>
+              <>
+                {t.customer_name && <span className="table-customer">👤 {t.customer_name}</span>}
+                <span className="table-total">{fmt(t.order_total)} ج</span>
+              </>
             ) : (
               <span className="table-free">متاحة</span>
             )}
           </button>
         ))}
       </div>
+
+      {/* نافذة: فتح حساب باسم الزبون */}
+      {openingTable && (
+        <div className="modal-overlay" onClick={() => setOpeningTable(null)}>
+          <form className="dialog" onClick={(e) => e.stopPropagation()} onSubmit={confirmOpenTable}>
+            <h3>فتح حساب — {openingTable.name}</h3>
+            <label>اسم الزبون (اختياري)</label>
+            <input
+              autoFocus
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="مثال: أستاذ محمد"
+            />
+            <div className="dialog-actions">
+              <button type="submit" className="btn-primary">فتح الحساب</button>
+              <button type="button" className="btn-ghost" onClick={() => setOpeningTable(null)}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* نافذة: إضافة ترابيزة */}
+      {addingTable && (
+        <div className="modal-overlay" onClick={() => setAddingTable(false)}>
+          <form className="dialog" onClick={(e) => e.stopPropagation()} onSubmit={confirmAddTable}>
+            <h3>➕ إضافة ترابيزة جديدة</h3>
+            <label>اسم الترابيزة</label>
+            <input
+              autoFocus
+              value={newTableName}
+              onChange={(e) => setNewTableName(e.target.value)}
+              placeholder={'مثال: ترابيزة ' + (tables.length + 1) + ' أو ركنة البلكونة'}
+              required
+            />
+            <div className="dialog-actions">
+              <button type="submit" className="btn-primary">إضافة</button>
+              <button type="button" className="btn-ghost" onClick={() => setAddingTable(false)}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {receipt && <Receipt order={receipt} onClose={() => setReceipt(null)} />}
     </div>

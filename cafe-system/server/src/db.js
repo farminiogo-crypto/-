@@ -107,6 +107,11 @@ export const SCHEMA = `
 
 export function initSchema() {
   db.exec(SCHEMA);
+  // ترقيات تلقائية لقواعد بيانات قديمة (بدون فقدان بيانات)
+  const orderCols = db.prepare('PRAGMA table_info(orders)').all().map((c) => c.name);
+  if (!orderCols.includes('customer_name')) {
+    db.exec('ALTER TABLE orders ADD COLUMN customer_name TEXT');
+  }
 }
 
 initSchema();

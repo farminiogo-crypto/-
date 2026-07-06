@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
+// وحدات القياس المتاحة — بالوزن، بالحجم، أو بالعدد (للكانز والزجاجات وغيرها)
+const UNITS = ['كجم', 'جرام', 'لتر', 'مل', 'حبة', 'علبة', 'زجاجة', 'كيس', 'كرتونة', 'باقة'];
+
 const empty = { name: '', unit: 'كجم', quantity: '', min_quantity: '' };
+
+const LEVELS = {
+  low: { label: '🔴 اطلب فوراً', cls: 'chip-low' },
+  warn: { label: '⚠️ قرب يخلص', cls: 'chip-warn' },
+  ok: { label: '✅ متوفر', cls: 'chip-on' },
+};
 
 export default function Inventory() {
   const [items, setItems] = useState([]);
@@ -16,7 +25,8 @@ export default function Inventory() {
   }
   useEffect(load, []);
 
-  const lowCount = items.filter((i) => i.low).length;
+  const lowCount = items.filter((i) => i.level === 'low').length;
+  const warnCount = items.filter((i) => i.level === 'warn').length;
 
   async function submit(e) {
     e.preventDefault();
@@ -24,7 +34,7 @@ export default function Inventory() {
     try {
       const payload = {
         name: form.name.trim(),
-        unit: form.unit.trim() || 'وحدة',
+        unit: form.unit,
         quantity: Number(form.quantity) || 0,
         min_quantity: Number(form.min_quantity) || 0,
       };
@@ -60,9 +70,12 @@ export default function Inventory() {
       <header className="page-head row">
         <div>
           <h1>📦 مخزون الكافيه</h1>
-          <p className="muted">تابع كميات الخامات وحدّها الأدنى</p>
+          <p className="muted">تابع الكميات — النظام ينبهك قبل ما أي صنف يخلص</p>
         </div>
-        {lowCount > 0 && <span className="low-alert">⚠️ {lowCount} صنف تحت الحد الأدنى</span>}
+        <div className="stock-alerts">
+          {lowCount > 0 && <span className="low-alert">🔴 {lowCount} لازم يتطلب فوراً</span>}
+          {warnCount > 0 && <span className="warn-alert">⚠️ {warnCount} قرب يخلص</span>}
+        </div>
       </header>
       {error && <div className="alert-error">{error}</div>}
 
@@ -71,19 +84,23 @@ export default function Inventory() {
         <div className="form-row">
           <div className="field grow">
             <label>الاسم</label>
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="مثال: بيبسي كانز" required />
           </div>
           <div className="field small">
             <label>الوحدة</label>
-            <input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} placeholder="كجم / لتر" />
+            <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })}>
+              {UNITS.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
           </div>
           <div className="field small">
             <label>الكمية</label>
             <input type="number" min="0" step="0.5" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} required />
           </div>
           <div className="field small">
-            <label>الحد الأدنى</label>
-            <input type="number" min="0" step="0.5" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} />
+            <label>حد التنبيه</label>
+            <input type="number" min="0" step="0.5" value={form.min_quantity} onChange={(e) => setForm({ ...form, min_quantity: e.target.value })} placeholder="اطلب عنده" />
           </div>
         </div>
         <div className="form-actions">
@@ -93,37 +110,37 @@ export default function Inventory() {
       </form>
 
       <div className="panel">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>الصنف</th><th>الكمية الحالية</th><th>الحد الأدنى</th><th>الحالة</th><th>تعديل سريع</th><th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((it) => (
-              <tr key={it.id} className={it.low ? 'row-low' : ''}>
-                <td className="strong">{it.name}</td>
-                <td>{fmt(it.quantity)} {it.unit}</td>
-                <td className="muted">{fmt(it.min_quantity)} {it.unit}</td>
-                <td>
-                  <span className={'chip ' + (it.low ? 'chip-low' : 'chip-on')}>
-                    {it.low ? 'ناقص' : 'متوفر'}
-                  </span>
-                </td>
-                <td>
-                  <div className="qty-ctrl inline">
-                    <button onClick={() => adjust(it, -1)}>−</button>
-                    <button onClick={() => adjust(it, 1)}>+</button>
-                  </div>
-                </td>
-                <td className="actions-cell">
-                  <button className="icon-btn" onClick={() => startEdit(it)}>✏️</button>
-                  <button className="icon-btn danger" onClick={() => remove(it)}>🗑️</button>
-                </td>
+        <div className="table-scroll">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>الصنف</th><th>الكمية الحالية</th><th>حد التنبيه</th><th>الحالة</th><th>تعديل سريع</th><th>إجراءات</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.id} className={it.level === 'low' ? 'row-low' : it.level === 'warn' ? 'row-warn' : ''}>
+                  <td className="strong">{it.name}</td>
+                  <td>{fmt(it.quantity)} {it.unit}</td>
+                  <td className="muted">{fmt(it.min_quantity)} {it.unit}</td>
+                  <td>
+                    <span className={'chip ' + LEVELS[it.level].cls}>{LEVELS[it.level].label}</span>
+                  </td>
+                  <td>
+                    <div className="qty-ctrl inline">
+                      <button onClick={() => adjust(it, -1)}>−</button>
+                      <button onClick={() => adjust(it, 1)}>+</button>
+                    </div>
+                  </td>
+                  <td className="actions-cell">
+                    <button className="icon-btn" onClick={() => startEdit(it)}>✏️</button>
+                    <button className="icon-btn danger" onClick={() => remove(it)}>🗑️</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

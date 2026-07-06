@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 
 export default function Dashboard() {
@@ -7,10 +8,10 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([api.summary(), api.paidOrders(10)])
+    Promise.all([api.summary(), api.paidOrders({ limit: 8 })])
       .then(([s, o]) => {
         setData(s);
-        setOrders(o);
+        setOrders(o.rows);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -47,6 +48,29 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* تنبيهات المخزون — اطلب قبل ما يخلص */}
+      {data.lowStock.length > 0 && (
+        <div className="panel stock-panel">
+          <div className="panel-head">
+            <h3>📦 نواقص المخزون — اطلب قبل النفاد</h3>
+            <Link to="/inventory" className="btn-ghost small-btn">إدارة المخزون ←</Link>
+          </div>
+          <div className="stock-list">
+            {data.lowStock.map((it) => (
+              <div key={it.id} className={'stock-item ' + it.level}>
+                <span className="stock-name">{it.name}</span>
+                <span className="stock-qty">
+                  باقي <b>{it.quantity} {it.unit}</b> (التنبيه عند {it.min_quantity})
+                </span>
+                <span className={'chip ' + (it.level === 'low' ? 'chip-low' : 'chip-warn')}>
+                  {it.level === 'low' ? '🔴 اطلب فوراً' : '⚠️ قرب يخلص'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="dash-grid">
         <div className="panel">
           <h3>مبيعات آخر 7 أيام</h3>
@@ -78,28 +102,33 @@ export default function Dashboard() {
       </div>
 
       <div className="panel">
-        <h3>🧾 آخر الفواتير المدفوعة</h3>
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>رقم الفاتورة</th><th>الترابيزة</th><th>الكاشير</th><th>الإجمالي</th><th>الوقت</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.length === 0 && (
-              <tr><td colSpan="5" className="muted center">لا توجد فواتير بعد</td></tr>
-            )}
-            {orders.map((o) => (
-              <tr key={o.id}>
-                <td>{o.order_no}</td>
-                <td>{o.table_name}</td>
-                <td>{o.cashier_name}</td>
-                <td className="strong">{fmt(o.total)} ج</td>
-                <td className="muted">{(o.paid_at || '').slice(11, 16)}</td>
+        <div className="panel-head">
+          <h3>🧾 آخر الفواتير</h3>
+          <Link to="/invoices" className="btn-ghost small-btn">كل الفواتير ←</Link>
+        </div>
+        <div className="table-scroll">
+          <table className="orders-table">
+            <thead>
+              <tr>
+                <th>رقم الفاتورة</th><th>الترابيزة</th><th>الزبون</th><th>الإجمالي</th><th>الوقت</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orders.length === 0 && (
+                <tr><td colSpan="5" className="muted center">لا توجد فواتير بعد</td></tr>
+              )}
+              {orders.map((o) => (
+                <tr key={o.id}>
+                  <td>{o.order_no}</td>
+                  <td>{o.table_name}</td>
+                  <td>{o.customer_name || '—'}</td>
+                  <td className="strong">{fmt(o.total)} ج</td>
+                  <td className="muted">{(o.paid_at || '').slice(11, 16)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
