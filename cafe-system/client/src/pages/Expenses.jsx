@@ -22,7 +22,8 @@ export default function Expenses() {
   useEffect(load, []);
 
   async function add(e) {
-    e.preventDefault();
+    e?.preventDefault();
+    if (!(Number(amount) > 0) || !description.trim()) return;
     setError('');
     try {
       await api.addExpense(description.trim(), Number(amount));
@@ -65,7 +66,7 @@ export default function Expenses() {
           <label>البيان</label>
           <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="مثال: شراء حليب" required />
           <label>المبلغ (ج)</label>
-          <NumPad value={amount} onChange={setAmount} />
+          <NumPad value={amount} onChange={setAmount} onEnter={add} />
           <button className="btn-primary" disabled={!(Number(amount) > 0) || !description.trim()}>تسجيل المصروف</button>
         </form>
 

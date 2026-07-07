@@ -45,6 +45,9 @@ export const api = {
 
   // المنيو
   categories: () => request('/categories'),
+  createCategory: (name) => request('/categories', { method: 'POST', body: { name } }),
+  updateCategory: (id, patch) => request('/categories/' + id, { method: 'PUT', body: patch }),
+  deleteCategory: (id) => request('/categories/' + id, { method: 'DELETE' }),
   products: (all = false) => request('/products' + (all ? '?all=1' : '')),
   createProduct: (p) => request('/products', { method: 'POST', body: p }),
   updateProduct: (id, p) => request('/products/' + id, { method: 'PUT', body: p }),

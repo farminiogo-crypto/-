@@ -24,6 +24,10 @@ export default function MenuManager() {
   const [recipeFor, setRecipeFor] = useState(null);
   const [recipe, setRecipe] = useState([]);
   const [search, setSearch] = useState('');
+  // إدارة الأقسام
+  const [newCat, setNewCat] = useState('');
+  const [editingCat, setEditingCat] = useState(null);
+  const [editCatName, setEditCatName] = useState('');
 
   async function load() {
     try {
@@ -42,6 +46,41 @@ export default function MenuManager() {
 
   const catName = (id) => categories.find((c) => c.id === id)?.name || '—';
   const invItem = (id) => inventory.find((i) => i.id === Number(id));
+
+  // ===== إدارة الأقسام =====
+  async function addCat(e) {
+    e.preventDefault();
+    setError('');
+    if (!newCat.trim()) return;
+    try {
+      await api.createCategory(newCat.trim());
+      setNewCat('');
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function saveCat(id) {
+    setError('');
+    if (!editCatName.trim()) return;
+    try {
+      await api.updateCategory(id, { name: editCatName.trim() });
+      setEditingCat(null);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function removeCat(c) {
+    if (!confirm(`حذف قسم "${c.name}"؟`)) return;
+    setError('');
+    try {
+      await api.deleteCategory(c.id);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -126,6 +165,41 @@ export default function MenuManager() {
       </header>
 
       {error && <div className="alert-error">{error}</div>}
+
+      {/* إدارة الأقسام */}
+      <div className="panel cats-panel">
+        <h3>🗂️ الأقسام</h3>
+        <form className="cat-add" onSubmit={addCat}>
+          <input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="اسم قسم جديد (مثال: عصائر)" />
+          <button className="btn-primary" type="submit">➕ إضافة قسم</button>
+        </form>
+        <div className="cats-list">
+          {categories.map((c) => (
+            <div key={c.id} className="cat-chip-row">
+              {editingCat === c.id ? (
+                <>
+                  <input
+                    className="cat-edit-input"
+                    value={editCatName}
+                    onChange={(e) => setEditCatName(e.target.value)}
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveCat(c.id); } }}
+                  />
+                  <button className="icon-btn" onClick={() => saveCat(c.id)}>✅</button>
+                  <button className="icon-btn" onClick={() => setEditingCat(null)}>✖</button>
+                </>
+              ) : (
+                <>
+                  <span className="cat-chip-name">{c.name}</span>
+                  <span className="cat-chip-count">{products.filter((p) => p.category_id === c.id).length} منتج</span>
+                  <button className="icon-btn" onClick={() => { setEditingCat(c.id); setEditCatName(c.name); }}>✏️</button>
+                  <button className="icon-btn danger" onClick={() => removeCat(c)}>🗑️</button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* نموذج الإضافة / التعديل */}
       <form className="product-form panel" onSubmit={submit}>

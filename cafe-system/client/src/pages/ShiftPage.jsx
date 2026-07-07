@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { auth, api } from '../api.js';
 import NumPad from '../components/NumPad.jsx';
 
@@ -15,6 +15,7 @@ export default function ShiftPage() {
   const [closingCash, setClosingCash] = useState('');
   const [notes, setNotes] = useState('');
   const [closedResult, setClosedResult] = useState(null);
+  const openCashRef = useRef(null);
 
   const fmt = (n) => Number(n || 0).toFixed(2);
 
@@ -32,7 +33,7 @@ export default function ShiftPage() {
   }
 
   async function openShift(e) {
-    e.preventDefault();
+    e?.preventDefault();
     setError('');
     try {
       await api.openShift(name.trim(), Number(openingCash) || 0);
@@ -121,9 +122,20 @@ export default function ShiftPage() {
         <form className="panel open-form" onSubmit={openShift}>
           <h3>▶️ فتح شيفت جديد</h3>
           <label>اسم الكاشير المسؤول عن الشيفت *</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اكتب اسمك" required />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="اكتب اسمك"
+            required
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                openCashRef.current?.focus(); // انتقل لخانة الرصيد بدل ما يفتح الشيفت على طول
+              }
+            }}
+          />
           <label>رصيد بداية الدرج (كاش)</label>
-          <NumPad value={openingCash} onChange={setOpeningCash} />
+          <NumPad ref={openCashRef} value={openingCash} onChange={setOpeningCash} onEnter={openShift} />
           <button className="btn-primary">فتح الشيفت</button>
         </form>
       )}

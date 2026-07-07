@@ -741,16 +741,19 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .danger-panel { border: 1.5px solid #f0cfcb; }
 .danger-panel .btn-danger-solid { margin-top: 10px; }
 
-/* ===== لوحة الأرقام باللمس (NumPad) ===== */
-.numpad-field {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 10px;
-  background: var(--surface); font-size: 20px; font-weight: 800; color: var(--ink);
-  cursor: pointer; min-height: 50px;
+/* ===== حقل الأرقام (كيبورد + لمس) ===== */
+.numpad-wrap { position: relative; display: flex; align-items: center; gap: 8px; }
+.numpad-input {
+  flex: 1; width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: var(--surface); font-size: 20px; font-weight: 800; color: var(--ink); font-family: inherit;
 }
-.numpad-field:hover { border-color: var(--accent); }
-.numpad-field.placeholder { color: var(--muted); font-weight: 600; }
-.numpad-field .numpad-unit { color: var(--muted); font-size: 14px; font-style: normal; font-weight: 600; }
+.numpad-input:focus { outline: none; border-color: var(--accent); }
+.numpad-input::placeholder { color: var(--muted); font-weight: 600; }
+.numpad-open {
+  flex: 0 0 auto; width: 50px; min-height: 48px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: #f4efe8; font-size: 22px; cursor: pointer;
+}
+.numpad-open:hover { border-color: var(--accent); }
 
 .numpad-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.45);
@@ -783,3 +786,21 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .np-clear { background: transparent; border: 1.5px solid var(--line); color: var(--muted); }
 .np-done { background: var(--brand); border: none; color: #fff; }
 .np-done:hover { background: var(--brand-dark); }
+
+/* ===== إدارة الأقسام ===== */
+.cats-panel h3 { margin-bottom: 12px; }
+.cat-add { display: flex; gap: 10px; margin-bottom: 14px; }
+.cat-add input {
+  flex: 1; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px; font-family: inherit;
+}
+.cat-add input:focus { outline: none; border-color: var(--accent); }
+.cat-add .btn-primary { white-space: nowrap; }
+.cats-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.cat-chip-row {
+  display: flex; align-items: center; gap: 6px;
+  background: #f4efe8; border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 10px;
+}
+.cat-chip-name { font-weight: 800; color: var(--brand); }
+.cat-chip-count { font-size: 12px; color: var(--muted); background: var(--surface); border-radius: 8px; padding: 2px 8px; }
+.cat-edit-input { width: 130px; padding: 6px 10px; border: 1.5px solid var(--accent); border-radius: 8px; font-family: inherit; font-size: 14px; }
+.cat-edit-input:focus { outline: none; }

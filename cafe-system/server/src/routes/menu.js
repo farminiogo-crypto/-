@@ -9,6 +9,37 @@ router.get('/categories', requireAuth, (req, res) => {
   res.json(db.prepare('SELECT * FROM categories ORDER BY sort, id').all());
 });
 
+// إضافة قسم جديد (مدير)
+router.post('/categories', requireAuth, requireAdmin, (req, res) => {
+  const { name } = req.body || {};
+  if (!name?.trim()) return res.status(400).json({ error: 'اكتب اسم القسم' });
+  const max = db.prepare('SELECT COALESCE(MAX(sort),0) AS m FROM categories').get().m;
+  const info = db.prepare('INSERT INTO categories (name, sort) VALUES (?, ?)').run(name.trim(), max + 1);
+  res.status(201).json(db.prepare('SELECT * FROM categories WHERE id = ?').get(info.lastInsertRowid));
+});
+
+// تعديل اسم/ترتيب قسم (مدير)
+router.put('/categories/:id', requireAuth, requireAdmin, (req, res) => {
+  const existing = db.prepare('SELECT * FROM categories WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'القسم غير موجود' });
+  const { name, sort } = req.body || {};
+  db.prepare('UPDATE categories SET name = ?, sort = ? WHERE id = ?').run(
+    name?.trim() || existing.name,
+    sort != null ? Number(sort) : existing.sort,
+    req.params.id
+  );
+  res.json(db.prepare('SELECT * FROM categories WHERE id = ?').get(req.params.id));
+});
+
+// حذف قسم (مدير) — ممنوع لو لسه فيه منتجات مربوطة به
+router.delete('/categories/:id', requireAuth, requireAdmin, (req, res) => {
+  const count = db.prepare('SELECT COUNT(*) AS c FROM products WHERE category_id = ?').get(req.params.id).c;
+  if (count > 0)
+    return res.status(400).json({ error: `القسم فيه ${count} منتج — انقلهم لقسم تاني أو احذفهم الأول` });
+  db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // كل المنتجات (للـ POS: النشطة فقط ما لم يطلب المدير الكل)
 router.get('/products', requireAuth, (req, res) => {
   const all = req.query.all === '1' && req.user.role === 'admin';

@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 
-// لوحة أرقام باللمس — تُستخدم بدل حقل الإدخال العادي لإدخال المبالغ والكميات
-// من غير كيبورد، عشان شاشة التاتش. القيمة نصية (string) وتتبعت عبر onChange.
-export default function NumPad({ value, onChange, placeholder = '0', allowDecimal = true, unit = 'ج' }) {
+// حقل إدخال أرقام يشتغل بالكيبورد **و** باللمس:
+// - تقدر تكتب بالكيبورد عادي (أرقام + علامة عشرية).
+// - أو تضغط زر 🔢 فتفتح لوحة أرقام كبيرة للمس.
+// القيمة نصية (string) وتتبعت عبر onChange. onEnter يتنفّذ عند ضغط Enter في الحقل.
+const NumPad = forwardRef(function NumPad(
+  { value, onChange, placeholder = '0', allowDecimal = true, unit = 'ج', onEnter },
+  ref
+) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
 
-  function start() {
-    setDraft(value ? String(value) : '');
-    setOpen(true);
+  // يقبل أرقام وعلامة عشرية واحدة فقط
+  function sanitize(v) {
+    v = String(v).replace(/[^\d.]/g, '');
+    if (!allowDecimal) v = v.replace(/\./g, '');
+    const parts = v.split('.');
+    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+    return v;
   }
 
   function press(k) {
@@ -17,9 +26,8 @@ export default function NumPad({ value, onChange, placeholder = '0', allowDecima
         if (!allowDecimal || d.includes('.')) return d;
         return d === '' ? '0.' : d + '.';
       }
-      if (d === '0') return k; // امنع الأصفار البادئة (05 → 5)
-      // حد أقصى منطقي للأرقام
-      if (d.replace('.', '').length >= 8) return d;
+      if (d === '0') return k; // امنع الأصفار البادئة
+      if (d.replace('.', '').length >= 9) return d;
       return d + k;
     });
   }
@@ -27,14 +35,32 @@ export default function NumPad({ value, onChange, placeholder = '0', allowDecima
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', allowDecimal ? '.' : '', '0', '⌫'];
 
   return (
-    <>
+    <div className="numpad-wrap">
+      <input
+        ref={ref}
+        className="numpad-input"
+        type="text"
+        inputMode="decimal"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(sanitize(e.target.value))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && onEnter) {
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+      />
       <button
         type="button"
-        className={'numpad-field' + (value ? '' : ' placeholder')}
-        onClick={start}
+        className="numpad-open"
+        title="لوحة أرقام"
+        onClick={() => {
+          setDraft(value ? String(value) : '');
+          setOpen(true);
+        }}
       >
-        <span>{value ? String(value) : placeholder}</span>
-        {unit && <em className="numpad-unit">{unit}</em>}
+        🔢
       </button>
 
       {open && (
@@ -69,6 +95,8 @@ export default function NumPad({ value, onChange, placeholder = '0', allowDecima
           </div>
         </div>
       )}
-    </>
+    </div>
   );
-}
+});
+
+export default NumPad;
