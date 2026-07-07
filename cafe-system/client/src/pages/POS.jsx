@@ -61,6 +61,8 @@ export default function POS() {
   function clickTable(t) {
     setError('');
     setEditingCustomer(false);
+    setProdSearch('');   // ابدأ كل فاتورة ببحث نظيف
+    setActiveCat('all');
     api.openTab(t.id).then(setOrder).catch((e) => setError(e.message));
   }
 
@@ -100,6 +102,8 @@ export default function POS() {
   function back() {
     setOrder(null);
     setEditingCustomer(false);
+    setProdSearch('');   // صفّي البحث عند الرجوع للترابيزات
+    setActiveCat('all');
     loadTables();
   }
 
@@ -109,6 +113,8 @@ export default function POS() {
       setReceipt(paid);
       setLowStock(paid.low_stock || []);
       setOrder(null);
+      setProdSearch('');
+      setActiveCat('all');
       loadTables();
     } catch (e) {
       setError(e.message);
