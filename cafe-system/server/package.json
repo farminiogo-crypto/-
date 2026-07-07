@@ -11,7 +11,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed": "node src/seed.js",
-    "seed:force": "node src/seed.js --force"
+    "seed:force": "node src/seed.js --force",
+    "reset": "node src/reset.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
