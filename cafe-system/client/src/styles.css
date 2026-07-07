@@ -613,3 +613,83 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .receipt-table th { font-size: 12px; color: var(--muted); font-weight: 700; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
 .receipt-table th.c, .receipt-table td.c { text-align: center; }
 .receipt-table th.l, .receipt-table td.l { text-align: left; }
+
+/* ============================================================
+   رِديزاين احترافي — كروت بدون أيقونات + لمس + بوابة المدير
+   ============================================================ */
+
+/* --- كروت المنيو: نص واضح، بدون أيقونات، مساحة لمس كبيرة --- */
+.product-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.product-card {
+  position: relative; min-height: 108px; padding: 16px 16px 14px;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: stretch;
+  gap: 10px; text-align: right; border: 1.5px solid var(--line); border-radius: 16px;
+  background: var(--surface); box-shadow: 0 3px 12px rgba(80,55,35,.06);
+  transition: transform .1s, border-color .1s, box-shadow .1s; overflow: hidden;
+}
+.product-card::before {
+  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 5px;
+  background: linear-gradient(var(--accent), var(--brand)); opacity: .9;
+}
+.product-card:hover { border-color: var(--accent); box-shadow: 0 6px 18px rgba(80,55,35,.12); transform: translateY(-2px); }
+.product-card:active { transform: scale(.97); }
+.product-card .product-name { font-size: 16.5px; font-weight: 800; line-height: 1.35; color: var(--ink); }
+.product-card .product-price {
+  align-self: flex-start; background: var(--brand); color: #fff; font-weight: 800; font-size: 15px;
+  padding: 5px 13px; border-radius: 20px; font-variant-numeric: tabular-nums;
+}
+.product-card .product-price em { font-style: normal; font-weight: 600; opacity: .85; font-size: 12px; margin-inline-start: 2px; }
+.product-emoji, .product-initial { display: none; }
+
+/* --- تكبير للّمس في الكاشير --- */
+.cat-tabs button { padding: 11px 20px; font-size: 15px; }
+.qty-ctrl button { width: 42px; height: 42px; font-size: 20px; border-radius: 11px; }
+.btn-checkout { padding: 18px; font-size: 17px; }
+.table-card { min-height: 118px; }
+
+/* --- بوابة المدير + لوحة الأرقام (تاتش) --- */
+.gate { min-height: 72vh; display: grid; place-items: center; padding: 20px; }
+.gate-card {
+  background: var(--surface); border-radius: 22px; box-shadow: var(--shadow);
+  padding: 30px 26px; width: 100%; max-width: 340px; text-align: center;
+}
+.gate-lock { font-size: 44px; }
+.gate-card h2 { margin-top: 8px; font-size: 22px; }
+.gate-card .muted { margin-bottom: 6px; }
+.pin-dots { display: flex; justify-content: center; gap: 13px; margin: 20px 0 6px; }
+.pin-dot { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--line); transition: .12s; }
+.pin-dot.on { background: var(--brand); border-color: var(--brand); }
+.gate-error { color: var(--danger); font-weight: 700; margin: 8px 0; }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.key {
+  height: 66px; border-radius: 15px; border: 1.5px solid var(--line); background: #faf7f2;
+  font-size: 25px; font-weight: 800; color: var(--ink); transition: .1s; font-variant-numeric: tabular-nums;
+}
+.key:hover { background: #f2ebe0; }
+.key:active { transform: scale(.95); }
+.key-ok { background: var(--green); color: #fff; border-color: var(--green); }
+.key-sm { font-size: 22px; }
+
+/* --- المخزون: تلقائي/يدوي --- */
+.deduct-toggle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.dt-label { font-weight: 700; font-size: 13.5px; color: var(--muted); }
+.dt-btn {
+  border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px;
+  padding: 10px 16px; font-weight: 800; font-size: 14px; color: var(--ink);
+}
+.dt-btn em { font-style: normal; font-weight: 500; font-size: 12px; color: var(--muted); }
+.dt-btn.on { border-color: var(--brand); background: #f6efe6; }
+.dt-btn.on em { color: var(--brand); }
+
+.mode-tag { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 800; }
+.mode-tag.auto { background: #eaf3ff; color: #2f6fb0; }
+.mode-tag.manual { background: #f3ede4; color: #8a6d4c; }
+.stock-actions-cell { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.btn-manual { background: #fdf0f0; color: var(--danger); border: 1px solid #f3d4d0; padding: 7px 12px; border-radius: 9px; font-weight: 800; font-size: 12.5px; }
+.btn-manual:hover { background: #fbe4e4; }
+
+/* --- استجابة لمس على الشاشات الصغيرة --- */
+@media (max-width: 640px) {
+  .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .key { height: 58px; font-size: 22px; }
+}

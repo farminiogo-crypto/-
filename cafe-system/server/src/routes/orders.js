@@ -124,8 +124,11 @@ router.post('/:id/pay', requireAuth, (req, res) => {
   if (items.length === 0) return res.status(400).json({ error: 'الفاتورة فارغة' });
 
   const shift = currentShift();
+  // يخصم فقط الخامات المضبوطة "خصم تلقائي" (بن/شاي...) — اليدوي (لبن/سكر/نعناع) لا يُخصم آلياً
   const getIngredients = db.prepare(
-    'SELECT inventory_id, qty_per_unit FROM product_ingredients WHERE product_id = ?'
+    `SELECT pi.inventory_id, pi.qty_per_unit
+     FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
+     WHERE pi.product_id = ? AND i.auto_deduct = 1`
   );
   const deduct = db.prepare(
     "UPDATE inventory SET quantity = MAX(0, quantity - ?), updated_at = datetime('now','localtime') WHERE id = ?"

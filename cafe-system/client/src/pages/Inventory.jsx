@@ -4,7 +4,7 @@ import { auth, api } from '../api.js';
 // وحدات القياس المتاحة — الأساسية (جرام/مل/قطعة) هي المستخدمة في الوصفات
 const UNITS = ['جرام', 'مل', 'قطعة', 'كوب', 'فتلة', 'حبة', 'زجاجة', 'باقة', 'علبة'];
 
-const empty = { name: '', unit: 'جرام', quantity: '', min_quantity: '', package_label: '', package_size: '' };
+const empty = { name: '', unit: 'جرام', quantity: '', min_quantity: '', package_label: '', package_size: '', auto_deduct: false };
 
 const LEVELS = {
   low: { label: '🔴 اطلب فوراً', cls: 'chip-low' },
@@ -27,6 +27,8 @@ export default function Inventory() {
   const [editing, setEditing] = useState(null);
   const [restockFor, setRestockFor] = useState(null);
   const [restockQty, setRestockQty] = useState('');
+  const [adjustFor, setAdjustFor] = useState(null); // خصم يدوي للأصناف اليدوية
+  const [adjustQty, setAdjustQty] = useState('');
   const [error, setError] = useState('');
 
   function load() {
@@ -50,6 +52,7 @@ export default function Inventory() {
         min_quantity: Number(form.min_quantity) || 0,
         package_label: form.package_label.trim() || null,
         package_size: Number(form.package_size) || null,
+        auto_deduct: form.auto_deduct ? 1 : 0,
       };
       if (editing) await api.updateInventory(editing, payload);
       else await api.addInventory(payload);
@@ -65,7 +68,7 @@ export default function Inventory() {
     setEditing(it.id);
     setForm({
       name: it.name, unit: it.unit, quantity: it.quantity, min_quantity: it.min_quantity,
-      package_label: it.package_label || '', package_size: it.package_size || '',
+      package_label: it.package_label || '', package_size: it.package_size || '', auto_deduct: !!it.auto,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -92,6 +95,18 @@ export default function Inventory() {
     }
   }
 
+  async function doAdjust(e, sign) {
+    e.preventDefault();
+    try {
+      await api.adjustInventory(adjustFor.id, sign * Math.abs(Number(adjustQty)));
+      setAdjustFor(null);
+      setAdjustQty('');
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   async function remove(it) {
     if (!confirm(`حذف "${it.name}"؟ هيتشال من كل الوصفات المرتبطة بيه.`)) return;
     await api.deleteInventory(it.id);
@@ -103,7 +118,7 @@ export default function Inventory() {
       <header className="page-head row">
         <div>
           <h1>📦 مخزون الكافيه</h1>
-          <p className="muted">المكونات بتتخصم تلقائياً مع كل بيع حسب الوصفات — والنظام ينبهك قبل ما أي صنف يخلص</p>
+          <p className="muted">⚡ التلقائي (بن/شاي) بينقص لوحده مع البيع • ✋ اليدوي (لبن/سكر/نعناع) تخصمه بإيدك</p>
         </div>
         <div className="stock-alerts">
           {lowCount > 0 && <span className="low-alert">🔴 {lowCount} لازم يتطلب فوراً</span>}
@@ -145,6 +160,15 @@ export default function Inventory() {
               <input type="number" min="0" step="any" value={form.package_size} onChange={(e) => setForm({ ...form, package_size: e.target.value })} placeholder="1000" />
             </div>
           </div>
+          <div className="deduct-toggle">
+            <span className="dt-label">طريقة الخصم من المخزون:</span>
+            <button type="button" className={'dt-btn ' + (!form.auto_deduct ? 'on' : '')} onClick={() => setForm({ ...form, auto_deduct: false })}>
+              ✋ يدوي <em>(لبن/سكر/نعناع)</em>
+            </button>
+            <button type="button" className={'dt-btn ' + (form.auto_deduct ? 'on' : '')} onClick={() => setForm({ ...form, auto_deduct: true })}>
+              ⚡ تلقائي <em>(بن/شاي — بالوصفة)</em>
+            </button>
+          </div>
           <div className="form-actions">
             <button className="btn-primary">{editing ? 'حفظ' : 'إضافة'}</button>
             {editing && <button type="button" className="btn-ghost" onClick={() => { setEditing(null); setForm(empty); }}>إلغاء</button>}
@@ -157,41 +181,60 @@ export default function Inventory() {
           <table className="products-table">
             <thead>
               <tr>
-                <th>الصنف</th><th>الرصيد</th><th>يكفي تقريباً لـ</th><th>الحالة</th><th>العبوة</th>{isAdmin && <th>إجراءات</th>}
+                <th>الصنف</th><th>الرصيد</th><th>يكفي تقريباً لـ</th><th>الحالة</th><th>خصم سريع</th>{isAdmin && <th>إجراءات</th>}
               </tr>
             </thead>
             <tbody>
               {items.map((it) => (
                 <tr key={it.id} className={it.level === 'low' ? 'row-low' : it.level === 'warn' ? 'row-warn' : ''}>
-                  <td className="strong">{it.name}</td>
+                  <td className="strong">
+                    {it.name}
+                    <div>
+                      <span className={'mode-tag ' + (it.auto ? 'auto' : 'manual')}>
+                        {it.auto ? '⚡ تلقائي' : '✋ يدوي'}
+                      </span>
+                    </div>
+                  </td>
                   <td>
                     {fmtQty(it.quantity, it.unit)}
                     <div className="muted small">التنبيه عند {fmtQty(it.min_quantity, it.unit)}</div>
                   </td>
                   <td>
-                    {it.usages.length === 0 && <span className="muted">غير مرتبط بوصفة</span>}
-                    {it.usages.slice(0, 3).map((u) => (
-                      <div key={u.product} className="usage-line">
-                        <span className="usage-count">≈{u.servings_left}</span> {u.product}
-                      </div>
-                    ))}
-                    {it.usages.length > 3 && <span className="muted small">+{it.usages.length - 3} مشروبات أخرى</span>}
+                    {it.auto ? (
+                      it.usages.length === 0 ? (
+                        <span className="muted">غير مرتبط بوصفة</span>
+                      ) : (
+                        <>
+                          {it.usages.slice(0, 2).map((u) => (
+                            <div key={u.product} className="usage-line">
+                              <span className="usage-count">≈{u.servings_left}</span> {u.product}
+                            </div>
+                          ))}
+                          {it.usages.length > 2 && <span className="muted small">+{it.usages.length - 2} أخرى</span>}
+                        </>
+                      )
+                    ) : (
+                      <span className="muted small">يُخصم بإيدك</span>
+                    )}
                   </td>
                   <td>
                     <span className={'chip ' + LEVELS[it.level].cls}>{LEVELS[it.level].label}</span>
                   </td>
-                  <td>
+                  <td className="stock-actions-cell">
+                    {!it.auto && (
+                      <button className="btn-manual" onClick={() => { setAdjustFor(it); setAdjustQty(''); }}>
+                        ➖ خصم استخدام
+                      </button>
+                    )}
                     {it.package_size ? (
                       <button className="btn-package" onClick={() => consumePackage(it)}>
-                        🗑️ خلّصت {it.package_label} ({fmtQty(it.package_size, it.unit)})
+                        🗑️ خلّصت {it.package_label}
                       </button>
-                    ) : (
-                      <span className="muted small">—</span>
-                    )}
+                    ) : (!it.auto ? null : <span className="muted small">—</span>)}
                   </td>
                   {isAdmin && (
                     <td className="actions-cell">
-                      <button className="icon-btn" title="توريد كمية" onClick={() => { setRestockFor(it); setRestockQty(''); }}>📥</button>
+                      <button className="icon-btn" title="توريد/إضافة كمية" onClick={() => { setRestockFor(it); setRestockQty(''); }}>📥</button>
                       <button className="icon-btn" title="تعديل" onClick={() => startEdit(it)}>✏️</button>
                       <button className="icon-btn danger" title="حذف" onClick={() => remove(it)}>🗑️</button>
                     </td>
@@ -228,6 +271,22 @@ export default function Inventory() {
           </table>
         </div>
       </div>
+
+      {/* نافذة الخصم اليدوي */}
+      {adjustFor && (
+        <div className="modal-overlay" onClick={() => setAdjustFor(null)}>
+          <form className="mini-modal" onClick={(e) => e.stopPropagation()} onSubmit={(e) => doAdjust(e, -1)}>
+            <h3>➖ خصم استخدام: {adjustFor.name}</h3>
+            <label>الكمية اللي اتستخدمت ({adjustFor.unit})</label>
+            <input type="number" min="0.1" step="any" value={adjustQty} onChange={(e) => setAdjustQty(e.target.value)} autoFocus required />
+            <div className="form-actions">
+              <button className="btn-primary">خصم من الرصيد</button>
+              <button type="button" className="btn-ghost" onClick={(e) => doAdjust(e, 1)}>➕ إضافة بدل الخصم</button>
+              <button type="button" className="btn-ghost" onClick={() => setAdjustFor(null)}>إلغاء</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* نافذة التوريد */}
       {restockFor && (

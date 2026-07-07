@@ -150,13 +150,8 @@ export default function POS() {
           <div className="product-grid">
             {shown.map((p) => (
               <button key={p.id} className="product-card" onClick={() => addItem(p)}>
-                {p.emoji ? (
-                  <span className="product-emoji">{p.emoji}</span>
-                ) : (
-                  <span className="product-initial">{p.name.trim()[0]}</span>
-                )}
                 <span className="product-name">{p.name}</span>
-                <span className="product-price">{fmt(p.price)} ج</span>
+                <span className="product-price">{fmt(p.price)} <em>ج</em></span>
               </button>
             ))}
           </div>

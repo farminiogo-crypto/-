@@ -12,6 +12,7 @@ import Inventory from './pages/Inventory.jsx';
 import TablesManager from './pages/TablesManager.jsx';
 import Invoices from './pages/Invoices.jsx';
 import Layout from './components/Layout.jsx';
+import ManagerGate from './components/ManagerGate.jsx';
 import './styles.css';
 
 function Protected({ children, adminOnly }) {
@@ -35,8 +36,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/pos" element={<POS />} />
           <Route path="/shift" element={<ShiftPage />} />
           <Route path="/expenses" element={<Expenses />} />
-          <Route path="/dashboard" element={<Protected adminOnly><Dashboard /></Protected>} />
-          <Route path="/invoices" element={<Protected adminOnly><Invoices /></Protected>} />
+          <Route path="/dashboard" element={<Protected adminOnly><ManagerGate title="التقارير والحسابات"><Dashboard /></ManagerGate></Protected>} />
+          <Route path="/invoices" element={<Protected adminOnly><ManagerGate title="سجل الفواتير"><Invoices /></ManagerGate></Protected>} />
           <Route path="/menu" element={<Protected adminOnly><MenuManager /></Protected>} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/tables-admin" element={<Protected adminOnly><TablesManager /></Protected>} />

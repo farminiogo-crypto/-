@@ -14,6 +14,7 @@ import tableRoutes from './routes/tables.js';
 import shiftRoutes from './routes/shifts.js';
 import expenseRoutes from './routes/expenses.js';
 import inventoryRoutes from './routes/inventory.js';
+import settingsRoutes from './routes/settings.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/shifts', shiftRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/reports', reportRoutes);
 
 // خدمة واجهة الإنتاج (بعد بناء الـ client) لو موجودة

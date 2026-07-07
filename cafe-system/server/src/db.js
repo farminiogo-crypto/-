@@ -92,7 +92,14 @@ export const SCHEMA = `
     min_quantity  REAL NOT NULL DEFAULT 0,
     package_label TEXT,                    -- اسم العبوة: كيس / كرتونة / علبة
     package_size  REAL,                    -- حجم العبوة بالوحدة الأساسية (كيس سكر = 1000 جرام)
+    auto_deduct   INTEGER NOT NULL DEFAULT 0, -- 1 = ينقص تلقائياً مع البيع (بن/شاي)، 0 = يدوي (لبن/سكر/نعناع)
     updated_at    TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+  );
+
+  -- إعدادات عامة (باسورد المدير...)
+  CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT
   );
 
   -- وصفات المنتجات: كل منتج ومكوناته وكمية كل مكون للوحدة الواحدة
@@ -134,6 +141,13 @@ export function initSchema() {
   if (!orderCols.includes('customer_name')) {
     db.exec('ALTER TABLE orders ADD COLUMN customer_name TEXT');
   }
+  const invCols = db.prepare('PRAGMA table_info(inventory)').all().map((c) => c.name);
+  if (!invCols.includes('auto_deduct')) {
+    db.exec('ALTER TABLE inventory ADD COLUMN auto_deduct INTEGER NOT NULL DEFAULT 0');
+  }
+  // باسورد مدير افتراضي أول مرة
+  const pin = db.prepare("SELECT value FROM settings WHERE key = 'manager_pin'").get();
+  if (!pin) db.prepare("INSERT INTO settings (key, value) VALUES ('manager_pin', '1234')").run();
 }
 
 initSchema();

@@ -85,6 +85,14 @@ const insertInv = db.prepare(
 const inv = {};
 for (const d of inventoryDefs) inv[d[0]] = insertInv.run(...d).lastInsertRowid;
 
+// ===== نوع الخصم: تلقائي vs يدوي =====
+// تلقائي: الخامات الأساسية (بن/شاي/أعشاب/فواكه/معبأة) — بتنقص لوحدها مع كل بيع حسب الوصفة
+// يدوي: اللبن/السكر/النعناع/الفانيليا/الأكواب — تتضاف وتتنقص بإيد الكاشير (والكبايات القزاز مالهاش خصم)
+db.prepare('UPDATE inventory SET auto_deduct = 1').run();
+const manualItems = ['سكر', 'حليب', 'نعناع', 'فانيليا بودر', 'أكواب ورقية (ساخن)', 'أكواب بلاستيك (بارد)'];
+const setManual = db.prepare('UPDATE inventory SET auto_deduct = 0 WHERE name = ?');
+manualItems.forEach((n) => setManual.run(n));
+
 // ===== الأقسام =====
 const insertCat = db.prepare('INSERT INTO categories (name, sort) VALUES (?, ?)');
 const cats = {

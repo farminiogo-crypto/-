@@ -104,8 +104,14 @@ export const api = {
   updateInventory: (id, item) => request('/inventory/' + id, { method: 'PUT', body: item }),
   restockInventory: (id, qty) =>
     request(`/inventory/${id}/restock`, { method: 'POST', body: { qty } }),
+  adjustInventory: (id, delta) =>
+    request(`/inventory/${id}/adjust`, { method: 'POST', body: { delta } }),
   consumePackage: (id) => request(`/inventory/${id}/consume-package`, { method: 'POST' }),
   deleteInventory: (id) => request('/inventory/' + id, { method: 'DELETE' }),
+
+  // إعدادات + باسورد المدير
+  verifyPin: (pin) => request('/settings/verify-pin', { method: 'POST', body: { pin } }),
+  changePin: (current, next) => request('/settings/change-pin', { method: 'POST', body: { current, next } }),
 
   // التقارير
   summary: () => request('/reports/summary'),
