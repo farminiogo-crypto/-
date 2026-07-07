@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
+import ExpenseReceipt from '../components/ExpenseReceipt.jsx';
 
 export default function Expenses() {
   const [shift, setShift] = useState(undefined);
@@ -8,6 +9,7 @@ export default function Expenses() {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
+  const [printing, setPrinting] = useState(null); // مصروف/ملخص للطباعة
 
   const fmt = (n) => Number(n || 0).toFixed(2);
   const total = items.reduce((s, e) => s + e.amount, 0);
@@ -71,6 +73,11 @@ export default function Expenses() {
             <h3>مصروفات الشيفت</h3>
             <span className="exp-total">{fmt(total)} ج</span>
           </div>
+          {items.length > 0 && (
+            <button className="btn-ghost print-all-exp" onClick={() => setPrinting({ items, total })}>
+              🖨️ طباعة كل المصروفات
+            </button>
+          )}
           <div className="exp-list">
             {items.length === 0 && <p className="muted center">لا توجد مصروفات بعد</p>}
             {items.map((e) => (
@@ -81,6 +88,7 @@ export default function Expenses() {
                 </div>
                 <div className="exp-right">
                   <span className="exp-amount">−{fmt(e.amount)} ج</span>
+                  <button className="icon-btn" title="طباعة إيصال" onClick={() => setPrinting(e)}>🖨️</button>
                   <button className="icon-btn danger" onClick={() => remove(e.id)}>🗑️</button>
                 </div>
               </div>
@@ -88,6 +96,8 @@ export default function Expenses() {
           </div>
         </div>
       </div>
+
+      {printing && <ExpenseReceipt expense={printing} onClose={() => setPrinting(null)} />}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // كابانا — غلاف تطبيق الديسك توب (Electron)
 // يشغّل خادم النظام داخلياً ثم يفتح الواجهة فُل سكرين — مهيّأ لشاشة التاتش
-const { app, BrowserWindow, globalShortcut } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
@@ -45,7 +45,11 @@ function createWindow() {
     fullscreen: true,
     autoHideMenuBar: true,
     backgroundColor: '#f4f1ea',
-    webPreferences: { contextIsolation: true, spellcheck: false },
+    webPreferences: {
+      contextIsolation: true,
+      spellcheck: false,
+      preload: path.join(__dirname, 'preload.cjs'),
+    },
   });
   win.loadURL(`http://localhost:${PORT}`);
 
@@ -54,6 +58,26 @@ function createWindow() {
   globalShortcut.register('CommandOrControl+Shift+Q', () => app.quit()); // خروج آمن
   globalShortcut.register('CommandOrControl+R', () => win.reload());
 }
+
+// ===== الطباعة الصامتة على ماكينة الفواتير =====
+// تطبع الصفحة الحالية على الطابعة الافتراضية مباشرة (بدون نافذة حوار).
+// الإيصال وحده هو الظاهر بفضل @media print، فتطبع ماكينة الفواتير الإيصال فقط.
+ipcMain.handle('print-silent', (e) => {
+  return new Promise((resolve) => {
+    e.sender.print(
+      { silent: true, printBackground: true, margins: { marginType: 'none' } },
+      (success, reason) => resolve({ success, reason })
+    );
+  });
+});
+
+ipcMain.handle('list-printers', async (e) => {
+  try {
+    return await e.sender.getPrintersAsync();
+  } catch {
+    return [];
+  }
+});
 
 app.whenReady().then(() => {
   startServer();

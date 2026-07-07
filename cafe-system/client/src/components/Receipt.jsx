@@ -1,4 +1,6 @@
 // إيصال بمقاس طابعة حرارية 80مم — قابل للطباعة مباشرة
+import { printReceipt } from '../print.js';
+
 export default function Receipt({ order, onClose }) {
   const fmt = (n) => Number(n || 0).toFixed(2);
 
@@ -46,7 +48,7 @@ export default function Receipt({ order, onClose }) {
         </div>
 
         <div className="receipt-actions">
-          <button className="btn-primary" onClick={() => window.print()}>🖨️ طباعة الإيصال</button>
+          <button className="btn-primary" onClick={printReceipt}>🖨️ طباعة الإيصال</button>
           <button className="btn-ghost" onClick={onClose}>إغلاق</button>
         </div>
       </div>

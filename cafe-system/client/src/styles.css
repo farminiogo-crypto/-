@@ -693,3 +693,7 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
   .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .key { height: 58px; font-size: 22px; }
 }
+
+/* زر طباعة كل المصروفات */
+.print-all-exp { margin-bottom: 12px; padding: 10px; font-size: 14px; }
+.exp-right { display: flex; align-items: center; gap: 8px; }
