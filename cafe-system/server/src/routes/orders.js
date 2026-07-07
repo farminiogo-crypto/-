@@ -125,11 +125,17 @@ router.post('/:id/pay', requireAuth, (req, res) => {
 
   const shift = currentShift();
   // يخصم فقط الخامات المضبوطة "خصم تلقائي" (بن/شاي...) — اليدوي (لبن/سكر/نعناع) لا يُخصم آلياً
+  // للأصناف اللي ليها إنتاجية (العبوة تعمل كام كوباية): qty_per_unit = عدد الكوبايات،
+  // والاستهلاك الفعلي = كوبايات × (حجم العبوة ÷ كوبايات العبوة)
   const getIngredients = db.prepare(
-    `SELECT pi.inventory_id, pi.qty_per_unit
+    `SELECT pi.inventory_id, pi.qty_per_unit, i.package_size, i.cups_per_package
      FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
      WHERE pi.product_id = ? AND i.auto_deduct = 1`
   );
+  const perUnitAmount = (ing) =>
+    ing.cups_per_package && ing.package_size
+      ? ing.qty_per_unit * (ing.package_size / ing.cups_per_package)
+      : ing.qty_per_unit;
   const deduct = db.prepare(
     "UPDATE inventory SET quantity = MAX(0, quantity - ?), updated_at = datetime('now','localtime') WHERE id = ?"
   );
@@ -148,7 +154,7 @@ router.post('/:id/pay', requireAuth, (req, res) => {
     for (const it of items) {
       if (!it.product_id) continue;
       for (const ing of getIngredients.all(it.product_id)) {
-        const used = ing.qty_per_unit * it.qty;
+        const used = perUnitAmount(ing) * it.qty;
         deduct.run(used, ing.inventory_id);
         logMove.run(ing.inventory_id, -used, `بيع: ${it.name} ×${it.qty}`, order.id, req.user.name);
       }

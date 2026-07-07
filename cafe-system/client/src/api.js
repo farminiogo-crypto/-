@@ -102,8 +102,8 @@ export const api = {
   inventoryMoves: (limit = 50) => request('/inventory/moves?limit=' + limit),
   addInventory: (item) => request('/inventory', { method: 'POST', body: item }),
   updateInventory: (id, item) => request('/inventory/' + id, { method: 'PUT', body: item }),
-  restockInventory: (id, qty) =>
-    request(`/inventory/${id}/restock`, { method: 'POST', body: { qty } }),
+  restockInventory: (id, qty, packages = null) =>
+    request(`/inventory/${id}/restock`, { method: 'POST', body: packages ? { packages } : { qty } }),
   adjustInventory: (id, delta) =>
     request(`/inventory/${id}/adjust`, { method: 'POST', body: { delta } }),
   consumePackage: (id) => request(`/inventory/${id}/consume-package`, { method: 'POST' }),

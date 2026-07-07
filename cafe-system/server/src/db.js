@@ -91,8 +91,9 @@ export const SCHEMA = `
     quantity      REAL NOT NULL DEFAULT 0,
     min_quantity  REAL NOT NULL DEFAULT 0,
     package_label TEXT,                    -- اسم العبوة: كيس / كرتونة / علبة
-    package_size  REAL,                    -- حجم العبوة بالوحدة الأساسية (كيس سكر = 1000 جرام)
+    package_size  REAL,                    -- حجم العبوة بالوحدة الأساسية (كيس بن ربع كيلو = 250 جرام)
     auto_deduct   INTEGER NOT NULL DEFAULT 0, -- 1 = ينقص تلقائياً مع البيع (بن/شاي)، 0 = يدوي (لبن/سكر/نعناع)
+    cups_per_package REAL,                 -- العبوة تعمل كام كوباية (كيس ربع كيلو = 80 كوباية) → استهلاك الكوباية = package_size / cups_per_package
     updated_at    TEXT NOT NULL DEFAULT (datetime('now','localtime'))
   );
 
@@ -144,6 +145,9 @@ export function initSchema() {
   const invCols = db.prepare('PRAGMA table_info(inventory)').all().map((c) => c.name);
   if (!invCols.includes('auto_deduct')) {
     db.exec('ALTER TABLE inventory ADD COLUMN auto_deduct INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!invCols.includes('cups_per_package')) {
+    db.exec('ALTER TABLE inventory ADD COLUMN cups_per_package REAL');
   }
   // باسورد مدير افتراضي أول مرة
   const pin = db.prepare("SELECT value FROM settings WHERE key = 'manager_pin'").get();

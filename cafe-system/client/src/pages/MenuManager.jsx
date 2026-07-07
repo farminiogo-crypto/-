@@ -232,10 +232,14 @@ export default function MenuManager() {
         <div className="modal-overlay" onClick={() => setRecipeFor(null)}>
           <form className="recipe-modal" onClick={(e) => e.stopPropagation()} onSubmit={saveRecipe}>
             <h3>🧪 وصفة: {recipeFor.emoji} {recipeFor.name}</h3>
-            <p className="muted small">الكميات دي بتتخصم من المخزون تلقائياً مع كل كوباية تتباع.</p>
+            <p className="muted small">
+              المكونات اللي ليها إنتاجية (بن/شاي): اكتب <b>عدد الكوبايات</b> (1 عادي، 2 دبل).
+              الباقي بالكمية المباشرة. اليدوي (لبن/سكر) للتوثيق فقط ولا يُخصم آلياً.
+            </p>
 
             {recipe.map((row, idx) => {
               const inv = invItem(row.inventory_id);
+              const isYield = inv && inv.cups_per_package;
               return (
                 <div key={idx} className="recipe-row">
                   <select
@@ -245,17 +249,19 @@ export default function MenuManager() {
                   >
                     <option value="">اختر مكوّن...</option>
                     {inventory.map((i) => (
-                      <option key={i.id} value={i.id}>{i.name} ({i.unit})</option>
+                      <option key={i.id} value={i.id}>
+                        {i.name} ({i.cups_per_package ? 'بالكوباية' : i.unit}){i.auto ? '' : ' — يدوي'}
+                      </option>
                     ))}
                   </select>
                   <input
                     type="number" min="0.01" step="any"
                     value={row.qty_per_unit}
                     onChange={(e) => setRecipeRow(idx, { qty_per_unit: e.target.value })}
-                    placeholder="الكمية"
+                    placeholder={isYield ? '1' : 'الكمية'}
                     required
                   />
-                  <span className="recipe-unit">{inv?.unit || ''}</span>
+                  <span className="recipe-unit">{isYield ? 'كوباية' : (inv?.unit || '')}</span>
                   <button type="button" className="icon-btn danger" onClick={() => setRecipe((r) => r.filter((_, i) => i !== idx))}>✖</button>
                 </div>
               );

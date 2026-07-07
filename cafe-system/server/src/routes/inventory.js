@@ -28,15 +28,21 @@ router.get('/', requireAuth, (req, res) => {
   );
   const withLevel = rows.map((r) => {
     const auto = !!r.auto_deduct;
-    // التقدير "يكفي كام كوباية" يظهر فقط للأصناف التلقائية (بن/شاي)
+    // استهلاك الكوباية الواحدة: للأصناف بإنتاجية = حجم العبوة ÷ كوبايات العبوة
+    const perCup = r.cups_per_package && r.package_size ? r.package_size / r.cups_per_package : null;
+    const cups_left = perCup ? Math.floor(r.quantity / perCup) : null;
+    const packages_left = r.package_size ? +(r.quantity / r.package_size).toFixed(1) : null;
+    // التقدير لكل مشروب (يهم لو فيه دبل بياخد كوبايتين)
     const usages = auto
-      ? usageStmt.all(r.id).map((u) => ({
-          product: u.product_name,
-          per_unit: u.qty_per_unit,
-          servings_left: Math.floor(r.quantity / u.qty_per_unit),
-        }))
+      ? usageStmt.all(r.id).map((u) => {
+          const per = perCup ? u.qty_per_unit * perCup : u.qty_per_unit;
+          return { product: u.product_name, per_unit: per, servings_left: Math.floor(r.quantity / per) };
+        })
       : [];
-    return { ...r, auto, level: stockLevel(r), low: r.quantity <= r.min_quantity, usages };
+    return {
+      ...r, auto, per_cup: perCup, cups_left, packages_left,
+      level: stockLevel(r), low: r.quantity <= r.min_quantity, usages,
+    };
   });
   const rank = { low: 0, warn: 1, ok: 2 };
   withLevel.sort((a, b) => rank[a.level] - rank[b.level] || a.name.localeCompare(b.name, 'ar'));
@@ -58,13 +64,13 @@ router.get('/moves', requireAuth, (req, res) => {
 
 // إضافة صنف مخزون (مدير)
 router.post('/', requireAuth, requireAdmin, (req, res) => {
-  const { name, unit = 'وحدة', quantity = 0, min_quantity = 0, package_label, package_size, auto_deduct = 0 } = req.body || {};
+  const { name, unit = 'وحدة', quantity = 0, min_quantity = 0, package_label, package_size, auto_deduct = 0, cups_per_package } = req.body || {};
   if (!name?.trim()) return res.status(400).json({ error: 'اسم الصنف مطلوب' });
   const info = db
     .prepare(
-      'INSERT INTO inventory (name, unit, quantity, min_quantity, package_label, package_size, auto_deduct) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO inventory (name, unit, quantity, min_quantity, package_label, package_size, auto_deduct, cups_per_package) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     )
-    .run(name.trim(), unit, Number(quantity) || 0, Number(min_quantity) || 0, package_label || null, Number(package_size) || null, auto_deduct ? 1 : 0);
+    .run(name.trim(), unit, Number(quantity) || 0, Number(min_quantity) || 0, package_label || null, Number(package_size) || null, auto_deduct ? 1 : 0, Number(cups_per_package) || null);
   if (Number(quantity) > 0) logMove(info.lastInsertRowid, Number(quantity), 'رصيد افتتاحي', req.user.name);
   res.status(201).json(db.prepare('SELECT * FROM inventory WHERE id = ?').get(info.lastInsertRowid));
 });
@@ -74,12 +80,12 @@ router.put('/:id', requireAuth, requireAdmin, (req, res) => {
   const item = db.prepare('SELECT * FROM inventory WHERE id = ?').get(req.params.id);
   if (!item) return res.status(404).json({ error: 'الصنف غير موجود' });
 
-  const { name, unit, quantity, min_quantity, package_label, package_size, auto_deduct } = req.body || {};
+  const { name, unit, quantity, min_quantity, package_label, package_size, auto_deduct, cups_per_package } = req.body || {};
   const newQty = quantity != null ? Number(quantity) : item.quantity;
   if (newQty !== item.quantity) logMove(item.id, newQty - item.quantity, 'تسوية جرد', req.user.name);
 
   db.prepare(
-    `UPDATE inventory SET name = ?, unit = ?, quantity = ?, min_quantity = ?, package_label = ?, package_size = ?, auto_deduct = ?,
+    `UPDATE inventory SET name = ?, unit = ?, quantity = ?, min_quantity = ?, package_label = ?, package_size = ?, auto_deduct = ?, cups_per_package = ?,
      updated_at = datetime('now','localtime') WHERE id = ?`
   ).run(
     name ?? item.name,
@@ -89,22 +95,29 @@ router.put('/:id', requireAuth, requireAdmin, (req, res) => {
     package_label !== undefined ? package_label || null : item.package_label,
     package_size !== undefined ? Number(package_size) || null : item.package_size,
     auto_deduct != null ? (auto_deduct ? 1 : 0) : item.auto_deduct,
+    cups_per_package !== undefined ? Number(cups_per_package) || null : item.cups_per_package,
     req.params.id
   );
   res.json(db.prepare('SELECT * FROM inventory WHERE id = ?').get(req.params.id));
 });
 
 // إضافة كمية (شراء/توريد) — مدير
+// packages = عدد العبوات الجاية (جالك 3 أكياس) أو qty = كمية مباشرة بالوحدة
 router.post('/:id/restock', requireAuth, requireAdmin, (req, res) => {
   const item = db.prepare('SELECT * FROM inventory WHERE id = ?').get(req.params.id);
   if (!item) return res.status(404).json({ error: 'الصنف غير موجود' });
-  const qty = Number(req.body?.qty);
+
+  const packages = Number(req.body?.packages);
+  const qty = packages > 0 && item.package_size ? packages * item.package_size : Number(req.body?.qty);
   if (!(qty > 0)) return res.status(400).json({ error: 'أدخل كمية صحيحة' });
 
   db.prepare(
     "UPDATE inventory SET quantity = quantity + ?, updated_at = datetime('now','localtime') WHERE id = ?"
   ).run(qty, req.params.id);
-  logMove(item.id, qty, 'شراء/توريد', req.user.name);
+  const reason = packages > 0 && item.package_size
+    ? `توريد ${packages} ${item.package_label || 'عبوة'}`
+    : 'شراء/توريد';
+  logMove(item.id, qty, reason, req.user.name);
   res.json(db.prepare('SELECT * FROM inventory WHERE id = ?').get(req.params.id));
 });
 
