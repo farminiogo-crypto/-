@@ -190,6 +190,38 @@ router.post('/:id/cancel', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// إلغاء/استرجاع فاتورة مدفوعة (اتدفعت بالغلط) — يرجّع المخزون المخصوم ويعلّمها "ملغاة"
+// محمي فعلياً ببوابة المدير في صفحة الفواتير. الفاتورة لا تُحذف — تفضل بسجل للتوثيق.
+router.post('/:id/void', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
+  if (order.status !== 'paid') return res.status(400).json({ error: 'الإلغاء متاح للفواتير المدفوعة فقط' });
+
+  // الحركات اللي اتخصمت وقت الدفع (delta سالب) — نرجّعها للمخزون زي ما كانت
+  const soldMoves = db
+    .prepare('SELECT inventory_id, delta FROM inventory_moves WHERE ref_order_id = ? AND delta < 0')
+    .all(order.id);
+
+  // quantity - delta(سالب) = quantity + الكمية المخصومة → استرجاع
+  const restore = db.prepare(
+    "UPDATE inventory SET quantity = quantity - ?, updated_at = datetime('now','localtime') WHERE id = ?"
+  );
+  const logMove = db.prepare(
+    'INSERT INTO inventory_moves (inventory_id, delta, reason, ref_order_id, user_name) VALUES (?, ?, ?, ?, ?)'
+  );
+
+  const tx = db.transaction(() => {
+    for (const m of soldMoves) {
+      restore.run(m.delta, m.inventory_id);
+      logMove.run(m.inventory_id, -m.delta, `إلغاء فاتورة: ${order.order_no}`, order.id, req.user.name);
+    }
+    db.prepare("UPDATE orders SET status = 'voided' WHERE id = ?").run(order.id);
+  });
+  tx();
+
+  res.json({ ok: true, restored: soldMoves.length });
+});
+
 // سجل الفواتير المدفوعة — مع فلتر تاريخ وبحث
 router.get('/', requireAuth, (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 100, 500);

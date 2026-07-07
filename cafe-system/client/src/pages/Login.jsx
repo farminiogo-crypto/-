@@ -29,6 +29,9 @@ export default function Login() {
     setPassword(p);
   }
 
+  // مستخدم واحد (المدير) — لو حبيت ترجّع حساب الكاشير غيّر لـ true
+  const MULTI_USER = false;
+
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={submit}>
@@ -50,11 +53,13 @@ export default function Login() {
 
         <div className="login-hints">
           <button type="button" onClick={() => quickFill('admin', 'admin123')}>
-            👑 مدير
+            👑 دخول
           </button>
-          <button type="button" onClick={() => quickFill('cashier', 'cashier123')}>
-            🧑‍💼 كاشير
-          </button>
+          {MULTI_USER && (
+            <button type="button" onClick={() => quickFill('cashier', 'cashier123')}>
+              🧑‍💼 كاشير
+            </button>
+          )}
         </div>
       </form>
     </div>

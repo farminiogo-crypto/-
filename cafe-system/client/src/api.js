@@ -72,6 +72,7 @@ export const api = {
   removeItem: (id, itemId) => request(`/orders/${id}/items/${itemId}`, { method: 'DELETE' }),
   payOrder: (id) => request(`/orders/${id}/pay`, { method: 'POST' }),
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }),
+  voidOrder: (id) => request(`/orders/${id}/void`, { method: 'POST' }),
   setCustomer: (id, customer_name) =>
     request(`/orders/${id}`, { method: 'PATCH', body: { customer_name } }),
   // سجل الفواتير المدفوعة: { rows, count, total } مع فلاتر اختيارية

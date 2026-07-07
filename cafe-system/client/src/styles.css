@@ -740,3 +740,46 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 }
 .danger-panel { border: 1.5px solid #f0cfcb; }
 .danger-panel .btn-danger-solid { margin-top: 10px; }
+
+/* ===== لوحة الأرقام باللمس (NumPad) ===== */
+.numpad-field {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: var(--surface); font-size: 20px; font-weight: 800; color: var(--ink);
+  cursor: pointer; min-height: 50px;
+}
+.numpad-field:hover { border-color: var(--accent); }
+.numpad-field.placeholder { color: var(--muted); font-weight: 600; }
+.numpad-field .numpad-unit { color: var(--muted); font-size: 14px; font-style: normal; font-weight: 600; }
+
+.numpad-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  display: grid; place-items: center; z-index: 100; padding: 16px;
+}
+.numpad {
+  background: var(--surface); border-radius: 18px; padding: 18px;
+  width: 320px; max-width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+.numpad-display {
+  text-align: center; font-size: 32px; font-weight: 900; color: var(--brand);
+  background: #f4efe8; border-radius: 12px; padding: 14px; margin-bottom: 14px;
+  direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.numpad-display span { font-size: 18px; color: var(--muted); }
+.numpad-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.np-key {
+  padding: 18px 0; border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--surface); font-size: 24px; font-weight: 800; color: var(--ink);
+  cursor: pointer; transition: .1s;
+}
+.np-key:hover { border-color: var(--accent); }
+.np-key:active { background: #f4efe8; transform: scale(.96); }
+.np-back { color: var(--danger); }
+.np-blank { visibility: hidden; }
+.numpad-actions { display: flex; gap: 10px; margin-top: 14px; }
+.np-clear, .np-done {
+  flex: 1; padding: 14px 0; border-radius: 12px; font-size: 17px; font-weight: 800; cursor: pointer;
+}
+.np-clear { background: transparent; border: 1.5px solid var(--line); color: var(--muted); }
+.np-done { background: var(--brand); border: none; color: #fff; }
+.np-done:hover { background: var(--brand-dark); }

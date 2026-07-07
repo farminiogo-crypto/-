@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import ExpenseReceipt from '../components/ExpenseReceipt.jsx';
+import NumPad from '../components/NumPad.jsx';
 
 export default function Expenses() {
   const [shift, setShift] = useState(undefined);
@@ -64,8 +65,8 @@ export default function Expenses() {
           <label>البيان</label>
           <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="مثال: شراء حليب" required />
           <label>المبلغ (ج)</label>
-          <input type="number" min="0.5" step="0.5" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" required />
-          <button className="btn-primary">تسجيل المصروف</button>
+          <NumPad value={amount} onChange={setAmount} />
+          <button className="btn-primary" disabled={!(Number(amount) > 0) || !description.trim()}>تسجيل المصروف</button>
         </form>
 
         <div className="panel">

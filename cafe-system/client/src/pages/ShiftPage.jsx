@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { auth, api } from '../api.js';
+import NumPad from '../components/NumPad.jsx';
 
 export default function ShiftPage() {
   const isAdmin = auth.user?.role === 'admin';
@@ -108,7 +109,7 @@ export default function ShiftPage() {
           <form className="panel" onSubmit={closeShift}>
             <h3>🔒 قفل الشيفت</h3>
             <label>النقدية المعدودة في الدرج</label>
-            <input type="number" min="0" step="0.5" value={closingCash} onChange={(e) => setClosingCash(e.target.value)} placeholder="0" required />
+            <NumPad value={closingCash} onChange={setClosingCash} />
             <label>ملاحظات (اختياري)</label>
             <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات على الشيفت" />
             <button className="btn-danger-solid">قفل الشيفت وتسليم الدرج</button>
@@ -122,7 +123,7 @@ export default function ShiftPage() {
           <label>اسم الكاشير المسؤول عن الشيفت *</label>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="اكتب اسمك" required />
           <label>رصيد بداية الدرج (كاش)</label>
-          <input type="number" min="0" step="0.5" value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} placeholder="0" required />
+          <NumPad value={openingCash} onChange={setOpeningCash} />
           <button className="btn-primary">فتح الشيفت</button>
         </form>
       )}

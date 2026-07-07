@@ -11,6 +11,7 @@ export default function Invoices() {
   const [selected, setSelected] = useState(null); // الفاتورة المعروضة بالتفاصيل
   const [reprint, setReprint] = useState(null);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
 
   const fmt = (n) => Number(n || 0).toFixed(2);
 
@@ -38,6 +39,21 @@ export default function Invoices() {
     }
   }
 
+  // إلغاء فاتورة اتدفعت بالغلط — يرجّع المخزون المخصوم ويشيلها من الحسابات
+  async function voidOrder(o) {
+    if (!confirm(`إلغاء الفاتورة ${o.order_no} نهائياً؟\nهيترجع المخزون المخصوم وتتشال من مبيعات الشيفت.`)) return;
+    setError('');
+    setInfo('');
+    try {
+      const r = await api.voidOrder(o.id);
+      setSelected(null);
+      setInfo(`تم إلغاء الفاتورة ${o.order_no} واسترجاع ${r.restored} مكوّن للمخزون.`);
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="invoices-page">
       <header className="page-head">
@@ -45,6 +61,7 @@ export default function Invoices() {
         <p className="muted">راجع أي فاتورة، شوف تفاصيلها، أو اطبعها تاني</p>
       </header>
       {error && <div className="alert-error">{error}</div>}
+      {info && <div className="alert-ok">{info} <button className="dismiss" onClick={() => setInfo('')}>✖</button></div>}
 
       {/* الفلاتر */}
       <form className="filters-bar panel" onSubmit={search}>
@@ -132,6 +149,9 @@ export default function Invoices() {
             <div className="dialog-actions">
               <button className="btn-primary" onClick={() => { setReprint(selected); setSelected(null); }}>
                 🖨️ إعادة طباعة
+              </button>
+              <button className="btn-danger-solid" onClick={() => voidOrder(selected)}>
+                ↩️ إلغاء الفاتورة
               </button>
               <button className="btn-ghost" onClick={() => setSelected(null)}>إغلاق</button>
             </div>
