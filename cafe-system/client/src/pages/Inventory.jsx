@@ -42,6 +42,7 @@ export default function Inventory() {
   const [restockQty, setRestockQty] = useState('');
   const [adjustFor, setAdjustFor] = useState(null);
   const [adjustQty, setAdjustQty] = useState('');
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
   function load() {
@@ -53,6 +54,8 @@ export default function Inventory() {
 
   const lowCount = items.filter((i) => i.level === 'low').length;
   const warnCount = items.filter((i) => i.level === 'warn').length;
+  const q = search.trim();
+  const shownItems = q ? items.filter((i) => i.name.includes(q)) : items;
 
   // معاينة حية أثناء الإدخال: 5 أكياس × 250جم ÷ 80 كوباية
   const previewCups =
@@ -282,6 +285,11 @@ export default function Inventory() {
       )}
 
       <div className="panel">
+        <div className="search-bar">
+          <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 دوّر على صنف بالاسم..." />
+          {search && <button className="search-clear" onClick={() => setSearch('')}>✖</button>}
+          <span className="search-count">{shownItems.length} صنف</span>
+        </div>
         <div className="table-scroll">
           <table className="products-table">
             <thead>
@@ -290,7 +298,8 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody>
-              {items.map((it) => (
+              {shownItems.length === 0 && <tr><td colSpan="6" className="muted center">مفيش صنف بالاسم ده</td></tr>}
+              {shownItems.map((it) => (
                 <tr key={it.id} className={it.level === 'low' ? 'row-low' : it.level === 'warn' ? 'row-warn' : ''}>
                   <td className="strong">
                     {it.name}

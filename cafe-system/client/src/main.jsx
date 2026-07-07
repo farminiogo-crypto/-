@@ -11,6 +11,7 @@ import Expenses from './pages/Expenses.jsx';
 import Inventory from './pages/Inventory.jsx';
 import TablesManager from './pages/TablesManager.jsx';
 import Invoices from './pages/Invoices.jsx';
+import Settings from './pages/Settings.jsx';
 import Layout from './components/Layout.jsx';
 import ManagerGate from './components/ManagerGate.jsx';
 import './styles.css';
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/menu" element={<Protected adminOnly><MenuManager /></Protected>} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/tables-admin" element={<Protected adminOnly><TablesManager /></Protected>} />
+          <Route path="/settings" element={<Protected adminOnly><ManagerGate title="الإعدادات"><Settings /></ManagerGate></Protected>} />
         </Route>
         <Route path="*" element={<Navigate to="/pos" replace />} />
       </Routes>

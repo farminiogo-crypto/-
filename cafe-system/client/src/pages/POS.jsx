@@ -19,6 +19,7 @@ export default function POS() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [activeCat, setActiveCat] = useState('all');
+  const [prodSearch, setProdSearch] = useState('');
   const [order, setOrder] = useState(null); // الفاتورة المفتوحة حالياً
   const [receipt, setReceipt] = useState(null);
   const [lowStock, setLowStock] = useState([]);
@@ -49,10 +50,12 @@ export default function POS() {
       .catch((e) => setError(e.message));
   }, []);
 
-  const shown = useMemo(
-    () => (activeCat === 'all' ? products : products.filter((p) => p.category_id === activeCat)),
-    [products, activeCat]
-  );
+  const shown = useMemo(() => {
+    const q = prodSearch.trim();
+    let list = q ? products : (activeCat === 'all' ? products : products.filter((p) => p.category_id === activeCat));
+    if (q) list = list.filter((p) => p.name.includes(q));
+    return list;
+  }, [products, activeCat, prodSearch]);
 
   // الضغط على أي ترابيزة يفتح فاتورتها مباشرة — اسم الزبون يتضاف في أي وقت بعدين
   function clickTable(t) {
@@ -137,12 +140,13 @@ export default function POS() {
         <section className="pos-menu">
           <header className="pos-head">
             <button className="btn-back" onClick={back}>→ رجوع للترابيزات</button>
+            <input className="pos-search" value={prodSearch} onChange={(e) => setProdSearch(e.target.value)} placeholder="🔍 دوّر على مشروب..." />
             {error && <span className="alert-error inline">{error}</span>}
           </header>
           <div className="cat-tabs">
-            <button className={activeCat === 'all' ? 'active' : ''} onClick={() => setActiveCat('all')}>الكل</button>
+            <button className={activeCat === 'all' && !prodSearch ? 'active' : ''} onClick={() => { setActiveCat('all'); setProdSearch(''); }}>الكل</button>
             {categories.map((c) => (
-              <button key={c.id} className={activeCat === c.id ? 'active' : ''} onClick={() => setActiveCat(c.id)}>
+              <button key={c.id} className={activeCat === c.id && !prodSearch ? 'active' : ''} onClick={() => { setActiveCat(c.id); setProdSearch(''); }}>
                 {c.name}
               </button>
             ))}

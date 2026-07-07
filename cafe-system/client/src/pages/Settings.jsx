@@ -1,0 +1,105 @@
+import { useEffect, useState } from 'react';
+import { api } from '../api.js';
+import { listPrinters, isDesktop } from '../print.js';
+
+export default function Settings() {
+  const [printers, setPrinters] = useState([]);
+  const [printer, setPrinter] = useState(localStorage.getItem('kabana_printer') || '');
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [msg, setMsg] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    listPrinters().then(setPrinters);
+    api.getPrinter().then((r) => {
+      if (r.printer_name) { setPrinter(r.printer_name); localStorage.setItem('kabana_printer', r.printer_name); }
+    }).catch(() => {});
+  }, []);
+
+  function flash(m) { setMsg(m); setError(''); setTimeout(() => setMsg(''), 3000); }
+
+  async function savePrinter(name) {
+    setPrinter(name);
+    localStorage.setItem('kabana_printer', name);
+    try { await api.setPrinter(name); flash('✅ اتحفظت ماكينة الطباعة'); }
+    catch (e) { setError(e.message); }
+  }
+
+  async function changePin(e) {
+    e.preventDefault();
+    setError('');
+    try {
+      await api.changePin(current, next);
+      setCurrent(''); setNext('');
+      flash('✅ اتغيّر باسورد المدير');
+    } catch (e) { setError(e.message); }
+  }
+
+  async function resetData() {
+    if (!confirm('هيتمسح كل الفواتير والشيفتات والمصروفات التجريبية، ويتصفّر المخزون. متأكد؟')) return;
+    if (!confirm('تأكيد أخير: مفيش رجوع بعد كده. نكمّل؟')) return;
+    try {
+      await api.resetData();
+      flash('✅ اتنظّفت بيانات التجربة، والمخزون اتصفّر — جاهزين للافتتاح');
+    } catch (e) { setError(e.message); }
+  }
+
+  return (
+    <div className="settings-page">
+      <header className="page-head">
+        <h1>⚙️ الإعدادات</h1>
+        <p className="muted">إعداد الطابعة، باسورد المدير، وتنظيف بيانات التجربة</p>
+      </header>
+      {msg && <div className="alert-ok">{msg}</div>}
+      {error && <div className="alert-error">{error}</div>}
+
+      {/* ماكينة الطباعة */}
+      <div className="panel">
+        <h3>🖨️ ماكينة الفواتير</h3>
+        {isDesktop() ? (
+          <>
+            <p className="muted small">اختار ماكينة الفواتير عشان الطباعة تطلع عليها مباشرة بدون أي نافذة.</p>
+            <div className="field">
+              <label>الطابعة المختارة</label>
+              <select value={printer} onChange={(e) => savePrinter(e.target.value)}>
+                <option value="">(الطابعة الافتراضية للجهاز)</option>
+                {printers.map((p) => (
+                  <option key={p.name} value={p.name}>{p.displayName || p.name}{p.isDefault ? ' — افتراضية' : ''}</option>
+                ))}
+              </select>
+            </div>
+            <button className="btn-ghost" onClick={() => listPrinters().then(setPrinters)}>🔄 تحديث قائمة الطابعات</button>
+          </>
+        ) : (
+          <p className="muted">اختيار الطابعة متاح في تطبيق الديسك توب فقط. في المتصفح بتظهر شاشة الطباعة العادية.</p>
+        )}
+      </div>
+
+      {/* باسورد المدير */}
+      <form className="panel" onSubmit={changePin}>
+        <h3>🔒 تغيير باسورد المدير</h3>
+        <p className="muted small">الباسورد ده بيفتح صفحات التقارير والإعدادات.</p>
+        <div className="field">
+          <label>الباسورد الحالي</label>
+          <input type="password" inputMode="numeric" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="1234" required />
+        </div>
+        <div className="field">
+          <label>الباسورد الجديد (3 أرقام على الأقل)</label>
+          <input type="password" inputMode="numeric" value={next} onChange={(e) => setNext(e.target.value)} required />
+        </div>
+        <button className="btn-primary">حفظ الباسورد الجديد</button>
+      </form>
+
+      {/* تنظيف البيانات */}
+      <div className="panel danger-panel">
+        <h3>🧹 تنظيف بيانات التجربة (قبل الافتتاح)</h3>
+        <p className="muted small">
+          بيمسح كل الفواتير والشيفتات والمصروفات وحركات المخزون التجريبية، ويصفّر أرصدة المخزون.
+          المنيو والأصناف والوصفات والمستخدمين والباسورد يفضلوا زي ما هم.
+        </p>
+        <button className="btn-danger-solid" onClick={resetData}>🗑️ تنظيف البيانات وتجهيز الافتتاح</button>
+      </div>
+    </div>
+  );
+}

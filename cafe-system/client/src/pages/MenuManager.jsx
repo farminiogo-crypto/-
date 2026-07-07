@@ -23,6 +23,7 @@ export default function MenuManager() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [recipeFor, setRecipeFor] = useState(null);
   const [recipe, setRecipe] = useState([]);
+  const [search, setSearch] = useState('');
 
   async function load() {
     try {
@@ -194,6 +195,11 @@ export default function MenuManager() {
 
       {/* جدول المنتجات */}
       <div className="panel">
+        <div className="search-bar">
+          <input className="search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 دوّر على منتج بالاسم..." />
+          {search && <button className="search-clear" onClick={() => setSearch('')}>✖</button>}
+          <span className="search-count">{(search.trim() ? products.filter((p) => p.name.includes(search.trim())) : products).length} منتج</span>
+        </div>
         <div className="table-scroll">
           <table className="products-table">
             <thead>
@@ -202,7 +208,7 @@ export default function MenuManager() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {(search.trim() ? products.filter((p) => p.name.includes(search.trim())) : products).map((p) => (
                 <tr key={p.id} className={p.active ? '' : 'row-inactive'}>
                   <td className="emoji-cell">{p.emoji}</td>
                   <td className="strong">{p.name}</td>

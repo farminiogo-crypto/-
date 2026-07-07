@@ -713,3 +713,30 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .pkg-count { font-size: 19px; font-weight: 900; color: var(--brand); font-variant-numeric: tabular-nums; }
 .cups-big { font-size: 16.5px; font-weight: 900; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cups-big span { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+
+/* ============ بحث + إعدادات ============ */
+.search-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.search-input {
+  flex: 1; padding: 12px 16px; border: 1.5px solid var(--line); border-radius: 12px;
+  font-size: 15px; background: #faf7f2;
+}
+.search-input:focus { outline: none; border-color: var(--accent); background: #fff; }
+.search-clear { background: #f0e8dd; border: none; border-radius: 10px; width: 40px; height: 40px; font-weight: 800; color: var(--muted); }
+.search-count { font-size: 13px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+
+.pos-search {
+  flex: 1; max-width: 320px; padding: 10px 14px; border: 1.5px solid var(--line);
+  border-radius: 20px; font-size: 15px; background: var(--surface);
+}
+.pos-search:focus { outline: none; border-color: var(--accent); }
+
+.alert-ok {
+  background: #e8f6ee; color: #1e6b47; border: 1px solid #bfe6cf;
+  padding: 11px 15px; border-radius: 11px; margin-bottom: 14px; font-weight: 700; font-size: 14.5px;
+}
+.settings-page .panel { max-width: 620px; }
+.settings-page .field select, .settings-page .field input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 15px;
+}
+.danger-panel { border: 1.5px solid #f0cfcb; }
+.danger-panel .btn-danger-solid { margin-top: 10px; }

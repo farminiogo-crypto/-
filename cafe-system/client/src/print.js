@@ -5,7 +5,8 @@ export async function printReceipt() {
   await new Promise((r) => setTimeout(r, 60));
   if (window.kabana && typeof window.kabana.printSilent === 'function') {
     try {
-      const res = await window.kabana.printSilent();
+      const deviceName = localStorage.getItem('kabana_printer') || '';
+      const res = await window.kabana.printSilent(deviceName ? { deviceName } : {});
       if (res && res.success) return true;
     } catch (e) {
       /* fall through to browser print */
@@ -13,6 +14,18 @@ export async function printReceipt() {
   }
   window.print();
   return true;
+}
+
+// قائمة الطابعات المتاحة (في تطبيق الديسك توب فقط)
+export async function listPrinters() {
+  if (window.kabana && typeof window.kabana.listPrinters === 'function') {
+    try {
+      return await window.kabana.listPrinters();
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 
 export const isDesktop = () => !!(window.kabana && window.kabana.desktop);

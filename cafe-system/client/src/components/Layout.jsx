@@ -44,6 +44,7 @@ export default function Layout() {
               <NavLink to="/invoices" className="nav-item"><span>🧾</span> <em>الفواتير</em></NavLink>
               <NavLink to="/menu" className="nav-item"><span>🍹</span> <em>إدارة المنيو</em></NavLink>
               <NavLink to="/tables-admin" className="nav-item"><span>🪑</span> <em>إدارة الترابيزات</em></NavLink>
+              <NavLink to="/settings" className="nav-item"><span>⚙️</span> <em>الإعدادات</em></NavLink>
             </>
           )}
         </nav>

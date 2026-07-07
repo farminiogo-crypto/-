@@ -62,12 +62,11 @@ function createWindow() {
 // ===== الطباعة الصامتة على ماكينة الفواتير =====
 // تطبع الصفحة الحالية على الطابعة الافتراضية مباشرة (بدون نافذة حوار).
 // الإيصال وحده هو الظاهر بفضل @media print، فتطبع ماكينة الفواتير الإيصال فقط.
-ipcMain.handle('print-silent', (e) => {
+ipcMain.handle('print-silent', (e, opts) => {
   return new Promise((resolve) => {
-    e.sender.print(
-      { silent: true, printBackground: true, margins: { marginType: 'none' } },
-      (success, reason) => resolve({ success, reason })
-    );
+    const printOptions = { silent: true, printBackground: true, margins: { marginType: 'none' } };
+    if (opts && opts.deviceName) printOptions.deviceName = opts.deviceName; // ماكينة محددة بالاسم
+    e.sender.print(printOptions, (success, reason) => resolve({ success, reason }));
   });
 });
 
