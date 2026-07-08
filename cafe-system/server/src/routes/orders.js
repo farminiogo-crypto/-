@@ -70,8 +70,10 @@ router.post('/:id/items', requireAuth, (req, res) => {
   if (!product) return res.status(404).json({ error: 'المنتج غير موجود' });
 
   const q = Math.max(1, parseInt(qty) || 1);
+  // يندمج فقط مع سطر بنفس المنتج وبدون ملاحظة — عشان الأصناف اللي عليها ملاحظات
+  // مختلفة تفضل كل واحدة في سطر لوحدها
   const line = db
-    .prepare('SELECT * FROM order_items WHERE order_id = ? AND product_id = ?')
+    .prepare('SELECT * FROM order_items WHERE order_id = ? AND product_id = ? AND note IS NULL')
     .get(order.id, product_id);
   if (line) {
     db.prepare('UPDATE order_items SET qty = qty + ? WHERE id = ?').run(q, line.id);
@@ -81,6 +83,19 @@ router.post('/:id/items', requireAuth, (req, res) => {
     ).run(order.id, product.id, product.name, product.price, q);
   }
   recalc(order.id);
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
+});
+
+// تعديل ملاحظة صنف (سكر زيادة / بدون نعناع...) — على فاتورة مفتوحة فقط
+router.patch('/:id/items/:itemId/note', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open')
+    return res.status(400).json({ error: 'لا يمكن تعديل فاتورة غير مفتوحة' });
+  const item = db.prepare('SELECT * FROM order_items WHERE id = ? AND order_id = ?').get(req.params.itemId, req.params.id);
+  if (!item) return res.status(404).json({ error: 'الصنف غير موجود' });
+
+  const { note } = req.body || {};
+  db.prepare('UPDATE order_items SET note = ? WHERE id = ?').run(note?.trim() || null, item.id);
   res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
 });
 

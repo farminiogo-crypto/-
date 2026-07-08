@@ -80,7 +80,8 @@ export const SCHEMA = `
     product_id INTEGER,
     name       TEXT NOT NULL,
     price      REAL NOT NULL,
-    qty        INTEGER NOT NULL
+    qty        INTEGER NOT NULL,
+    note       TEXT
   );
 
   -- المخزون (الكمية بوحدة أساسية: جرام / مل / قطعة ...)
@@ -148,6 +149,10 @@ export function initSchema() {
   }
   if (!invCols.includes('cups_per_package')) {
     db.exec('ALTER TABLE inventory ADD COLUMN cups_per_package REAL');
+  }
+  const itemCols = db.prepare('PRAGMA table_info(order_items)').all().map((c) => c.name);
+  if (!itemCols.includes('note')) {
+    db.exec('ALTER TABLE order_items ADD COLUMN note TEXT');
   }
   // باسورد مدير افتراضي أول مرة
   const pin = db.prepare("SELECT value FROM settings WHERE key = 'manager_pin'").get();

@@ -134,7 +134,7 @@ export default function Invoices() {
               <tbody>
                 {selected.items.map((it) => (
                   <tr key={it.id}>
-                    <td>{it.name}</td>
+                    <td>{it.name}{it.note ? <div className="cart-note">📝 {it.note}</div> : null}</td>
                     <td>{it.qty}</td>
                     <td>{fmt(it.price)}</td>
                     <td className="strong">{fmt(it.price * it.qty)}</td>

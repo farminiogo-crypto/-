@@ -28,7 +28,10 @@ export default function Receipt({ order, onClose }) {
             <tbody>
               {order.items.map((it, idx) => (
                 <tr key={idx}>
-                  <td>{it.name}</td>
+                  <td>
+                    {it.name}
+                    {it.note ? <div className="rc-note">📝 {it.note}</div> : null}
+                  </td>
                   <td className="c">{it.qty}</td>
                   <td className="l">{fmt(it.price * it.qty)}</td>
                 </tr>

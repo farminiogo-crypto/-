@@ -72,6 +72,8 @@ export const api = {
     request(`/orders/${id}/items`, { method: 'POST', body: { product_id, qty } }),
   changeItem: (id, itemId, delta) =>
     request(`/orders/${id}/items/${itemId}`, { method: 'PATCH', body: { delta } }),
+  setItemNote: (id, itemId, note) =>
+    request(`/orders/${id}/items/${itemId}/note`, { method: 'PATCH', body: { note } }),
   removeItem: (id, itemId) => request(`/orders/${id}/items/${itemId}`, { method: 'DELETE' }),
   payOrder: (id) => request(`/orders/${id}/pay`, { method: 'POST' }),
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }),

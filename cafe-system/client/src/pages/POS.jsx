@@ -1,7 +1,33 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api.js';
 import Receipt from '../components/Receipt.jsx';
+
+// نغمة تنبيه قصيرة للطلب الجديد — مولّدة بالكود (بدون ملف صوت)
+let _audioCtx = null;
+function playNewOrderChime() {
+  try {
+    _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = _audioCtx;
+    if (ctx.state === 'suspended') ctx.resume();
+    const now = ctx.currentTime;
+    [880, 1174.7].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = now + i * 0.16;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.24);
+    });
+  } catch {
+    /* المتصفح منع الصوت قبل أول لمسة — يتجاهل بهدوء */
+  }
+}
 
 // يحسب اسم الترابيزة التالية بالترتيب: "ترابيزة 14" وهكذا
 export function nextTableName(tables) {
@@ -29,11 +55,27 @@ export default function POS() {
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerName, setCustomerName] = useState('');
 
+  // ملاحظة صنف داخل الفاتورة
+  const [noteFor, setNoteFor] = useState(null); // id السطر اللي بنكتب ملاحظته
+  const [noteDraft, setNoteDraft] = useState('');
+
+  // تنبيه الطلب الجديد (من الموبايل)
+  const [newOrderToast, setNewOrderToast] = useState(false);
+  const prevSigRef = useRef(null); // بصمة الترابيزات المشغولة للمقارنة بين التحديثات
+
   const fmt = (n) => Number(n || 0).toFixed(2);
+
+  // بصمة تلخّص المشغول + إجماليّاته — لو زادت يبقى نزل طلب جديد
+  function tablesSig(list) {
+    const occ = list.filter((t) => t.status === 'occupied');
+    return { count: occ.length, total: occ.reduce((s, t) => s + Number(t.order_total || 0), 0) };
+  }
 
   async function loadTables() {
     try {
-      setTables(await api.tables());
+      const list = await api.tables();
+      prevSigRef.current = tablesSig(list); // خط الأساس — من غير تنبيه عند أول تحميل
+      setTables(list);
     } catch (e) {
       setError(e.message);
     }
@@ -54,8 +96,20 @@ export default function POS() {
   // تظهر على الجهاز الرئيسي فوراً (ومفيش تحديث وإحنا جوه فاتورة عشان السرعة)
   useEffect(() => {
     if (order) return;
-    // تحديث صامت: أي تقطيع نت لحظي أثناء التحديث الدوري ما يطلّعش بانر خطأ
-    const silentRefresh = () => api.tables().then(setTables).catch(() => {});
+    // تحديث صامت: أي تقطيع نت لحظي أثناء التحديث الدوري ما يطلّعش بانر خطأ.
+    // ولو زاد عدد المشغول أو الإجماليات → طلب جديد نزل من الموبايل → صوت + تنبيه
+    const silentRefresh = () =>
+      api.tables().then((list) => {
+        const sig = tablesSig(list);
+        const prev = prevSigRef.current;
+        if (prev && (sig.count > prev.count || sig.total > prev.total + 0.001)) {
+          playNewOrderChime();
+          setNewOrderToast(true);
+          setTimeout(() => setNewOrderToast(false), 5000);
+        }
+        prevSigRef.current = sig;
+        setTables(list);
+      }).catch(() => {});
     const t = setInterval(silentRefresh, 8000);
     const onFocus = silentRefresh;
     window.addEventListener('focus', onFocus);
@@ -112,6 +166,20 @@ export default function POS() {
   }
   async function changeItem(itemId, delta) {
     setOrder(await api.changeItem(order.id, itemId, delta));
+  }
+
+  function openNote(item) {
+    setNoteFor(item.id);
+    setNoteDraft(item.note || '');
+  }
+  async function saveNote(itemId) {
+    try {
+      setOrder(await api.setItemNote(order.id, itemId, noteDraft));
+      setNoteFor(null);
+      setNoteDraft('');
+    } catch (e) {
+      setError(e.message);
+    }
   }
 
   function back() {
@@ -218,10 +286,29 @@ export default function POS() {
                   <span className="cart-name">{i.name}</span>
                   <span className="cart-line-price">{fmt(i.price * i.qty)} ج</span>
                 </div>
+                {i.note && noteFor !== i.id && (
+                  <div className="cart-note">📝 {i.note}</div>
+                )}
+                {noteFor === i.id ? (
+                  <div className="cart-note-edit">
+                    <input
+                      autoFocus
+                      value={noteDraft}
+                      onChange={(e) => setNoteDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveNote(i.id); } }}
+                      placeholder="مثال: سكر زيادة / بدون نعناع"
+                    />
+                    <button className="icon-btn" onClick={() => saveNote(i.id)}>✅</button>
+                    <button className="icon-btn" onClick={() => setNoteFor(null)}>✖</button>
+                  </div>
+                ) : null}
                 <div className="qty-ctrl">
                   <button onClick={() => changeItem(i.id, -1)}>−</button>
                   <span>{i.qty}</span>
                   <button onClick={() => changeItem(i.id, 1)}>+</button>
+                  <button className="note-btn" onClick={() => openNote(i)} title="ملاحظة">
+                    {i.note ? '📝' : '➕📝'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -259,6 +346,11 @@ export default function POS() {
 
   return (
     <div className="tables-page">
+      {newOrderToast && (
+        <div className="new-order-toast" onClick={() => setNewOrderToast(false)}>
+          🔔 طلب جديد نزل من الموبايل!
+        </div>
+      )}
       <header className="page-head row">
         <div>
           <h1>🍽️ الترابيزات</h1>
