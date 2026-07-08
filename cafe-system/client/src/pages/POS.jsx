@@ -54,8 +54,10 @@ export default function POS() {
   // تظهر على الجهاز الرئيسي فوراً (ومفيش تحديث وإحنا جوه فاتورة عشان السرعة)
   useEffect(() => {
     if (order) return;
-    const t = setInterval(loadTables, 8000);
-    const onFocus = () => loadTables();
+    // تحديث صامت: أي تقطيع نت لحظي أثناء التحديث الدوري ما يطلّعش بانر خطأ
+    const silentRefresh = () => api.tables().then(setTables).catch(() => {});
+    const t = setInterval(silentRefresh, 8000);
+    const onFocus = silentRefresh;
     window.addEventListener('focus', onFocus);
     return () => {
       clearInterval(t);
