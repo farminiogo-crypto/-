@@ -64,5 +64,8 @@ client/src/
 - **تقرير شهري Excel:** `GET /api/reports/monthly.xlsx?month=YYYY-MM` (مدير) — 6 صفحات RTL عبر exceljs، والتنزيل من لوحة التحكم.
 - **الطباعة الحرارية:** `@page size: 80mm auto` + عرض `72mm` للمحتوى + خط أسود سميك — كتلة `@media print` في آخر `styles.css`.
 
+- **الطلب من الموبايل:** السيرفر بيسمع على 0.0.0.0، و`GET /api/settings/lan` بيرجع عناوين الشبكة المحلية (معروضة في صفحة الإعدادات). شاشة الترابيزات في POS بتتحدث تلقائياً كل 8 ثواني + عند focus عشان طلبات الموبايل تظهر على الجهاز الرئيسي. شريط دفع ثابت للموبايل (`.mobile-paybar` ≤640px).
+- **الأنيميشن:** كتلة "حركات الواجهة" آخر `styles.css` — transform/opacity فقط. **تحذير:** متضفش `animation-fill-mode: both/forwards` لعناصر فيها `position: fixed` جواها (الـ transform الباقي بيكسر الـ fixed positioning).
+
 ### أفكار مفتوحة للتوسعة
 - شاشة مطبخ (KDS) · منيو QR للعملاء · نظام ولاء
