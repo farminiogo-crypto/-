@@ -9,12 +9,14 @@ export default function Settings() {
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
+  const [lan, setLan] = useState(null);
 
   useEffect(() => {
     listPrinters().then(setPrinters);
     api.getPrinter().then((r) => {
       if (r.printer_name) { setPrinter(r.printer_name); localStorage.setItem('kabana_printer', r.printer_name); }
     }).catch(() => {});
+    api.lanInfo().then(setLan).catch(() => {});
   }, []);
 
   function flash(m) { setMsg(m); setError(''); setTimeout(() => setMsg(''), 3000); }
@@ -73,6 +75,30 @@ export default function Settings() {
           </>
         ) : (
           <p className="muted">اختيار الطابعة متاح في تطبيق الديسك توب فقط. في المتصفح بتظهر شاشة الطباعة العادية.</p>
+        )}
+      </div>
+
+      {/* الطلب من الموبايل */}
+      <div className="panel">
+        <h3>📱 الطلب من الموبايل</h3>
+        <p className="muted small">
+          الكاشير أو الجرسون يقدر يفتح السيستم من موبايله ويسجّل الطلبات، وبتنزل على الجهاز الرئيسي أول بأول.
+          الشرط الوحيد: الموبايل يكون على <b>نفس شبكة الواي فاي</b> بتاعة جهاز الكافيه.
+        </p>
+        {lan && lan.ips.length > 0 ? (
+          <>
+            <p className="muted small">افتح المتصفح في الموبايل واكتب العنوان ده:</p>
+            <div className="lan-urls">
+              {lan.ips.map((ip) => (
+                <div key={ip} className="lan-url" dir="ltr">http://{ip}:{lan.port}</div>
+              ))}
+            </div>
+            <p className="muted small">
+              وسجّل دخول بنفس الحساب. أول مرة بس: لو ويندوز سأل عن الجدار الناري (Firewall) وافق على "Allow".
+            </p>
+          </>
+        ) : (
+          <p className="muted">الجهاز مش متوصل بشبكة دلوقتي — وصّله بالواي فاي أو الراوتر وافتح الصفحة دي تاني.</p>
         )}
       </div>
 

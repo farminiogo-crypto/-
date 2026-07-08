@@ -50,6 +50,19 @@ export default function POS() {
       .catch((e) => setError(e.message));
   }, []);
 
+  // تحديث تلقائي لشاشة الترابيزات — عشان الطلبات اللي بتتسجل من الموبايل
+  // تظهر على الجهاز الرئيسي فوراً (ومفيش تحديث وإحنا جوه فاتورة عشان السرعة)
+  useEffect(() => {
+    if (order) return;
+    const t = setInterval(loadTables, 8000);
+    const onFocus = () => loadTables();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [order]);
+
   const shown = useMemo(() => {
     const q = prodSearch.trim();
     let list = q ? products : (activeCat === 'all' ? products : products.filter((p) => p.category_id === activeCat));
@@ -215,7 +228,8 @@ export default function POS() {
           <div className="cart-summary">
             <div className="sum-row total">
               <span>الإجمالي</span>
-              <span>{fmt(order.total)} ج</span>
+              {/* key=total → العنصر يتبني من جديد مع كل تغيير فيعمل نبضة الأنيميشن */}
+              <span className="total-bump" key={order.total}>{fmt(order.total)} ج</span>
             </div>
           </div>
 
@@ -224,6 +238,14 @@ export default function POS() {
           </button>
           <button className="btn-cancel" onClick={cancel}>إلغاء الفاتورة</button>
         </aside>
+
+        {/* شريط دفع ثابت تحت — يظهر على الموبايل فقط عشان الجرسون يدفع من غير سكرول */}
+        {order.items.length > 0 && (
+          <div className="mobile-paybar">
+            <span className="mp-total" key={order.total}>{fmt(order.total)} ج</span>
+            <button className="mp-pay" onClick={pay}>💵 دفع كاش</button>
+          </div>
+        )}
 
         {receipt && <Receipt order={receipt} onClose={() => setReceipt(null)} />}
       </div>

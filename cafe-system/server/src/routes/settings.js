@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import os from 'os';
 import db from '../db.js';
 import { requireAuth, requireAdmin } from '../auth.js';
 
@@ -30,6 +31,19 @@ router.post('/change-pin', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'الباسورد الجديد لازم 3 أرقام على الأقل' });
   setSetting('manager_pin', String(next));
   res.json({ ok: true });
+});
+
+// عناوين الجهاز على الشبكة المحلية — عشان الكاشير يفتح السيستم من الموبايل
+router.get('/lan', requireAuth, (req, res) => {
+  const nets = os.networkInterfaces();
+  const ips = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      // IPv4 فقط وغير الداخلي (127.0.0.1)
+      if ((net.family === 'IPv4' || net.family === 4) && !net.internal) ips.push(net.address);
+    }
+  }
+  res.json({ ips, port: Number(process.env.PORT || 4000) });
 });
 
 // اسم ماكينة الفواتير المختارة (للطباعة الصامتة المباشرة)

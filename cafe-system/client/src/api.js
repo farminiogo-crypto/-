@@ -116,6 +116,7 @@ export const api = {
   // إعدادات + باسورد المدير
   verifyPin: (pin) => request('/settings/verify-pin', { method: 'POST', body: { pin } }),
   changePin: (current, next) => request('/settings/change-pin', { method: 'POST', body: { current, next } }),
+  lanInfo: () => request('/settings/lan'),
   getPrinter: () => request('/settings/printer'),
   setPrinter: (name) => request('/settings/printer', { method: 'POST', body: { name } }),
   resetData: () => request('/settings/reset-data', { method: 'POST' }),

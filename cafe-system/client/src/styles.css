@@ -804,3 +804,84 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .cat-chip-count { font-size: 12px; color: var(--muted); background: var(--surface); border-radius: 8px; padding: 2px 8px; }
 .cat-edit-input { width: 130px; padding: 6px 10px; border: 1.5px solid var(--accent); border-radius: 8px; font-family: inherit; font-size: 14px; }
 .cat-edit-input:focus { outline: none; }
+
+/* ============ حركات الواجهة (transform/opacity فقط — سريعة على أي جهاز) ============ */
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes popIn { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rowIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+@keyframes bump { 0% { transform: scale(1); } 45% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes livePulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.25); opacity: .75; } }
+
+/* دخول الصفحات (وبيشتغل كمان عند التنقل بين شبكة الترابيزات والفاتورة)
+   مهم: من غير fill-mode عشان الـ transform يتشال بعد الحركة —
+   لو فضل مطبّق بيكسر position:fixed لأي عنصر جوه الصفحة (زي شريط دفع الموبايل) */
+.main-area > * { animation: pageIn .28s ease; }
+
+/* التنبيهات تنزلق للداخل */
+.alert-error, .alert-ok, .alert-warn { animation: pageIn .22s ease both; }
+
+/* إحساس ضغطة فوري على كل الأزرار */
+button { transition: transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease, filter .15s ease; }
+button:active { transform: scale(.96); }
+
+/* كروت الترابيزات: رفعة عند المرور + نبض للمشغولة */
+.table-card { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
+.table-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0, 0, 0, .10); }
+.table-card:active { transform: scale(.96); }
+.table-card.occupied .table-icon { display: inline-block; animation: livePulse 1.6s ease-in-out infinite; }
+
+/* كروت المنتجات: ضغطة ملموسة */
+.product-card:active { transform: scale(.94); border-color: var(--brand); }
+
+/* صف جديد في الفاتورة يدخل بحركة */
+.cart-row { animation: rowIn .22s ease both; }
+
+/* نبضة الإجمالي مع كل تغيير (العنصر بيتبني من جديد بـ key) */
+.total-bump { display: inline-block; animation: bump .3s ease; }
+
+/* المودالات ولوحة الأرقام: خلفية بتظهر + صندوق بينط لفوق */
+.modal-overlay, .numpad-overlay { animation: overlayIn .18s ease both; }
+.modal-overlay > *, .numpad { animation: popIn .24s cubic-bezier(.22, 1, .36, 1) both; }
+
+/* القائمة الجانبية */
+.nav-item { transition: background .15s ease, transform .12s ease; }
+.nav-item:active { transform: scale(.95); }
+
+/* شارة نواقص المخزون تنبض بهدوء */
+.nav-badge { animation: livePulse 2.2s ease-in-out infinite; }
+
+/* مفاتيح لوحة الأرقام */
+.np-key:active { transform: scale(.92); }
+
+/* لو المستخدم مفعّل "تقليل الحركة" في النظام — نوقف كل الأنيميشن احتراماً له */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ============ شريط الدفع الثابت للموبايل ============ */
+.mobile-paybar { display: none; }
+@media (max-width: 640px) {
+  .mobile-paybar {
+    display: flex; align-items: center; gap: 12px;
+    position: fixed; bottom: calc(64px + env(safe-area-inset-bottom)); left: 12px; right: 12px;
+    background: var(--brand-dark); color: #fff; border-radius: 14px;
+    padding: 10px 16px; z-index: 45; box-shadow: 0 10px 26px rgba(0, 0, 0, .28);
+    animation: popIn .25s ease both;
+  }
+  .mp-total { font-size: 20px; font-weight: 900; flex: 1; }
+  .mp-pay {
+    background: var(--green); color: #fff; border: none; border-radius: 10px;
+    padding: 12px 18px; font-weight: 800; font-size: 15px;
+  }
+  /* مسافة تحت عشان الشريط ميغطيش آخر عناصر الصفحة */
+  .pos { padding-bottom: 76px; }
+}
+
+/* ============ عناوين الدخول من الموبايل (صفحة الإعدادات) ============ */
+.lan-urls { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.lan-url {
+  background: #f4efe8; border: 1.5px dashed var(--accent); border-radius: 10px;
+  padding: 12px 16px; font-size: 20px; font-weight: 800; color: var(--brand);
+  text-align: center; letter-spacing: .5px; user-select: all;
+}
