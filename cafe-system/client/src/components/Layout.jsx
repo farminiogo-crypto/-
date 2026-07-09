@@ -30,7 +30,7 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="brand">☕ كابانا</div>
 
-        <nav className="side-nav">
+        <nav className="side-nav" onAuxClick={(e) => e.preventDefault()}>
           <NavLink to="/pos" className="nav-item"><span>🍽️</span> <em>الترابيزات</em></NavLink>
           <NavLink to="/shift" className="nav-item"><span>🕐</span> <em>الشيفت</em></NavLink>
           <NavLink to="/expenses" className="nav-item"><span>💸</span> <em>المصروفات</em></NavLink>

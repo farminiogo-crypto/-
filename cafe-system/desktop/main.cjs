@@ -62,8 +62,12 @@ function createWindow() {
   });
   win.loadURL(`http://localhost:${PORT}`);
 
-  // منع أي نافذة منبثقة جديدة — كل حاجة تفضل جوه نفس النافذة (وضع الكشك)
-  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  // منع النوافذ المنبثقة (وضع الكشك): لو ضغطة على قايمة جانبية اتفهمت غلط
+  // كـ"افتح في نافذة جديدة"، نفتح الصفحة جوه نفس النافذة بدل نافذة صغيرة منفصلة
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url && url.startsWith(`http://localhost:${PORT}`)) win.loadURL(url);
+    return { action: 'deny' };
+  });
   win.webContents.on('will-navigate', (e, url) => {
     if (!url.startsWith(`http://localhost:${PORT}`)) e.preventDefault();
   });
