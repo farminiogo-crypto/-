@@ -830,7 +830,6 @@ button:active { transform: scale(.96); }
 .table-card { transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease; }
 .table-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(0, 0, 0, .10); }
 .table-card:active { transform: scale(.96); }
-.table-card.occupied .table-icon { display: inline-block; animation: livePulse 1.6s ease-in-out infinite; }
 
 /* كروت المنتجات: ضغطة ملموسة */
 .product-card:active { transform: scale(.94); border-color: var(--brand); }
@@ -908,3 +907,32 @@ button:active { transform: scale(.96); }
   padding: 12px 22px; border-radius: 30px; z-index: 60; cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, .25); animation: popIn .3s ease both;
 }
+
+/* ============ الكيبورد على الشاشة ============ */
+.osk {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  background: #efe7dc; border-top: 2px solid var(--line);
+  padding: 8px 10px calc(10px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .18);
+  display: flex; flex-direction: column; gap: 7px;
+  animation: pageIn .18s ease;
+}
+.osk-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+.osk-hint { font-weight: 800; color: var(--muted); font-size: 14px; }
+.osk-close { background: transparent; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 14px; font-weight: 800; color: var(--brand); }
+.osk-row { display: flex; gap: 6px; justify-content: center; }
+.osk-key {
+  flex: 1 1 0; min-width: 0; max-width: 92px; height: 52px;
+  border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface);
+  font-size: 20px; font-weight: 800; color: var(--ink); cursor: pointer;
+  display: grid; place-items: center; box-shadow: 0 1px 0 rgba(0,0,0,.08);
+}
+.osk-key:active { transform: scale(.94); background: #f4efe8; }
+.osk-back { color: var(--danger); }
+.osk-fn { background: #e8ddce; max-width: 70px; font-size: 16px; }
+.osk-space { flex: 4; max-width: none; font-size: 15px; color: var(--muted); }
+.osk-enter { background: var(--brand); color: #fff; border-color: var(--brand); max-width: 140px; flex: 2; }
+.osk-ctrl { margin-top: 2px; }
+/* لوحة الأرقام تبقى مضغوطة في النص */
+.osk-num { max-width: 420px; margin: 0 auto; border-radius: 16px 16px 0 0; }
+.osk-num .osk-key { height: 58px; font-size: 24px; }

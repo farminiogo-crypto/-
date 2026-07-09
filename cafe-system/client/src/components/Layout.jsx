@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { auth, api } from '../api.js';
+import OnScreenKeyboard from './OnScreenKeyboard.jsx';
 
 export default function Layout() {
   const navigate = useNavigate();
@@ -79,6 +80,8 @@ export default function Layout() {
       <main className="main-area">
         <Outlet />
       </main>
+
+      <OnScreenKeyboard />
     </div>
   );
 }

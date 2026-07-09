@@ -98,7 +98,8 @@ export default function POS() {
     if (order) return;
     // تحديث صامت: أي تقطيع نت لحظي أثناء التحديث الدوري ما يطلّعش بانر خطأ.
     // ولو زاد عدد المشغول أو الإجماليات → طلب جديد نزل من الموبايل → صوت + تنبيه
-    const silentRefresh = () =>
+    const silentRefresh = () => {
+      if (document.hidden) return; // ما نشتغلش والبرنامج مخفي/مصغّر (يخفف الحِمل)
       api.tables().then((list) => {
         const sig = tablesSig(list);
         const prev = prevSigRef.current;
@@ -110,12 +111,15 @@ export default function POS() {
         prevSigRef.current = sig;
         setTables(list);
       }).catch(() => {});
+    };
     const t = setInterval(silentRefresh, 8000);
     const onFocus = silentRefresh;
     window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
     return () => {
       clearInterval(t);
       window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
     };
   }, [order]);
 
