@@ -63,6 +63,21 @@ export default function ShiftPage() {
     }
   }
 
+  // إلغاء الشيفت ومسح بياناته (للتجربة) — يرجّع المخزون والترابيزات زي ما كانت
+  async function cancelShift() {
+    if (!confirm('إلغاء الشيفت الحالي ومسح كل أوردراته ومصروفاته؟\nهيرجّع المخزون والترابيزات زي ما كانت. (للتجربة/التصحيح)')) return;
+    setError('');
+    try {
+      await api.cancelShift();
+      setClosedResult(null);
+      await refreshShift();
+      if (isAdmin) api.shifts().then(setHistory).catch(() => {});
+      notifyChange();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   if (shift === undefined) return <div className="loading">جاري التحميل...</div>;
 
   return (
@@ -105,6 +120,9 @@ export default function ShiftPage() {
               <Recon label="المتوقع في الدرج" value={shift.expected_cash} strong />
             </div>
             <p className="muted small">بدأ: {(shift.opened_at || '').replace('T', ' ')} • بواسطة {shift.user_name}</p>
+            <button className="btn-ghost cancel-shift-btn" onClick={cancelShift}>
+              🗑️ إلغاء الشيفت ومسح بياناته (للتجربة)
+            </button>
           </div>
 
           <form className="panel" onSubmit={closeShift}>

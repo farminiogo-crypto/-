@@ -806,6 +806,9 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .cat-edit-input { width: 130px; padding: 6px 10px; border: 1.5px solid var(--accent); border-radius: 8px; font-family: inherit; font-size: 14px; }
 .cat-edit-input:focus { outline: none; }
 
+.cancel-shift-btn { margin-top: 14px; width: 100%; color: var(--danger); border-color: #f0cfcb; }
+.cancel-shift-btn:hover { border-color: var(--danger); background: #fff5f4; }
+
 /* ============ حركات الواجهة (transform/opacity فقط — سريعة على أي جهاز) ============ */
 @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes popIn { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }

@@ -95,6 +95,7 @@ export const api = {
     request('/shifts/open', { method: 'POST', body: { name, opening_cash } }),
   closeShift: (closing_cash, notes) =>
     request('/shifts/close', { method: 'POST', body: { closing_cash, notes } }),
+  cancelShift: () => request('/shifts/cancel', { method: 'POST' }),
   shifts: () => request('/shifts'),
 
   // المصروفات
