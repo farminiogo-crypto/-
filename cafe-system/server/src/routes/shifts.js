@@ -73,45 +73,55 @@ router.post('/close', requireAuth, (req, res) => {
   res.json(shiftSummary(db.prepare('SELECT * FROM shifts WHERE id = ?').get(shift.id)));
 });
 
-// إلغاء الشيفت المفتوح ومسح بياناته (للتجربة/التصحيح) — يرجّع المخزون والترابيزات
-// زي ما كانت، من غير جرد درج. بيمسح أوردرات ومصروفات الشيفت الحالي فقط.
+// يمسح شيفت وكل بياناته ويرجّع المخزون والترابيزات (للتجربة/التصحيح)
+// alsoOpenOrders = true للشيفت المفتوح (عشان يشمل الأوردرات اللي لسه مالهاش shift_id)
+function purgeShift(shiftId, alsoOpenOrders) {
+  const restore = db.prepare('UPDATE inventory SET quantity = quantity - ? WHERE id = ?');
+  const orders = db
+    .prepare(
+      alsoOpenOrders
+        ? "SELECT id, table_id FROM orders WHERE shift_id = ? OR status = 'open'"
+        : 'SELECT id, table_id FROM orders WHERE shift_id = ?'
+    )
+    .all(shiftId);
+
+  // 1) استرجاع المخزون المخصوم (delta السالب → نرجّعه)
+  for (const o of orders) {
+    const moves = db
+      .prepare('SELECT inventory_id, delta FROM inventory_moves WHERE ref_order_id = ? AND delta < 0')
+      .all(o.id);
+    for (const m of moves) restore.run(m.delta, m.inventory_id);
+  }
+
+  // 2) تحرير الترابيزات المرتبطة
+  if (alsoOpenOrders) db.prepare("UPDATE tables SET status = 'free'").run();
+  else for (const o of orders) if (o.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(o.table_id);
+
+  // 3) مسح عناصر الأوردرات وحركات المخزون والأوردرات نفسها
+  for (const o of orders) {
+    db.prepare('DELETE FROM order_items WHERE order_id = ?').run(o.id);
+    db.prepare('DELETE FROM inventory_moves WHERE ref_order_id = ?').run(o.id);
+    db.prepare('DELETE FROM orders WHERE id = ?').run(o.id);
+  }
+
+  // 4) مسح مصروفات الشيفت ثم الشيفت نفسه
+  db.prepare('DELETE FROM expenses WHERE shift_id = ?').run(shiftId);
+  db.prepare('DELETE FROM shifts WHERE id = ?').run(shiftId);
+}
+
+// إلغاء الشيفت المفتوح حالياً ومسح بياناته (للتجربة/التصحيح)
 router.post('/cancel', requireAuth, (req, res) => {
   const shift = currentShift();
   if (!shift) return res.status(400).json({ error: 'لا يوجد شيفت مفتوح' });
+  db.transaction(() => purgeShift(shift.id, true))();
+  res.json({ ok: true });
+});
 
-  const restore = db.prepare('UPDATE inventory SET quantity = quantity - ? WHERE id = ?');
-
-  const tx = db.transaction(() => {
-    // أوردرات الشيفت = المدفوعة على الشيفت ده + أي أوردرات لسه مفتوحة
-    // (المفتوحة مالهاش shift_id لغاية الدفع، وواحد شيفت مفتوح بس في المرة)
-    const orders = db
-      .prepare("SELECT id FROM orders WHERE shift_id = ? OR status = 'open'")
-      .all(shift.id);
-
-    // 1) استرجاع المخزون المخصوم من مبيعات الشيفت (delta السالب → نرجّعه)
-    for (const o of orders) {
-      const moves = db
-        .prepare('SELECT inventory_id, delta FROM inventory_moves WHERE ref_order_id = ? AND delta < 0')
-        .all(o.id);
-      for (const m of moves) restore.run(m.delta, m.inventory_id);
-    }
-
-    // 2) تحرير كل الترابيزات
-    db.prepare("UPDATE tables SET status = 'free'").run();
-
-    // 3) مسح عناصر الأوردرات وحركات المخزون والأوردرات نفسها
-    for (const o of orders) {
-      db.prepare('DELETE FROM order_items WHERE order_id = ?').run(o.id);
-      db.prepare('DELETE FROM inventory_moves WHERE ref_order_id = ?').run(o.id);
-      db.prepare('DELETE FROM orders WHERE id = ?').run(o.id);
-    }
-
-    // 4) مسح مصروفات الشيفت ثم الشيفت نفسه
-    db.prepare('DELETE FROM expenses WHERE shift_id = ?').run(shift.id);
-    db.prepare('DELETE FROM shifts WHERE id = ?').run(shift.id);
-  });
-  tx();
-
+// حذف أي شيفت من السجل (مدير) — يرجّع المخزون ويمسح أوردراته ومصروفاته
+router.delete('/:id', requireAuth, requireAdmin, (req, res) => {
+  const shift = db.prepare('SELECT * FROM shifts WHERE id = ?').get(req.params.id);
+  if (!shift) return res.status(404).json({ error: 'الشيفت غير موجود' });
+  db.transaction(() => purgeShift(shift.id, shift.status === 'open'))();
   res.json({ ok: true });
 });
 

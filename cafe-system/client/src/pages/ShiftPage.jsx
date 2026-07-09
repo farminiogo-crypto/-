@@ -63,6 +63,20 @@ export default function ShiftPage() {
     }
   }
 
+  // حذف شيفت من السجل — يرجّع المخزون ويمسح أوردراته ومصروفاته
+  async function deleteShift(s) {
+    if (!confirm(`حذف شيفت "${s.name}" وكل بياناته نهائياً؟\nهيرجّع المخزون المخصوم منه.`)) return;
+    setError('');
+    try {
+      await api.deleteShift(s.id);
+      await refreshShift();
+      api.shifts().then(setHistory).catch(() => {});
+      notifyChange();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   // إلغاء الشيفت ومسح بياناته (للتجربة) — يرجّع المخزون والترابيزات زي ما كانت
   async function cancelShift() {
     if (!confirm('إلغاء الشيفت الحالي ومسح كل أوردراته ومصروفاته؟\nهيرجّع المخزون والترابيزات زي ما كانت. (للتجربة/التصحيح)')) return;
@@ -165,7 +179,7 @@ export default function ShiftPage() {
           <table className="orders-table">
             <thead>
               <tr>
-                <th>الشيفت</th><th>الكاشير</th><th>مبيعات</th><th>مصروفات</th><th>متوقع</th><th>فعلي</th><th>الفرق</th><th>الحالة</th>
+                <th>الشيفت</th><th>الكاشير</th><th>مبيعات</th><th>مصروفات</th><th>متوقع</th><th>فعلي</th><th>الفرق</th><th>الحالة</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -184,6 +198,9 @@ export default function ShiftPage() {
                     <span className={'chip ' + (s.status === 'open' ? 'chip-on' : 'chip-off')}>
                       {s.status === 'open' ? 'مفتوح' : 'مقفول'}
                     </span>
+                  </td>
+                  <td>
+                    <button className="icon-btn danger" title="حذف الشيفت" onClick={() => deleteShift(s)}>🗑️</button>
                   </td>
                 </tr>
               ))}
