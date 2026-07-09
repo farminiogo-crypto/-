@@ -5,6 +5,14 @@ const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
 
+// ===== منع تجميد النافذة والإدخال على ويندوز =====
+// ويندوز أحياناً يفتكر إن النافذة "مغطّاة" فيجمّد الرسم والكيبورد والماوس لحد ما
+// تعمل alt-tab أو تضغط زر ويندوز. الأسطر دي بتطفّي السلوك ده وتمنع تجميد النافذة.
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+
 const PORT = process.env.PORT || 4000;
 const SERVER_DIR = path.join(__dirname, '..', 'server');
 const SERVER_ENTRY = path.join(SERVER_DIR, 'src', 'index.js');
@@ -48,6 +56,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       spellcheck: false,
+      backgroundThrottling: false, // لا تُبطّئ/تجمّد الصفحة لما تفقد التركيز
       preload: path.join(__dirname, 'preload.cjs'),
     },
   });
