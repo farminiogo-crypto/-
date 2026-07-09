@@ -1,6 +1,21 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import { listPrinters, isDesktop } from '../print.js';
+import Receipt from '../components/Receipt.jsx';
+
+// فاتورة تجريبية لاختبار الطابعة (بدون ما تعمل أوردر حقيقي)
+const SAMPLE_RECEIPT = {
+  order_no: 'TEST-001',
+  table_name: 'اختبار الطباعة',
+  customer_name: '',
+  cashier_name: 'المدير',
+  paid_at: '',
+  total: 45,
+  items: [
+    { name: 'قهوة تركي', qty: 1, price: 25, note: 'سكر زيادة' },
+    { name: 'شاي', qty: 1, price: 20, note: null },
+  ],
+};
 
 export default function Settings() {
   const [printers, setPrinters] = useState([]);
@@ -10,6 +25,7 @@ export default function Settings() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [lan, setLan] = useState(null);
+  const [testReceipt, setTestReceipt] = useState(null);
 
   useEffect(() => {
     listPrinters().then(setPrinters);
@@ -76,6 +92,13 @@ export default function Settings() {
         ) : (
           <p className="muted">اختيار الطابعة متاح في تطبيق الديسك توب فقط. في المتصفح بتظهر شاشة الطباعة العادية.</p>
         )}
+        <hr className="soft-sep" />
+        <p className="muted small">جرّب الطابعة بفاتورة تجريبية قبل الافتتاح — لو طلعت طلاسم يبقى إعداد درايفر الطابعة محتاج يتظبط (شوف الملاحظة تحت).</p>
+        <button className="btn-primary" onClick={() => setTestReceipt(SAMPLE_RECEIPT)}>🖨️ طباعة تجريبية</button>
+        <p className="muted small tip-box">
+          💡 لو الطابعة بتطبع رموز/طلاسم: تأكد إنك مثبّت <b>درايفر الطابعة الأصلي</b> (مش «Generic / Text Only»)،
+          وإنه متظبط على وضع <b>الجرافيك/الصورة</b> ومقاس ورق <b>80مم</b>، واختار نفس الطابعة من القايمة فوق.
+        </p>
       </div>
 
       {/* الطلب من الموبايل */}
@@ -126,6 +149,8 @@ export default function Settings() {
         </p>
         <button className="btn-danger-solid" onClick={resetData}>🗑️ تنظيف البيانات وتجهيز الافتتاح</button>
       </div>
+
+      {testReceipt && <Receipt order={testReceipt} onClose={() => setTestReceipt(null)} />}
     </div>
   );
 }
