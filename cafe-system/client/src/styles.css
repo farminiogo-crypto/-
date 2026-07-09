@@ -926,7 +926,8 @@ button:active { transform: scale(.96); }
 .osk-bar { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
 .osk-hint { font-weight: 800; color: var(--muted); font-size: 14px; }
 .osk-close { background: transparent; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 14px; font-weight: 800; color: var(--brand); }
-.osk-row { display: flex; gap: 6px; justify-content: center; }
+/* direction:ltr عشان الحروف تترتب من الشمال زي كيبورد التلفون بالظبط */
+.osk-row { display: flex; gap: 6px; justify-content: center; direction: ltr; }
 .osk-key {
   flex: 1 1 0; min-width: 0; max-width: 92px; height: 52px;
   border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface);
