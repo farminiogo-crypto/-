@@ -62,6 +62,12 @@ function createWindow() {
   });
   win.loadURL(`http://localhost:${PORT}`);
 
+  // منع أي نافذة منبثقة جديدة — كل حاجة تفضل جوه نفس النافذة (وضع الكشك)
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (e, url) => {
+    if (!url.startsWith(`http://localhost:${PORT}`)) e.preventDefault();
+  });
+
   // اختصارات مفيدة على شاشة الكاشير
   globalShortcut.register('F11', () => win.setFullScreen(!win.isFullScreen()));
   globalShortcut.register('CommandOrControl+Shift+Q', () => app.quit()); // خروج آمن
