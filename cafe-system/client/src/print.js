@@ -83,18 +83,26 @@ function printViaFrame(html) {
 export async function printReceipt() {
   // انتظر لحظة ليكتمل رسم الإيصال قبل الطباعة
   await new Promise((r) => setTimeout(r, 60));
-  const html = buildReceiptPage();
 
-  // تطبيق الديسك توب: طباعة صامتة مباشرة على ماكينة الفواتير
+  // تطبيق الديسك توب: طباعة صامتة على ماكينة الفواتير.
+  // بنستنسخ الإيصال في #print-host على مستوى body، ونطبع نافذة البرنامج نفسها
+  // (نفس المسار اللي أثبت إنه بيوصل للطابعة) — وCSS الطباعة بيخفي التطبيق
+  // ويظهر الإيصال المستنسخ بارتفاع صحيح فالطباعة تطلع كاملة مش فاضية.
   if (window.kabana && typeof window.kabana.printSilent === 'function') {
+    const receipt = document.getElementById('receipt-print');
+    let host = null;
+    if (receipt) {
+      document.getElementById('print-host')?.remove();
+      host = document.createElement('div');
+      host.id = 'print-host';
+      host.innerHTML = receipt.innerHTML;
+      document.body.appendChild(host);
+      await new Promise((r) => setTimeout(r, 80)); // مهلة صغيرة لضمان تجهيز التخطيط
+    }
     try {
       const deviceName = localStorage.getItem('kabana_printer') || '';
-      const res = await window.kabana.printSilent({
-        ...(deviceName ? { deviceName } : {}),
-        ...(html ? { html } : {}),
-      });
+      const res = await window.kabana.printSilent(deviceName ? { deviceName } : {});
       if (res && res.success) return true;
-      // فشل الطباعة الصامتة — قول للمستخدم السبب بدل الصمت، وافتح نافذة الطباعة العادية
       alert(
         '⚠️ الطباعة المباشرة على ماكينة الفواتير فشلت:\n\n' +
           (res && res.reason ? res.reason : 'سبب غير معروف') +
@@ -102,10 +110,13 @@ export async function printReceipt() {
       );
     } catch (e) {
       alert('⚠️ الطباعة المباشرة فشلت: ' + (e && e.message ? e.message : e) + '\nهنفتح نافذة الطباعة العادية.');
+    } finally {
+      if (host) setTimeout(() => { try { host.remove(); } catch {} }, 2000);
     }
   }
 
   // المتصفح: اطبع صفحة الإيصال المستقلة (مش صفحة البرنامج)
+  const html = buildReceiptPage();
   if (html) return printViaFrame(html);
   window.print();
   return true;

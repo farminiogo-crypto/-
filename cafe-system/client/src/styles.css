@@ -565,47 +565,45 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .export-bar input[type='month']:focus { outline: none; border-color: var(--accent); }
 
 /* ============ الطباعة (طابعة حرارية — رول 80مم) ============ */
+/* الطباعة الصامتة بتستنسخ الإيصال في #print-host على مستوى body، ونخفي التطبيق
+   (#root) تماماً في وضع الطباعة عشان الصفحة ترتفع بطول الإيصال فقط.
+   الطريقة القديمة (visibility:hidden + position:absolute + height:0) كانت
+   بتطلع صفحة ارتفاعها صفر → طباعة فاضية والطابعة تقص الورق. */
+#print-host { display: none; }
+
 @media print {
-  /* مقاس الرول 80مم — الارتفاع تلقائي حسب طول الفاتورة (بدون صفحات فارغة) */
   @page { size: 80mm auto; margin: 0; }
 
   html, body {
     width: 80mm !important; margin: 0 !important; padding: 0 !important;
-    background: #fff !important; height: auto !important;
+    background: #fff !important;
   }
 
-  /* إخفاء كل الواجهة وتصفير أبعادها حتى لا تنتج صفحات فارغة */
-  body * { visibility: hidden; }
-  #root { height: 0 !important; overflow: hidden !important; }
+  /* أخفي التطبيق كله من تدفق الطباعة، وأظهر الإيصال المستنسخ في التدفق العادي */
+  #root { display: none !important; }
 
-  /* إظهار الإيصال فقط */
-  #receipt-print, #receipt-print * { visibility: visible; }
-  #receipt-print {
-    position: absolute; top: 0; right: 0; left: 0;
-    width: 72mm;              /* المساحة القابلة للطباعة فعلياً في رول 80مم */
-    margin: 0 auto; padding: 2mm 2mm 6mm;
-    background: #fff; color: #000;
+  #print-host {
+    display: block !important;
+    width: 72mm; margin: 0 auto; padding: 2mm 2mm 6mm;
+    background: #fff; color: #000; text-align: center;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     font-size: 13px; line-height: 1.6; font-weight: 600;
   }
-
-  /* خط أسود سميك واضح مناسب للطباعة الحرارية */
-  #receipt-print .receipt-logo { font-size: 26px; }
-  #receipt-print h3 { font-size: 18px; font-weight: 900; color: #000; }
-  #receipt-print .receipt-no { font-size: 14px; font-weight: 800; color: #000; }
-  #receipt-print .receipt-meta { font-size: 12px; color: #000; }
-  #receipt-print .receipt-sep { border-top: 1px dashed #000; }
-  #receipt-print .receipt-table { width: 100%; font-size: 12.5px; }
-  #receipt-print .receipt-table th { color: #000; border-bottom: 1px solid #000; font-size: 12px; }
-  #receipt-print .receipt-table td { padding: 2px 0; color: #000; }
-  #receipt-print .rc-note { font-size: 11px; color: #000; font-weight: 700; }
-  #receipt-print .rc-row { font-size: 13px; color: #000; }
-  #receipt-print .rc-row.total { font-size: 17px; font-weight: 900; }
-  #receipt-print .receipt-thanks { font-size: 12px; margin-top: 8px; color: #000; }
-
-  /* إخفاء الأزرار والخلفيات */
-  .receipt-actions { display: none !important; }
-  .modal-overlay { position: static !important; background: none !important; }
-  .receipt { box-shadow: none !important; width: auto !important; padding: 0 !important; }
+  #print-host .receipt-logo { font-size: 26px; }
+  #print-host h3 { font-size: 18px; font-weight: 900; color: #000; margin: 2px 0; }
+  #print-host .receipt-no { font-size: 14px; font-weight: 800; color: #000; }
+  #print-host .receipt-meta { font-size: 12px; color: #000; }
+  #print-host .receipt-sep { border-top: 1px dashed #000; margin: 8px 0; }
+  #print-host .receipt-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  #print-host .receipt-table th { color: #000; border-bottom: 1px solid #000; font-size: 12px; text-align: right; padding-bottom: 3px; }
+  #print-host .receipt-table td { padding: 2px 0; color: #000; text-align: right; }
+  #print-host .receipt-table th.c, #print-host .receipt-table td.c { text-align: center; }
+  #print-host .receipt-table th.l, #print-host .receipt-table td.l { text-align: left; }
+  #print-host .rc-note { font-size: 11px; color: #000; font-weight: 700; }
+  #print-host .rc-row { display: flex; justify-content: space-between; font-size: 13px; color: #000; margin-top: 2px; }
+  #print-host .rc-row.total { font-size: 17px; font-weight: 900; border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; }
+  #print-host .receipt-thanks { font-size: 12px; margin-top: 8px; color: #000; }
+  #print-host .receipt-actions { display: none !important; }
 }
 
 /* حدود مقاس الإيصال على الشاشة ليطابق 80مم */

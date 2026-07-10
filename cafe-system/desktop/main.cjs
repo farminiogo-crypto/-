@@ -4,8 +4,6 @@ const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
-const fs = require('fs');
-const os = require('os');
 
 // ===== منع تجميد النافذة والإدخال على ويندوز =====
 // ويندوز أحياناً يفتكر إن النافذة "مغطّاة" فيجمّد الرسم والكيبورد والماوس لحد ما
@@ -82,21 +80,19 @@ function createWindow() {
 }
 
 // ===== الطباعة الصامتة على ماكينة الفواتير =====
-// الواجهة بتبعت صفحة HTML مستقلة فيها الإيصال فقط (opts.html)، بنحمّلها في
-// نافذة مخفية ونطبعها بمقاس رول 80مم وارتفاع بطول محتوى الإيصال فعلياً.
-// (طباعة صفحة البرنامج نفسها بإخفاء الواجهة كانت بتطلع صفحة فاضية —
-//  الطابعة تقص الورق من غير ما تطبع حاجة)
+// بنطبع نافذة البرنامج نفسها (اللي مرسومة فعلاً وأثبتت إنها بتوصل للطابعة)،
+// وCSS الطباعة (@media print) بيخفي التطبيق ويظهر الإيصال المستنسخ (#print-host)
+// بارتفاع صحيح — فتطلع الفاتورة كاملة مش صفحة فاضية.
 ipcMain.handle('print-silent', async (e, opts) => {
   const printOptions = { silent: true, printBackground: true, margins: { marginType: 'none' } };
   if (opts && opts.deviceName) printOptions.deviceName = opts.deviceName; // ماكينة محددة بالاسم
 
-  // تحقق مبكر بدل الفشل الصامت: الاسم المحفوظ لازم يطابق طابعة موجودة فعلاً،
-  // ولو مفيش اسم محفوظ لازم تكون الطابعة الافتراضية حقيقية (مش Print to PDF)
+  // اختيار الطابعة + رسالة واضحة بدل الفشل الصامت
   try {
     const printers = await e.sender.getPrintersAsync();
+    const isVirtual = (n) => /PDF|XPS|OneNote|Fax/i.test(n);
     if (printOptions.deviceName) {
-      const found = printers.some((p) => p.name === printOptions.deviceName);
-      if (!found) {
+      if (!printers.some((p) => p.name === printOptions.deviceName)) {
         const names = printers.map((p) => p.name).join(' | ') || 'لا يوجد';
         return {
           success: false,
@@ -108,83 +104,23 @@ ipcMain.handle('print-silent', async (e, opts) => {
     } else {
       // مفيش اسم محفوظ: خد الافتراضية الحقيقية، ولو ويندوز مش معلّم افتراضية
       // (وضع Let Windows manage) استخدم الطابعة الحقيقية الوحيدة تلقائياً
-      const isVirtual = (n) => /PDF|XPS|OneNote|Fax/i.test(n);
       const real = printers.filter((p) => !isVirtual(p.name));
       const def = printers.find((p) => p.isDefault);
-      if (def && !isVirtual(def.name)) {
-        printOptions.deviceName = def.name;
-      } else if (real.length === 1) {
-        printOptions.deviceName = real[0].name; // طابعة حقيقية واحدة بس — دي ماكينة الفواتير أكيد
-      } else if (real.length === 0) {
+      if (def && !isVirtual(def.name)) printOptions.deviceName = def.name;
+      else if (real.length === 1) printOptions.deviceName = real[0].name;
+      else if (real.length === 0)
         return { success: false, reason: 'مفيش طابعة حقيقية متوصلة بالجهاز — وصّل ماكينة الفواتير الأول.' };
-      } else {
+      else
         return {
           success: false,
-          reason: 'في أكتر من طابعة على الجهاز (' + real.map((p) => p.name).join(' | ') + ') — اختار ماكينة الفواتير من الإعدادات.',
+          reason: 'في أكتر من طابعة (' + real.map((p) => p.name).join(' | ') + ') — اختار ماكينة الفواتير من الإعدادات.',
         };
-      }
     }
   } catch { /* لو القائمة فشلت نكمّل ونحاول الطباعة عادي */ }
 
-  // الطريقة القديمة (طباعة الصفحة الحالية) كبديل لو مفيش html
-  if (!opts || !opts.html) {
-    return new Promise((resolve) => {
-      e.sender.print(printOptions, (success, reason) => resolve({ success, reason }));
-    });
-  }
-
-  let pw = null;
-  let tmpFile = null;
-  try {
-    // نكتب الإيصال في ملف مؤقت ونحمّله بـ file:// (أثبت من data: URL)
-    tmpFile = path.join(os.tmpdir(), 'kabana-receipt-' + Date.now() + '.html');
-    fs.writeFileSync(tmpFile, opts.html, 'utf8');
-
-    // مهم جداً: النافذة لازم "تترسم" فعلياً وإلا الطباعة بتطلع صفحة بيضا.
-    // نفتحها خارج الشاشة (بعيد) ونعرضها بدون تركيز عشان ترسم من غير ما تظهر للكاشير.
-    pw = new BrowserWindow({
-      x: -32000,
-      y: -32000,
-      width: 380,
-      height: 1200,
-      show: false,
-      frame: false,
-      skipTaskbar: true,
-      webPreferences: { sandbox: true, contextIsolation: true, backgroundThrottling: false },
-    });
-    pw.showInactive(); // يعرضها خارج الشاشة (غير مرئية) عشان تترسم فعلاً
-
-    await pw.loadFile(tmpFile);
-    // استنى تحميل الخط + إطارين رسم عشان نتأكد إن المحتوى اترسم
-    await pw.webContents
-      .executeJavaScript(
-        'document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))).then(()=>Math.max(document.body.scrollHeight,120))'
-      )
-      .catch(() => 300);
-
-    const tryPrint = (options) =>
-      new Promise((resolve) => {
-        pw.webContents.print(options, (success, reason) => resolve({ success, reason: reason || '' }));
-      });
-
-    // من غير فرض مقاس ورق — نسيب تعريف الطابعة يستخدم مقاس الرول المظبوط فيه
-    // (نفس اللي بيحصل لما المستخدم يطبع من نافذة ويندوز وبتنجح)
-    let res = await tryPrint(printOptions);
-    if (!res.success) {
-      const res2 = await tryPrint({ ...printOptions, pageSize: { width: 80000, height: 200000 } });
-      if (res2.success) res = res2;
-      else res = { success: false, reason: (res.reason || 'فشل') + ' / ' + (res2.reason || 'فشل') };
-    }
-    return res;
-  } catch (err) {
-    return { success: false, reason: String(err && err.message) };
-  } finally {
-    // اقفل نافذة الطباعة وامسح الملف المؤقت بعد ما الأمر يتبعت للطابعة
-    setTimeout(() => {
-      try { if (pw) pw.close(); } catch {}
-      try { if (tmpFile) fs.unlinkSync(tmpFile); } catch {}
-    }, 20000);
-  }
+  return await new Promise((resolve) => {
+    e.sender.print(printOptions, (success, reason) => resolve({ success, reason: reason || '' }));
+  });
 });
 
 ipcMain.handle('list-printers', async (e) => {
