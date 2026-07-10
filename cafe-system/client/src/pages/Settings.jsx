@@ -26,6 +26,13 @@ export default function Settings() {
   const [error, setError] = useState('');
   const [lan, setLan] = useState(null);
   const [testReceipt, setTestReceipt] = useState(null);
+  const [printMode, setPrintMode] = useState(localStorage.getItem('kabana_print_mode') || 'dialog');
+
+  function changePrintMode(m) {
+    setPrintMode(m);
+    localStorage.setItem('kabana_print_mode', m);
+    flash(m === 'dialog' ? '✅ الطباعة هتفتح نافذة جاهزة — تدوس Print' : '✅ الطباعة هتطلع مباشرة بدون نافذة');
+  }
 
   useEffect(() => {
     listPrinters().then((ps) => {
@@ -100,6 +107,19 @@ export default function Settings() {
         ) : (
           <p className="muted">اختيار الطابعة متاح في تطبيق الديسك توب فقط. في المتصفح بتظهر شاشة الطباعة العادية.</p>
         )}
+        <hr className="soft-sep" />
+        <h4 className="sub-h">طريقة الطباعة</h4>
+        <div className="print-mode">
+          <button className={'mode-btn ' + (printMode === 'dialog' ? 'on' : '')} onClick={() => changePrintMode('dialog')}>
+            🪟 نافذة الطباعة
+            <small>تفتح جاهزة بالفاتورة — تدوس Print (الأضمن)</small>
+          </button>
+          <button className={'mode-btn ' + (printMode === 'silent' ? 'on' : '')} onClick={() => changePrintMode('silent')}>
+            ⚡ طباعة مباشرة
+            <small>بدون نافذة — لو طابعتك بتدعمها</small>
+          </button>
+        </div>
+
         <hr className="soft-sep" />
         <p className="muted small">جرّب الطابعة بفاتورة تجريبية قبل الافتتاح — لو طلعت طلاسم يبقى إعداد درايفر الطابعة محتاج يتظبط (شوف الملاحظة تحت).</p>
         <button className="btn-primary" onClick={() => setTestReceipt(SAMPLE_RECEIPT)}>🖨️ طباعة تجريبية</button>

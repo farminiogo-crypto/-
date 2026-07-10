@@ -808,6 +808,16 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .cancel-shift-btn:hover { border-color: var(--danger); background: #fff5f4; }
 
 .soft-sep { border: none; border-top: 1px solid var(--line); margin: 16px 0; }
+.sub-h { font-size: 15px; margin-bottom: 10px; color: var(--brand); }
+.print-mode { display: flex; gap: 12px; flex-wrap: wrap; }
+.mode-btn {
+  flex: 1; min-width: 180px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 14px 16px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface);
+  font-weight: 800; font-size: 15px; color: var(--ink); cursor: pointer; text-align: right;
+}
+.mode-btn small { font-weight: 600; font-size: 12px; color: var(--muted); }
+.mode-btn.on { border-color: var(--brand); background: #f7f0e8; }
+.mode-btn.on small { color: var(--brand); }
 .tip-box { background: #fff8ec; border: 1px solid #f0e2c8; border-radius: 10px; padding: 10px 12px; margin-top: 10px; line-height: 1.7; }
 
 /* ============ حركات الواجهة (transform/opacity فقط — سريعة على أي جهاز) ============ */
