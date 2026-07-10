@@ -139,17 +139,29 @@ ipcMain.handle('print-silent', async (e, opts) => {
     });
     await pw.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(opts.html));
 
-    // استنى تحميل الخط ثم قيس ارتفاع الإيصال الحقيقي بالبكسل
+    // استنى تحميل الخط قبل الطباعة
     const heightPx = await pw.webContents.executeJavaScript(
       'document.fonts.ready.then(() => Math.max(document.body.scrollHeight, 120))'
     );
-    // تحويل بكسل → ميكرون (96px = بوصة = 25.4مم) + هامش أمان بسيط قبل القص
-    const heightMicrons = Math.ceil((heightPx * 25.4 * 1000) / 96) + 4000;
-    printOptions.pageSize = { width: 80000, height: heightMicrons }; // رول 80مم
 
-    return await new Promise((resolve) => {
-      pw.webContents.print(printOptions, (success, reason) => resolve({ success, reason }));
-    });
+    const tryPrint = (options) =>
+      new Promise((resolve) => {
+        pw.webContents.print(options, (success, reason) => resolve({ success, reason: reason || '' }));
+      });
+
+    // المحاولة الأولى: من غير فرض مقاس ورق — نسيب تعريف الطابعة يستخدم مقاس
+    // الرول المظبوط فيه (درايفرات الحرارية بترفض المقاسات المخصوصة غالباً،
+    // وده كان سبب فشل الطباعة الصامتة رغم نجاحها من نافذة ويندوز)
+    let res = await tryPrint(printOptions);
+
+    // خطة تانية: بمقاس رول 80مم صريح بالميكرون (لو الدرايفر افتراضيه A4 مثلاً)
+    if (!res.success) {
+      const heightMicrons = Math.ceil((heightPx * 25.4 * 1000) / 96) + 4000;
+      const res2 = await tryPrint({ ...printOptions, pageSize: { width: 80000, height: heightMicrons } });
+      if (res2.success) res = res2;
+      else res = { success: false, reason: (res.reason || 'فشل') + ' / ' + (res2.reason || 'فشل') };
+    }
+    return res;
   } catch (err) {
     return { success: false, reason: String(err && err.message) };
   } finally {
