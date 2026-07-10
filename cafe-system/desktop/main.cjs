@@ -4,6 +4,8 @@ const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
+const os = require('os');
 
 // ===== منع تجميد النافذة والإدخال على ويندوز =====
 // ويندوز أحياناً يفتكر إن النافذة "مغطّاة" فيجمّد الرسم والكيبورد والماوس لحد ما
@@ -132,32 +134,44 @@ ipcMain.handle('print-silent', async (e, opts) => {
   }
 
   let pw = null;
+  let tmpFile = null;
   try {
-    pw = new BrowserWindow({
-      show: false,
-      webPreferences: { sandbox: true, contextIsolation: true },
-    });
-    await pw.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(opts.html));
+    // نكتب الإيصال في ملف مؤقت ونحمّله بـ file:// (أثبت من data: URL)
+    tmpFile = path.join(os.tmpdir(), 'kabana-receipt-' + Date.now() + '.html');
+    fs.writeFileSync(tmpFile, opts.html, 'utf8');
 
-    // استنى تحميل الخط قبل الطباعة
-    const heightPx = await pw.webContents.executeJavaScript(
-      'document.fonts.ready.then(() => Math.max(document.body.scrollHeight, 120))'
-    );
+    // مهم جداً: النافذة لازم "تترسم" فعلياً وإلا الطباعة بتطلع صفحة بيضا.
+    // نفتحها خارج الشاشة (بعيد) ونعرضها بدون تركيز عشان ترسم من غير ما تظهر للكاشير.
+    pw = new BrowserWindow({
+      x: -32000,
+      y: -32000,
+      width: 380,
+      height: 1200,
+      show: false,
+      frame: false,
+      skipTaskbar: true,
+      webPreferences: { sandbox: true, contextIsolation: true, backgroundThrottling: false },
+    });
+    pw.showInactive(); // يعرضها خارج الشاشة (غير مرئية) عشان تترسم فعلاً
+
+    await pw.loadFile(tmpFile);
+    // استنى تحميل الخط + إطارين رسم عشان نتأكد إن المحتوى اترسم
+    await pw.webContents
+      .executeJavaScript(
+        'document.fonts.ready.then(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))).then(()=>Math.max(document.body.scrollHeight,120))'
+      )
+      .catch(() => 300);
 
     const tryPrint = (options) =>
       new Promise((resolve) => {
         pw.webContents.print(options, (success, reason) => resolve({ success, reason: reason || '' }));
       });
 
-    // المحاولة الأولى: من غير فرض مقاس ورق — نسيب تعريف الطابعة يستخدم مقاس
-    // الرول المظبوط فيه (درايفرات الحرارية بترفض المقاسات المخصوصة غالباً،
-    // وده كان سبب فشل الطباعة الصامتة رغم نجاحها من نافذة ويندوز)
+    // من غير فرض مقاس ورق — نسيب تعريف الطابعة يستخدم مقاس الرول المظبوط فيه
+    // (نفس اللي بيحصل لما المستخدم يطبع من نافذة ويندوز وبتنجح)
     let res = await tryPrint(printOptions);
-
-    // خطة تانية: بمقاس رول 80مم صريح بالميكرون (لو الدرايفر افتراضيه A4 مثلاً)
     if (!res.success) {
-      const heightMicrons = Math.ceil((heightPx * 25.4 * 1000) / 96) + 4000;
-      const res2 = await tryPrint({ ...printOptions, pageSize: { width: 80000, height: heightMicrons } });
+      const res2 = await tryPrint({ ...printOptions, pageSize: { width: 80000, height: 200000 } });
       if (res2.success) res = res2;
       else res = { success: false, reason: (res.reason || 'فشل') + ' / ' + (res2.reason || 'فشل') };
     }
@@ -165,8 +179,11 @@ ipcMain.handle('print-silent', async (e, opts) => {
   } catch (err) {
     return { success: false, reason: String(err && err.message) };
   } finally {
-    // اقفل نافذة الطباعة المخفية بعد ما الأمر يتبعت للطابعة
-    if (pw) setTimeout(() => { try { pw.close(); } catch {} }, 15000);
+    // اقفل نافذة الطباعة وامسح الملف المؤقت بعد ما الأمر يتبعت للطابعة
+    setTimeout(() => {
+      try { if (pw) pw.close(); } catch {}
+      try { if (tmpFile) fs.unlinkSync(tmpFile); } catch {}
+    }, 20000);
   }
 });
 
