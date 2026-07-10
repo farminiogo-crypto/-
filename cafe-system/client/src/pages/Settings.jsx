@@ -28,7 +28,15 @@ export default function Settings() {
   const [testReceipt, setTestReceipt] = useState(null);
 
   useEffect(() => {
-    listPrinters().then(setPrinters);
+    listPrinters().then((ps) => {
+      setPrinters(ps);
+      // لو مفيش طابعة محفوظة وفيه طابعة حقيقية واحدة بس — اختارها واحفظها تلقائياً
+      const saved = localStorage.getItem('kabana_printer') || '';
+      if (!saved) {
+        const real = ps.filter((p) => !/PDF|XPS|OneNote|Fax/i.test(p.name));
+        if (real.length === 1) savePrinter(real[0].name);
+      }
+    });
     api.getPrinter().then((r) => {
       if (r.printer_name) { setPrinter(r.printer_name); localStorage.setItem('kabana_printer', r.printer_name); }
     }).catch(() => {});

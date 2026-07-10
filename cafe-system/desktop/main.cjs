@@ -104,14 +104,21 @@ ipcMain.handle('print-silent', async (e, opts) => {
         };
       }
     } else {
+      // مفيش اسم محفوظ: خد الافتراضية الحقيقية، ولو ويندوز مش معلّم افتراضية
+      // (وضع Let Windows manage) استخدم الطابعة الحقيقية الوحيدة تلقائياً
+      const isVirtual = (n) => /PDF|XPS|OneNote|Fax/i.test(n);
+      const real = printers.filter((p) => !isVirtual(p.name));
       const def = printers.find((p) => p.isDefault);
-      if (!def) return { success: false, reason: 'مفيش طابعة افتراضية على الجهاز — اختار الطابعة من الإعدادات.' };
-      if (/PDF|XPS|OneNote|Fax/i.test(def.name)) {
+      if (def && !isVirtual(def.name)) {
+        printOptions.deviceName = def.name;
+      } else if (real.length === 1) {
+        printOptions.deviceName = real[0].name; // طابعة حقيقية واحدة بس — دي ماكينة الفواتير أكيد
+      } else if (real.length === 0) {
+        return { success: false, reason: 'مفيش طابعة حقيقية متوصلة بالجهاز — وصّل ماكينة الفواتير الأول.' };
+      } else {
         return {
           success: false,
-          reason:
-            'الطابعة الافتراضية للجهاز هي "' + def.name + '" (مش طابعة حقيقية).\n' +
-            'روح للإعدادات واختار ماكينة الفواتير من القايمة.',
+          reason: 'في أكتر من طابعة على الجهاز (' + real.map((p) => p.name).join(' | ') + ') — اختار ماكينة الفواتير من الإعدادات.',
         };
       }
     }
