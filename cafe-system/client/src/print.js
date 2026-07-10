@@ -42,13 +42,53 @@ function buildReceiptPage() {
   );
 }
 
+// طباعة في المتصفح: نحمّل صفحة الإيصال المستقلة في إطار مخفي ونطبع الإطار نفسه —
+// فمعاينة الطباعة تعرض الإيصال فقط (طباعة صفحة البرنامج كانت بتطلع معاينة فاضية)
+function printViaFrame(html) {
+  return new Promise((resolve) => {
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:80mm;height:400px;border:0;';
+    let done = false; // onload ممكن يتنادى أكتر من مرة (about:blank ثم srcdoc) — نطبع مرة واحدة
+    frame.onload = () => {
+      const w = frame.contentWindow;
+      // تجاهل تحميل الصفحة الفاضية الأولية — نطبع بس لما الإيصال يكون موجود فعلاً
+      if (!w || !w.document.body || w.document.body.children.length === 0) return;
+      const doPrint = () => {
+        if (done) return;
+        done = true;
+        try {
+          w.focus();
+          w.print();
+        } catch {
+          window.print(); // احتياطي أخير
+        }
+        // شيل الإطار بعد ما حوار الطباعة يقفل
+        setTimeout(() => frame.remove(), 60000);
+        resolve(true);
+      };
+      // استنى تحميل خط القاهرة عشان المعاينة تطلع بالخط الصح
+      if (w.document.fonts && w.document.fonts.ready) {
+        w.document.fonts.ready.then(doPrint, doPrint);
+        setTimeout(doPrint, 1500); // حد أقصى للانتظار
+      } else {
+        setTimeout(doPrint, 300);
+      }
+    };
+    frame.srcdoc = html; // قبل الإضافة للصفحة — عشان مايحصلش تحميل صفحة فاضية الأول
+    document.body.appendChild(frame);
+  });
+}
+
 export async function printReceipt() {
   // انتظر لحظة ليكتمل رسم الإيصال قبل الطباعة
   await new Promise((r) => setTimeout(r, 60));
+  const html = buildReceiptPage();
+
+  // تطبيق الديسك توب: طباعة صامتة مباشرة على ماكينة الفواتير
   if (window.kabana && typeof window.kabana.printSilent === 'function') {
     try {
       const deviceName = localStorage.getItem('kabana_printer') || '';
-      const html = buildReceiptPage();
       const res = await window.kabana.printSilent({
         ...(deviceName ? { deviceName } : {}),
         ...(html ? { html } : {}),
@@ -58,6 +98,9 @@ export async function printReceipt() {
       /* fall through to browser print */
     }
   }
+
+  // المتصفح: اطبع صفحة الإيصال المستقلة (مش صفحة البرنامج)
+  if (html) return printViaFrame(html);
   window.print();
   return true;
 }
