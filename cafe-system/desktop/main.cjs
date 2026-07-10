@@ -80,14 +80,46 @@ function createWindow() {
 }
 
 // ===== الطباعة الصامتة على ماكينة الفواتير =====
-// تطبع الصفحة الحالية على الطابعة الافتراضية مباشرة (بدون نافذة حوار).
-// الإيصال وحده هو الظاهر بفضل @media print، فتطبع ماكينة الفواتير الإيصال فقط.
-ipcMain.handle('print-silent', (e, opts) => {
-  return new Promise((resolve) => {
-    const printOptions = { silent: true, printBackground: true, margins: { marginType: 'none' } };
-    if (opts && opts.deviceName) printOptions.deviceName = opts.deviceName; // ماكينة محددة بالاسم
-    e.sender.print(printOptions, (success, reason) => resolve({ success, reason }));
-  });
+// الواجهة بتبعت صفحة HTML مستقلة فيها الإيصال فقط (opts.html)، بنحمّلها في
+// نافذة مخفية ونطبعها بمقاس رول 80مم وارتفاع بطول محتوى الإيصال فعلياً.
+// (طباعة صفحة البرنامج نفسها بإخفاء الواجهة كانت بتطلع صفحة فاضية —
+//  الطابعة تقص الورق من غير ما تطبع حاجة)
+ipcMain.handle('print-silent', async (e, opts) => {
+  const printOptions = { silent: true, printBackground: true, margins: { marginType: 'none' } };
+  if (opts && opts.deviceName) printOptions.deviceName = opts.deviceName; // ماكينة محددة بالاسم
+
+  // الطريقة القديمة (طباعة الصفحة الحالية) كبديل لو مفيش html
+  if (!opts || !opts.html) {
+    return new Promise((resolve) => {
+      e.sender.print(printOptions, (success, reason) => resolve({ success, reason }));
+    });
+  }
+
+  let pw = null;
+  try {
+    pw = new BrowserWindow({
+      show: false,
+      webPreferences: { sandbox: true, contextIsolation: true },
+    });
+    await pw.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(opts.html));
+
+    // استنى تحميل الخط ثم قيس ارتفاع الإيصال الحقيقي بالبكسل
+    const heightPx = await pw.webContents.executeJavaScript(
+      'document.fonts.ready.then(() => Math.max(document.body.scrollHeight, 120))'
+    );
+    // تحويل بكسل → ميكرون (96px = بوصة = 25.4مم) + هامش أمان بسيط قبل القص
+    const heightMicrons = Math.ceil((heightPx * 25.4 * 1000) / 96) + 4000;
+    printOptions.pageSize = { width: 80000, height: heightMicrons }; // رول 80مم
+
+    return await new Promise((resolve) => {
+      pw.webContents.print(printOptions, (success, reason) => resolve({ success, reason }));
+    });
+  } catch (err) {
+    return { success: false, reason: String(err && err.message) };
+  } finally {
+    // اقفل نافذة الطباعة المخفية بعد ما الأمر يتبعت للطابعة
+    if (pw) setTimeout(() => { try { pw.close(); } catch {} }, 15000);
+  }
 });
 
 ipcMain.handle('list-printers', async (e) => {
