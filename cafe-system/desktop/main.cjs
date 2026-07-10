@@ -88,6 +88,35 @@ ipcMain.handle('print-silent', async (e, opts) => {
   const printOptions = { silent: true, printBackground: true, margins: { marginType: 'none' } };
   if (opts && opts.deviceName) printOptions.deviceName = opts.deviceName; // ماكينة محددة بالاسم
 
+  // تحقق مبكر بدل الفشل الصامت: الاسم المحفوظ لازم يطابق طابعة موجودة فعلاً،
+  // ولو مفيش اسم محفوظ لازم تكون الطابعة الافتراضية حقيقية (مش Print to PDF)
+  try {
+    const printers = await e.sender.getPrintersAsync();
+    if (printOptions.deviceName) {
+      const found = printers.some((p) => p.name === printOptions.deviceName);
+      if (!found) {
+        const names = printers.map((p) => p.name).join(' | ') || 'لا يوجد';
+        return {
+          success: false,
+          reason:
+            'الطابعة المحفوظة "' + printOptions.deviceName + '" مش موجودة على الجهاز.\n' +
+            'الطابعات المتاحة: ' + names + '\nروح للإعدادات واختار الطابعة الصح.',
+        };
+      }
+    } else {
+      const def = printers.find((p) => p.isDefault);
+      if (!def) return { success: false, reason: 'مفيش طابعة افتراضية على الجهاز — اختار الطابعة من الإعدادات.' };
+      if (/PDF|XPS|OneNote|Fax/i.test(def.name)) {
+        return {
+          success: false,
+          reason:
+            'الطابعة الافتراضية للجهاز هي "' + def.name + '" (مش طابعة حقيقية).\n' +
+            'روح للإعدادات واختار ماكينة الفواتير من القايمة.',
+        };
+      }
+    }
+  } catch { /* لو القائمة فشلت نكمّل ونحاول الطباعة عادي */ }
+
   // الطريقة القديمة (طباعة الصفحة الحالية) كبديل لو مفيش html
   if (!opts || !opts.html) {
     return new Promise((resolve) => {

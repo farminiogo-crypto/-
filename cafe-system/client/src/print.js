@@ -94,8 +94,14 @@ export async function printReceipt() {
         ...(html ? { html } : {}),
       });
       if (res && res.success) return true;
+      // فشل الطباعة الصامتة — قول للمستخدم السبب بدل الصمت، وافتح نافذة الطباعة العادية
+      alert(
+        '⚠️ الطباعة المباشرة على ماكينة الفواتير فشلت:\n\n' +
+          (res && res.reason ? res.reason : 'سبب غير معروف') +
+          '\n\nهنفتح نافذة الطباعة العادية دلوقتي.'
+      );
     } catch (e) {
-      /* fall through to browser print */
+      alert('⚠️ الطباعة المباشرة فشلت: ' + (e && e.message ? e.message : e) + '\nهنفتح نافذة الطباعة العادية.');
     }
   }
 
