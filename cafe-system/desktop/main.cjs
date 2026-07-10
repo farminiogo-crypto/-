@@ -50,7 +50,6 @@ function waitForServer(done, tries = 0) {
 
 function createWindow() {
   win = new BrowserWindow({
-    fullscreen: true,
     autoHideMenuBar: true,
     backgroundColor: '#f4f1ea',
     webPreferences: {
@@ -60,6 +59,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
     },
   });
+  // نافذة مكبّرة تملأ الشاشة بس تسيب شريط مهام ويندوز ظاهر (يوصله باللمس)
+  win.maximize();
   win.loadURL(`http://localhost:${PORT}`);
 
   // منع النوافذ المنبثقة (وضع الكشك): لو ضغطة على قايمة جانبية اتفهمت غلط
