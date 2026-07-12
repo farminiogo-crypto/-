@@ -55,6 +55,10 @@ export default function POS() {
   const [editingCustomer, setEditingCustomer] = useState(false);
   const [customerName, setCustomerName] = useState('');
 
+  // دفع جزئي (زبون يحاسب على أصنافه بس) — كمية كل صنف المطلوب دفعها
+  const [splitOpen, setSplitOpen] = useState(false);
+  const [splitQty, setSplitQty] = useState({}); // { [itemId]: qty }
+
   // ملاحظة صنف داخل الفاتورة
   const [noteFor, setNoteFor] = useState(null); // id السطر اللي بنكتب ملاحظته
   const [noteDraft, setNoteDraft] = useState('');
@@ -214,6 +218,47 @@ export default function POS() {
     back();
   }
 
+  // ===== دفع جزئي =====
+  function openSplit() {
+    setSplitQty({}); // يبدأ الكل صفر
+    setSplitOpen(true);
+  }
+  function setSplit(itemId, max, delta) {
+    setSplitQty((s) => {
+      const cur = s[itemId] || 0;
+      const next = Math.max(0, Math.min(max, cur + delta));
+      return { ...s, [itemId]: next };
+    });
+  }
+  const splitTotal = useMemo(
+    () => (order?.items || []).reduce((sum, i) => sum + (splitQty[i.id] || 0) * i.price, 0),
+    [order, splitQty]
+  );
+  const splitCount = Object.values(splitQty).reduce((a, b) => a + b, 0);
+
+  async function paySplit() {
+    const items = Object.entries(splitQty)
+      .filter(([, q]) => q > 0)
+      .map(([item_id, qty]) => ({ item_id: Number(item_id), qty }));
+    if (items.length === 0) return;
+    try {
+      const { paid, order: rest } = await api.splitPay(order.id, items);
+      setSplitOpen(false);
+      setReceipt(paid);
+      setLowStock(paid.low_stock || []);
+      if (rest) {
+        setOrder(rest); // الترابيزة لسه فيها أصناف
+      } else {
+        setOrder(null); // الترابيزة اتفضت
+        setProdSearch('');
+        setActiveCat('all');
+        loadTables();
+      }
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   // بوابة الشيفت
   if (shift === null) {
     return (
@@ -327,10 +372,48 @@ export default function POS() {
           </div>
 
           <button className="btn-checkout" disabled={order.items.length === 0} onClick={pay}>
-            💵 دفع كاش • {fmt(order.total)} ج
+            💵 دفع الكل • {fmt(order.total)} ج
+          </button>
+          <button className="btn-split" disabled={order.items.length === 0} onClick={openSplit}>
+            🧾 دفع جزئي (زبون يحاسب لوحده)
           </button>
           <button className="btn-cancel" onClick={cancel}>إلغاء الفاتورة</button>
         </aside>
+
+        {/* نافذة الدفع الجزئي */}
+        {splitOpen && (
+          <div className="modal-overlay" onClick={() => setSplitOpen(false)}>
+            <div className="dialog split-modal" onClick={(e) => e.stopPropagation()}>
+              <h3>🧾 حساب زبون لوحده</h3>
+              <p className="muted small">اختار كام واحد من كل صنف الزبون هيحاسب عليه — الباقي يفضل على الترابيزة.</p>
+              <div className="split-list">
+                {order.items.map((i) => (
+                  <div key={i.id} className="split-row">
+                    <div className="split-info">
+                      <span className="cart-name">{i.name}</span>
+                      <span className="muted small">{fmt(i.price)} ج × {i.qty} متاح</span>
+                    </div>
+                    <div className="qty-ctrl">
+                      <button onClick={() => setSplit(i.id, i.qty, -1)}>−</button>
+                      <span>{splitQty[i.id] || 0}</span>
+                      <button onClick={() => setSplit(i.id, i.qty, 1)}>+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="sum-row total split-total">
+                <span>إجمالي الزبون</span>
+                <span>{fmt(splitTotal)} ج</span>
+              </div>
+              <div className="dialog-actions">
+                <button className="btn-primary" disabled={splitCount === 0} onClick={paySplit}>
+                  💵 دفع {fmt(splitTotal)} ج
+                </button>
+                <button className="btn-ghost" onClick={() => setSplitOpen(false)}>إلغاء</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* شريط دفع ثابت تحت — يظهر على الموبايل فقط عشان الجرسون يدفع من غير سكرول */}
         {order.items.length > 0 && (

@@ -33,10 +33,13 @@ function shiftSummary(shift) {
   };
 }
 
-// الشيفت الحالي مع ملخصه
+// الشيفت الحالي مع ملخصه + عدد الترابيزات المفتوحة حالياً
 router.get('/current', requireAuth, (req, res) => {
   const shift = currentShift();
-  res.json(shift ? shiftSummary(shift) : null);
+  if (!shift) return res.json(null);
+  const summary = shiftSummary(shift);
+  summary.open_tables = db.prepare("SELECT COUNT(*) AS c FROM orders WHERE status = 'open'").get().c;
+  res.json(summary);
 });
 
 // فتح شيفت جديد
@@ -55,22 +58,22 @@ router.post('/open', requireAuth, (req, res) => {
 });
 
 // قفل الشيفت الحالي (مع جرد الدرج)
+// الترابيزات المفتوحة **مسموح** تفضل مفتوحة بعد قفل الشيفت — الكاشير يقدر
+// يرجعلها بكرة (بعد فتح شيفت جديد) ويكمّل حساب ويقفلها. المبيعات بتتحسب على
+// الشيفت اللي اتدفعت فيه الفاتورة، مش اللي اتفتحت فيه.
 router.post('/close', requireAuth, (req, res) => {
   const shift = currentShift();
   if (!shift) return res.status(400).json({ error: 'لا يوجد شيفت مفتوح' });
-
-  const openOrders = db
-    .prepare("SELECT COUNT(*) AS c FROM orders WHERE status = 'open'")
-    .get().c;
-  if (openOrders > 0)
-    return res.status(400).json({ error: `يوجد ${openOrders} فاتورة مفتوحة، أغلقها قبل قفل الشيفت` });
 
   const { closing_cash = 0, notes = '' } = req.body || {};
   db.prepare(
     "UPDATE shifts SET status = 'closed', closing_cash = ?, notes = ?, closed_at = datetime('now','localtime') WHERE id = ?"
   ).run(Number(closing_cash) || 0, notes, shift.id);
 
-  res.json(shiftSummary(db.prepare('SELECT * FROM shifts WHERE id = ?').get(shift.id)));
+  const summary = shiftSummary(db.prepare('SELECT * FROM shifts WHERE id = ?').get(shift.id));
+  // عدد الترابيزات اللي فضلت مفتوحة (تُحمل للشيفت الجاي) — لعرضها/طباعتها
+  summary.open_tables = db.prepare("SELECT COUNT(*) AS c FROM orders WHERE status = 'open'").get().c;
+  res.json(summary);
 });
 
 // يمسح شيفت وكل بياناته ويرجّع المخزون والترابيزات (للتجربة/التصحيح)

@@ -21,6 +21,36 @@ function withItems(order) {
   return order;
 }
 
+// يخصم مكونات مجموعة أصناف مباعة من المخزون (الخصم التلقائي فقط: بن/شاي...)
+// ويسجّل الحركة. اليدوي (لبن/سكر/نعناع) لا يُخصم آلياً.
+// للأصناف اللي ليها إنتاجية: qty_per_unit = عدد الكوبايات، والاستهلاك الفعلي =
+// كوبايات × (حجم العبوة ÷ كوبايات العبوة).
+function deductInventoryForItems(items, orderId, userName) {
+  const getIngredients = db.prepare(
+    `SELECT pi.inventory_id, pi.qty_per_unit, i.package_size, i.cups_per_package
+     FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
+     WHERE pi.product_id = ? AND i.auto_deduct = 1`
+  );
+  const perUnitAmount = (ing) =>
+    ing.cups_per_package && ing.package_size
+      ? ing.qty_per_unit * (ing.package_size / ing.cups_per_package)
+      : ing.qty_per_unit;
+  const deduct = db.prepare(
+    "UPDATE inventory SET quantity = MAX(0, quantity - ?), updated_at = datetime('now','localtime') WHERE id = ?"
+  );
+  const logMove = db.prepare(
+    'INSERT INTO inventory_moves (inventory_id, delta, reason, ref_order_id, user_name) VALUES (?, ?, ?, ?, ?)'
+  );
+  for (const it of items) {
+    if (!it.product_id) continue;
+    for (const ing of getIngredients.all(it.product_id)) {
+      const used = perUnitAmount(ing) * it.qty;
+      deduct.run(used, ing.inventory_id);
+      logMove.run(ing.inventory_id, -used, `بيع: ${it.name} ×${it.qty}`, orderId, userName);
+    }
+  }
+}
+
 // فتح فاتورة لترابيزة (أو إرجاع المفتوحة لو موجودة)
 router.post('/open', requireAuth, (req, res) => {
   const shift = currentShift();
@@ -139,41 +169,13 @@ router.post('/:id/pay', requireAuth, (req, res) => {
   if (items.length === 0) return res.status(400).json({ error: 'الفاتورة فارغة' });
 
   const shift = currentShift();
-  // يخصم فقط الخامات المضبوطة "خصم تلقائي" (بن/شاي...) — اليدوي (لبن/سكر/نعناع) لا يُخصم آلياً
-  // للأصناف اللي ليها إنتاجية (العبوة تعمل كام كوباية): qty_per_unit = عدد الكوبايات،
-  // والاستهلاك الفعلي = كوبايات × (حجم العبوة ÷ كوبايات العبوة)
-  const getIngredients = db.prepare(
-    `SELECT pi.inventory_id, pi.qty_per_unit, i.package_size, i.cups_per_package
-     FROM product_ingredients pi JOIN inventory i ON i.id = pi.inventory_id
-     WHERE pi.product_id = ? AND i.auto_deduct = 1`
-  );
-  const perUnitAmount = (ing) =>
-    ing.cups_per_package && ing.package_size
-      ? ing.qty_per_unit * (ing.package_size / ing.cups_per_package)
-      : ing.qty_per_unit;
-  const deduct = db.prepare(
-    "UPDATE inventory SET quantity = MAX(0, quantity - ?), updated_at = datetime('now','localtime') WHERE id = ?"
-  );
-  const logMove = db.prepare(
-    'INSERT INTO inventory_moves (inventory_id, delta, reason, ref_order_id, user_name) VALUES (?, ?, ?, ?, ?)'
-  );
-
   const tx = db.transaction(() => {
     recalc(order.id);
     db.prepare(
       "UPDATE orders SET status = 'paid', shift_id = ?, paid_at = datetime('now','localtime') WHERE id = ?"
     ).run(shift?.id || null, order.id);
     if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
-
-    // خصم مكونات كل صنف مباع من المخزون
-    for (const it of items) {
-      if (!it.product_id) continue;
-      for (const ing of getIngredients.all(it.product_id)) {
-        const used = perUnitAmount(ing) * it.qty;
-        deduct.run(used, ing.inventory_id);
-        logMove.run(ing.inventory_id, -used, `بيع: ${it.name} ×${it.qty}`, order.id, req.user.name);
-      }
-    }
+    deductInventoryForItems(items, order.id, req.user.name);
   });
   tx();
 
@@ -185,6 +187,64 @@ router.post('/:id/pay', requireAuth, (req, res) => {
   const paid = withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id));
   paid.low_stock = lowStock;
   res.json(paid);
+});
+
+// دفع جزئي: زبون في ترابيزة فيها كذا شخص يحاسب على أصنافه لوحده.
+// بيعمل فاتورة جديدة مدفوعة بالأصناف المختارة (تُطبع + تخصم مخزون + تتحسب مبيعات)،
+// ويقلّل كميات الأصناف من الترابيزة الأصلية. لو الترابيزة فضلت فاضية تتحرّر.
+router.post('/:id/split-pay', requireAuth, (req, res) => {
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order || order.status !== 'open') return res.status(400).json({ error: 'الفاتورة غير مفتوحة' });
+
+  const picks = Array.isArray(req.body?.items) ? req.body.items : [];
+  const selected = [];
+  for (const p of picks) {
+    const qty = Math.max(0, parseInt(p.qty) || 0);
+    if (qty <= 0) continue;
+    const item = db.prepare('SELECT * FROM order_items WHERE id = ? AND order_id = ?').get(p.item_id, order.id);
+    if (!item) return res.status(404).json({ error: 'صنف غير موجود في الفاتورة' });
+    if (qty > item.qty) return res.status(400).json({ error: `الكمية المطلوبة من "${item.name}" أكبر من الموجود` });
+    selected.push({ item, qty });
+  }
+  if (selected.length === 0) return res.status(400).json({ error: 'اختار الأصناف اللي هتتحاسب' });
+
+  const shift = currentShift();
+  let newOrderId = null;
+  const tx = db.transaction(() => {
+    const orderNo = 'ORD-' + Date.now().toString().slice(-6);
+    const info = db
+      .prepare(
+        'INSERT INTO orders (order_no, table_id, table_name, customer_name, cashier_id, cashier_name, status, shift_id, paid_at) ' +
+          "VALUES (?, ?, ?, ?, ?, ?, 'paid', ?, datetime('now','localtime'))"
+      )
+      .run(orderNo, order.table_id, order.table_name, order.customer_name, req.user.id, req.user.name, shift?.id || null);
+    newOrderId = info.lastInsertRowid;
+
+    const paidItems = [];
+    for (const { item, qty } of selected) {
+      db.prepare('INSERT INTO order_items (order_id, product_id, name, price, qty, note) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(newOrderId, item.product_id, item.name, item.price, qty, item.note || null);
+      paidItems.push({ product_id: item.product_id, name: item.name, qty });
+      if (qty >= item.qty) db.prepare('DELETE FROM order_items WHERE id = ?').run(item.id);
+      else db.prepare('UPDATE order_items SET qty = qty - ? WHERE id = ?').run(qty, item.id);
+    }
+    recalc(newOrderId);
+    deductInventoryForItems(paidItems, newOrderId, req.user.name);
+
+    const remaining = db.prepare('SELECT COUNT(*) AS c FROM order_items WHERE order_id = ?').get(order.id).c;
+    if (remaining === 0) {
+      db.prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?").run(order.id);
+      if (order.table_id) db.prepare("UPDATE tables SET status = 'free' WHERE id = ?").run(order.table_id);
+    } else {
+      recalc(order.id);
+    }
+  });
+  tx();
+
+  const paid = withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(newOrderId));
+  paid.low_stock = db.prepare('SELECT name, quantity, unit FROM inventory WHERE quantity <= min_quantity').all();
+  const remainingOrder = db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id);
+  res.json({ paid, order: remainingOrder.status === 'open' ? withItems(remainingOrder) : null });
 });
 
 // تعديل اسم الزبون على فاتورة مفتوحة (في أي وقت قبل الدفع)

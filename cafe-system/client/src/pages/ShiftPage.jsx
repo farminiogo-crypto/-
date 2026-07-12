@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { auth, api } from '../api.js';
 import NumPad from '../components/NumPad.jsx';
+import ShiftReceipt from '../components/ShiftReceipt.jsx';
 
 export default function ShiftPage() {
   const isAdmin = auth.user?.role === 'admin';
@@ -15,6 +16,7 @@ export default function ShiftPage() {
   const [closingCash, setClosingCash] = useState('');
   const [notes, setNotes] = useState('');
   const [closedResult, setClosedResult] = useState(null);
+  const [printReport, setPrintReport] = useState(null); // تقرير الشيفت للطباعة
   const openCashRef = useRef(null);
 
   const fmt = (n) => Number(n || 0).toFixed(2);
@@ -53,6 +55,7 @@ export default function ShiftPage() {
     try {
       const result = await api.closeShift(Number(closingCash) || 0, notes);
       setClosedResult(result);
+      setPrintReport(result); // افتح تقرير الشيفت للطباعة على طول
       setClosingCash('');
       setNotes('');
       await refreshShift();
@@ -118,6 +121,10 @@ export default function ShiftPage() {
               tone={closedResult.difference === 0 ? 'ok' : closedResult.difference > 0 ? 'warn' : 'bad'}
             />
           </div>
+          {closedResult.open_tables > 0 && (
+            <p className="muted small">⚠️ فيه {closedResult.open_tables} ترابيزة مفتوحة اتحملت للشيفت الجاي — تقدر تكمّلها بكرة.</p>
+          )}
+          <button className="btn-ghost" onClick={() => setPrintReport(closedResult)}>🖨️ طباعة تقرير الشيفت</button>
         </div>
       )}
 
@@ -146,7 +153,11 @@ export default function ShiftPage() {
             <label>ملاحظات (اختياري)</label>
             <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="أي ملاحظات على الشيفت" />
             <button className="btn-danger-solid">قفل الشيفت وتسليم الدرج</button>
-            <p className="muted small">⚠️ لازم كل الفواتير المفتوحة تتقفل قبل قفل الشيفت.</p>
+            {shift.open_tables > 0 ? (
+              <p className="muted small">☕ فيه {shift.open_tables} ترابيزة مفتوحة — هتفضل مفتوحة وتقدر تكمّلها في الشيفت الجاي.</p>
+            ) : (
+              <p className="muted small">هيتطبع تقرير الشيفت بعد القفل.</p>
+            )}
           </form>
         </div>
       ) : (
@@ -208,6 +219,8 @@ export default function ShiftPage() {
           </table>
         </div>
       )}
+
+      {printReport && <ShiftReceipt shift={printReport} onClose={() => setPrintReport(null)} />}
     </div>
   );
 }

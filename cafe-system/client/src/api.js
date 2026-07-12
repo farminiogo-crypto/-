@@ -76,6 +76,7 @@ export const api = {
     request(`/orders/${id}/items/${itemId}/note`, { method: 'PATCH', body: { note } }),
   removeItem: (id, itemId) => request(`/orders/${id}/items/${itemId}`, { method: 'DELETE' }),
   payOrder: (id) => request(`/orders/${id}/pay`, { method: 'POST' }),
+  splitPay: (id, items) => request(`/orders/${id}/split-pay`, { method: 'POST', body: { items } }),
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'POST' }),
   voidOrder: (id) => request(`/orders/${id}/void`, { method: 'POST' }),
   setCustomer: (id, customer_name) =>
