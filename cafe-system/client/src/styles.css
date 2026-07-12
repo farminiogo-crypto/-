@@ -886,9 +886,12 @@ button:active { transform: scale(.96); }
 /* مفاتيح لوحة الأرقام */
 .np-key:active { transform: scale(.92); }
 
-/* لو المستخدم مفعّل "تقليل الحركة" في النظام — نوقف كل الأنيميشن احتراماً له */
+/* ملاحظة: كنا بنوقف كل الأنيميشن لو ويندوز مفعّل "تقليل الحركة"، لكن ده كان
+   بيخلي الأنيميشن مايشتغلش على أجهزة الكافيه اللي تأثيرات الحركة مقفولة فيها.
+   بما إنها كشك والأنيميشن كله خفيف (transform/opacity)، نسيبه شغال دايماً،
+   ونوقف بس النبضات المستمرة (اللي ممكن تضايق) احتراماً للإعداد. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .nav-badge, .table-icon { animation: none !important; }
 }
 
 /* ============ شريط الدفع الثابت للموبايل ============ */
