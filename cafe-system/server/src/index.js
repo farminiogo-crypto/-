@@ -21,26 +21,37 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // ===== نسخ احتياطي تلقائي لقاعدة البيانات =====
-// نسخة يومية في data/backups/ — يحتفظ بآخر 30 نسخة
+// نسختين في data/backups/:
+//   يومية  (cafe-backup-YYYY-MM-DD.db)      — يحتفظ بآخر 30 يوم (شهر تاريخ)
+//   بالساعة (cafe-hourly-YYYY-MM-DD_HH.db)  — يحتفظ بآخر 48 ساعة (يومين لقطات دقيقة)
+// كده لو قطعت الكهربا في أي لحظة، أسوأ حالة تخسر شغل ساعة واحدة بحد أقصى.
 const backupsDir = join(__dirname, '..', 'data', 'backups');
 mkdirSync(backupsDir, { recursive: true });
 
-async function backupDatabase() {
-  const today = new Date().toLocaleDateString('sv'); // YYYY-MM-DD بتوقيت الجهاز
-  const dest = join(backupsDir, `cafe-backup-${today}.db`);
-  if (existsSync(dest)) return; // نسخة النهارده موجودة
+async function makeBackup(prefix, stamp, keep) {
+  const dest = join(backupsDir, `${prefix}-${stamp}.db`);
+  if (existsSync(dest)) return; // نسخة نفس الفترة موجودة بالفعل
   try {
     await db.backup(dest); // نسخ آمن ومتسق حتى أثناء الاستخدام
     console.log(`💾 نسخة احتياطية: ${dest}`);
-    // الاحتفاظ بآخر 30 نسخة فقط
-    const files = readdirSync(backupsDir).filter((f) => f.startsWith('cafe-backup-')).sort();
-    while (files.length > 30) unlinkSync(join(backupsDir, files.shift()));
+    // الاحتفاظ بآخر (keep) نسخة فقط من نفس النوع
+    const files = readdirSync(backupsDir).filter((f) => f.startsWith(prefix + '-')).sort();
+    while (files.length > keep) unlinkSync(join(backupsDir, files.shift()));
   } catch (e) {
     console.error('⚠️ فشل النسخ الاحتياطي:', e.message);
   }
 }
-backupDatabase();                                   // عند التشغيل
-setInterval(backupDatabase, 6 * 60 * 60 * 1000);    // وكل 6 ساعات (لو اليوم اتغيّر)
+
+function runBackups() {
+  const now = new Date();
+  const day = now.toLocaleDateString('sv'); // YYYY-MM-DD بتوقيت الجهاز
+  const hour = String(now.getHours()).padStart(2, '0');
+  makeBackup('cafe-backup', day, 30);              // يومية — آخر 30 يوم
+  makeBackup('cafe-hourly', `${day}_${hour}`, 48); // بالساعة — آخر 48 ساعة
+}
+
+runBackups();                                 // عند التشغيل
+setInterval(runBackups, 60 * 60 * 1000);      // وكل ساعة
 
 app.use(cors());
 app.use(express.json());

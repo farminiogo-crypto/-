@@ -61,7 +61,7 @@ client/src/
 - `GET /api/orders` يرجع `{rows, count, total}` مع فلاتر `?date=&q=`.
 - مكتبة الأيقونات `ICON_SET` في `MenuManager.jsx` (التكرار مسموح)، ووحدات المخزون `UNITS` في `Inventory.jsx`.
 - الخط في `client/public/fonts/` (يُنسخ لـ dist تلقائياً).
-- **حماية البيانات:** `npm run seed` يرفض المسح لو فيه فواتير — لازم `npm run seed:force`. نسخة احتياطية يومية تلقائية في `server/data/backups/` (آخر 30 نسخة) عبر `db.backup()` عند الإقلاع وكل 6 ساعات. الفواتير المدفوعة لا تُعدَّل ولا تُحذف أبداً.
+- **حماية البيانات:** `npm run seed` يرفض المسح لو فيه فواتير — لازم `npm run seed:force`. نسخ احتياطي تلقائي في `server/data/backups/` عبر `db.backup()`: **يومية** `cafe-backup-YYYY-MM-DD.db` (آخر 30 يوم) + **بالساعة** `cafe-hourly-YYYY-MM-DD_HH.db` (آخر 48 ساعة) — عند الإقلاع وكل ساعة (`runBackups`/`makeBackup` في `index.js`). الفواتير المدفوعة لا تُعدَّل ولا تُحذف أبداً.
 - **تقرير شهري Excel:** `GET /api/reports/monthly.xlsx?month=YYYY-MM` (مدير) — 6 صفحات RTL عبر exceljs، والتنزيل من لوحة التحكم.
 - **الطباعة الحرارية:** في **الديسك توب** `print.js` بيستنسخ محتوى `#receipt-print` في `#print-host` على مستوى `body`، ثم `main.cjs` يطبع نافذة البرنامج نفسها صامتاً (`e.sender.print` — المسار الوحيد اللي بيوصل للطابعة فعلاً). كتلة `@media print` في `styles.css` بتعمل `#root { display:none }` وتظهر `#print-host` في التدفق العادي فالصفحة ترتفع بطول الإيصال. **تحذير:** الطريقة القديمة (`visibility:hidden` + `position:absolute` + `#root height:0`) كانت بتطلع صفحة ارتفاعها صفر → طباعة فاضية والطابعة تقص الورق. اختيار الطابعة تلقائي في `main.cjs` (لو طابعة حقيقية واحدة). في **المتصفح** `printViaFrame` بيطبع صفحة الإيصال المستقلة في iframe مخفي.
 
