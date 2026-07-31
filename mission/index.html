@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#050708">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>الوحدة ٧ — إنذار مهمة | محاكاة تفاعلية</title>
+<meta name="description" content="محاكاة تفاعلية خيالية على شكل إنذار مهمة يصل إلى هاتف ميداني. محتوى ترفيهي بالكامل، لا يمثل أي جهة حقيقية.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050708'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%2300ffb2' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='%23ff2d46'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;800&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="mission.css">
+</head>
+<body data-stage="boot">
+
+<!-- طبقات التأثير البصري العامة -->
+<div class="fx-vignette" aria-hidden="true"></div>
+<div class="fx-scanlines" aria-hidden="true"></div>
+<div class="fx-noise" aria-hidden="true"></div>
+<div class="fx-flash" id="fxFlash" aria-hidden="true"></div>
+
+<!-- شريط علوي ثابت -->
+<div class="topbar" aria-hidden="true">
+  <div class="topbar-side">
+    <span class="sig" id="sigBars"><i></i><i></i><i></i><i></i></span>
+    <span class="mono">SAT-LINK</span>
+  </div>
+  <div class="topbar-mid mono" id="topClock">--:--:--</div>
+  <div class="topbar-side end">
+    <span class="mono" id="battText">87%</span>
+    <span class="batt"><b style="width:87%"></b></span>
+  </div>
+</div>
+
+<!-- زر الكتم -->
+<button class="mute-btn" id="muteBtn" type="button" aria-pressed="false" aria-label="كتم الصوت">
+  <svg viewBox="0 0 24 24" class="ico-on" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <svg viewBox="0 0 24 24" class="ico-off" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+</button>
+
+<main class="viewport" id="viewport">
+
+  <!-- ═══ 1. الإنذار الوارد ═══ -->
+  <section class="stage stage-alert" data-for="alert" aria-labelledby="alertTitle">
+    <div class="alert-rings" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <div class="alert-inner">
+      <div class="crest" aria-hidden="true">
+        <svg viewBox="0 0 100 110">
+          <path d="M50 4 92 20v40c0 26-18 41-42 46C26 101 8 86 8 60V20z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M50 16 82 28v31c0 20-14 32-32 36-18-4-32-16-32-36V28z" fill="none" stroke="currentColor" stroke-width="1" opacity=".45"/>
+          <path d="M50 34l6.5 13.5L71 49.5 60.5 60l2.5 15L50 68l-13 7.5 2.5-15L29 49.5l14.5-2z" fill="currentColor" opacity=".9"/>
+          <text x="50" y="97" text-anchor="middle" font-size="13" fill="currentColor" font-family="monospace">VII</text>
+        </svg>
+      </div>
+
+      <p class="unit-line mono">SHADOW COMMAND · UNIT VII</p>
+      <div class="prio-tag" id="prioTag">أولوية قصوى</div>
+
+      <h1 id="alertTitle" class="alert-title glitch" data-text="اتصال مشفّر وارد">اتصال مشفّر وارد</h1>
+      <p class="alert-sub">تم استدعاؤك. البلاغ ينتظر فك التشفير.</p>
+
+      <dl class="alert-meta mono">
+        <div><dt>المُرسِل</dt><dd>غرفة العمليات ٧</dd></div>
+        <div><dt>القناة</dt><dd>AES-256 / SAT</dd></div>
+        <div><dt>التصنيف</dt><dd class="danger">سري للغاية</dd></div>
+      </dl>
+
+      <p class="ring-timer mono" id="ringTimer">يرنّ منذ 00:00</p>
+    </div>
+
+    <div class="stage-foot">
+      <button class="btn btn-danger btn-lg pulse" id="btnAccept" type="button">
+        <span class="btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z"/></svg>
+        </span>
+        استلام البلاغ
+      </button>
+      <p class="hint">اضغط للاستلام — سيبدأ التحقق من هويتك</p>
+    </div>
+  </section>
+
+  <!-- ═══ 2. المصادقة ═══ -->
+  <section class="stage stage-auth" data-for="auth" aria-labelledby="authTitle">
+    <div class="auth-inner">
+      <h2 id="authTitle" class="stage-h">التحقق من الهوية</h2>
+
+      <div class="fingerprint" id="fingerprint">
+        <svg viewBox="0 0 120 140" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M60 18c23 0 42 19 42 42v20c0 12-3 24-8 34"/>
+            <path d="M18 60c0-23 19-42 42-42"/>
+            <path d="M18 62v22c0 10 2 20 6 30"/>
+            <path d="M32 60a28 28 0 0 1 56 0v24c0 11-2 21-6 30"/>
+            <path d="M32 62v22c0 9 1 17 4 25"/>
+            <path d="M46 60a14 14 0 0 1 28 0v26c0 10-1 19-4 28"/>
+            <path d="M46 64v22c0 8 1 15 3 22"/>
+            <path d="M60 54a7 7 0 0 1 7 7v26c0 9-1 17-3 25"/>
+            <path d="M60 70v18"/>
+          </g>
+        </svg>
+        <span class="fp-scan" aria-hidden="true"></span>
+      </div>
+
+      <ul class="check-list mono" id="authList" aria-live="polite">
+        <li data-ok="pending"><span class="mark"></span>مطابقة البصمة الحيوية</li>
+        <li data-ok="pending"><span class="mark"></span>تحقق من الجهاز الميداني</li>
+        <li data-ok="pending"><span class="mark"></span>فك تشفير الحزمة AES-256</li>
+        <li data-ok="pending"><span class="mark"></span>مزامنة الساعة مع القمر</li>
+      </ul>
+
+      <div class="progress"><span id="authBar"></span></div>
+    </div>
+  </section>
+
+  <!-- ═══ 3. موجز المهمة ═══ -->
+  <section class="stage stage-brief" data-for="briefing" aria-labelledby="briefTitle">
+    <div class="brief-inner">
+      <p class="eyebrow mono">// موجز العملية · للعين فقط</p>
+      <h2 id="briefTitle" class="op-name" data-decrypt="عملية: سراب أسود">عملية: سراب أسود</h2>
+
+      <div class="brief-grid mono">
+        <div class="cell"><span class="k">التصنيف</span><span class="v danger" data-decrypt="سري للغاية">سري للغاية</span></div>
+        <div class="cell"><span class="k">القطاع</span><span class="v" data-decrypt="القطاع 9-شمال">القطاع 9-شمال</span></div>
+        <div class="cell"><span class="k">الأفراد</span><span class="v" data-decrypt="6 عناصر">6 عناصر</span></div>
+        <div class="cell"><span class="k">الطقس</span><span class="v" data-decrypt="رياح 18 كم/س">رياح 18 كم/س</span></div>
+        <div class="cell"><span class="k">الرؤية</span><span class="v" data-decrypt="ضعيفة · ليلي">ضعيفة · ليلي</span></div>
+        <div class="cell"><span class="k">الاشتباك</span><span class="v" data-decrypt="محتمل">محتمل</span></div>
+      </div>
+
+      <p class="brief-body" data-decrypt="تسلل ليلي إلى نقطة الهدف، تأمين الحزمة، والانسحاب قبل الفجر. الصمت اللاسلكي مفروض حتى إشارة الانطلاق.">تسلل ليلي إلى نقطة الهدف، تأمين الحزمة، والانسحاب قبل الفجر. الصمت اللاسلكي مفروض حتى إشارة الانطلاق.</p>
+
+      <div class="countdown-box">
+        <span class="cd-label mono">الوقت المتبقي للانطلاق</span>
+        <span class="cd mono" id="countdown">04:30</span>
+      </div>
+    </div>
+
+    <div class="stage-foot">
+      <button class="btn btn-primary btn-lg" id="btnOpenMap" type="button">
+        <span class="btn-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></span>
+        فتح الخريطة التكتيكية
+      </button>
+    </div>
+  </section>
+
+  <!-- ═══ 4. الخريطة التكتيكية ═══ -->
+  <section class="stage stage-map" data-for="map" aria-labelledby="mapTitle">
+    <h2 id="mapTitle" class="sr-only">الخريطة التكتيكية ونقاط التزود</h2>
+
+    <div class="map-head">
+      <div class="map-head-row">
+        <span class="mono grid-ref" id="gridRef">GRID 38S·MC·4471</span>
+        <span class="cd cd-sm mono" id="countdownMap">04:30</span>
+      </div>
+      <div class="map-head-row">
+        <div class="progress thin"><span id="visitBar"></span></div>
+        <span class="mono visits" id="visitCount">0 / 3</span>
+      </div>
+    </div>
+
+    <div class="map-wrap" id="mapWrap">
+      <canvas id="tacticalMap"></canvas>
+      <div class="map-hotspots" id="hotspots"></div>
+      <div class="map-corner tl mono">SEC·9N</div>
+      <div class="map-corner tr mono">ZOOM ×1.4</div>
+      <div class="map-corner bl mono" id="selfCoord">34.021N / 44.887E</div>
+      <div class="map-corner br mono">THERMAL</div>
+    </div>
+
+    <p class="map-hint" id="mapHint">اضغط على أي نقطة لعرض تفاصيلها</p>
+
+    <div class="poi-list" id="poiList"></div>
+
+    <div class="stage-foot map-foot">
+      <button class="btn btn-primary btn-lg" id="btnJoin" type="button">
+        <span class="btn-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.6 6.2 19.8l1.6-6.6L2.6 8.8l6.8-.5z"/></svg></span>
+        انضمام للعملية
+      </button>
+      <button class="btn btn-ghost" id="btnUnavailable" type="button">غير متاح بالخدمة</button>
+    </div>
+  </section>
+
+  <!-- ═══ 5. التحقق من التصريح ═══ -->
+  <section class="stage stage-verify" data-for="verify" aria-labelledby="verifyTitle">
+    <div class="verify-inner">
+      <div class="spinner" id="verifySpin" aria-hidden="true"><span></span><span></span><span></span></div>
+      <h2 id="verifyTitle" class="stage-h">التحقق من التصريح</h2>
+      <ul class="check-list mono" id="verifyList" aria-live="polite">
+        <li data-ok="pending"><span class="mark"></span>استعلام قاعدة الأفراد</li>
+        <li data-ok="pending"><span class="mark"></span>مطابقة التصريح الأمني</li>
+        <li data-ok="pending"><span class="mark"></span>التحقق من حالة الخدمة</li>
+      </ul>
+      <div class="progress"><span id="verifyBar"></span></div>
+    </div>
+  </section>
+
+  <!-- ═══ 6. غير متاح بالخدمة ═══ -->
+  <section class="stage stage-denied" data-for="denied" aria-labelledby="deniedTitle">
+    <div class="denied-inner">
+      <div class="stamp" aria-hidden="true"><span>غير متاح بالخدمة</span></div>
+      <h2 id="deniedTitle" class="denied-title glitch" data-text="التصريح مرفوض">التصريح مرفوض</h2>
+      <p class="denied-reason" id="deniedReason">حالتك في السجل: <b>خارج الخدمة</b>. لا يمكن ضمّك إلى هذه العملية.</p>
+      <dl class="alert-meta mono">
+        <div><dt>رقم المرجع</dt><dd id="refNo">—</dd></div>
+        <div><dt>الحالة</dt><dd class="danger">DENIED · 403</dd></div>
+      </dl>
+      <p class="denied-note">أُغلقت القناة. سيُحذف هذا البلاغ من جهازك.</p>
+    </div>
+    <div class="stage-foot">
+      <button class="btn btn-ghost btn-lg" id="btnRestart" type="button">إعادة التشغيل</button>
+    </div>
+  </section>
+
+  <!-- ═══ انتهاء الوقت ═══ -->
+  <section class="stage stage-timeout" data-for="timeout" aria-labelledby="timeoutTitle">
+    <div class="denied-inner">
+      <h2 id="timeoutTitle" class="denied-title glitch" data-text="انتهى الوقت">انتهى الوقت</h2>
+      <p class="denied-reason">انطلقت القافلة بدونك. أُغلقت نافذة الانضمام.</p>
+    </div>
+    <div class="stage-foot">
+      <button class="btn btn-ghost btn-lg" id="btnRestart2" type="button">إعادة التشغيل</button>
+    </div>
+  </section>
+
+</main>
+
+<p class="disclaimer">محاكاة تفاعلية خيالية — محتوى ترفيهي، لا يمثل أي جهة حقيقية</p>
+
+<script src="map.js"></script>
+<script src="mission.js"></script>
+</body>
+</html>
