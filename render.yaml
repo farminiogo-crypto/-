@@ -1,0 +1,18 @@
+# نشر نظام كابانا على Render.com كخدمة ويب واحدة (مجاناً)
+# الخطوات: render.com → New + → Blueprint → اختر هذا الريبو → Apply
+services:
+  - type: web
+    name: cafe-kabana
+    runtime: node
+    plan: free
+    rootDir: cafe-system/server
+    # الواجهة مبنية مسبقاً ومسجّلة في الريبو (client/dist)، فلا حاجة لبنائها
+    buildCommand: npm install
+    # يعبّئ البيانات الأولية لو القاعدة فاضية ثم يشغّل الخادم
+    startCommand: node src/ensure-seed.js && node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: JWT_SECRET
+        generateValue: true
