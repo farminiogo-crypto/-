@@ -1,0 +1,57 @@
+---
+import Ziggurat from '@/components/Ziggurat.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import { wa, waMessages } from '@/config/site';
+interface Props {
+  title?: string;
+  text?: string;
+  waMessage?: string;
+}
+const {
+  title = 'طبقتك التالية تبدأ برسالة.',
+  text = 'أخبرنا أين وصلت في رسالتك، وسنخبرك بالخطوة التالية وتكلفتها، بلا أي التزام.',
+  waMessage = waMessages.general,
+} = Astro.props;
+---
+<section class="fcta section--dark" data-fab-hide aria-labelledby="fcta-title">
+  <div class="container fcta__grid">
+    <div class="fcta__art" aria-hidden="true">
+      <Ziggurat variant="cta" tiers={7} />
+    </div>
+    <div class="fcta__text">
+      <h2 id="fcta-title" data-reveal="heading">{title}</h2>
+      <p class="lead" data-reveal="fade">{text}</p>
+      <div class="fcta__actions" data-reveal="fade" data-delay="0.15">
+        <a class="btn btn--wa btn--lg" href={wa(waMessage)} target="_blank" rel="noopener" data-magnetic>
+          <BrandIcon name="whatsapp" /> تحدث معنا على واتساب
+        </a>
+        <a class="btn btn--outline btn--lg" href="/request/">ابدأ طلبك</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .fcta { padding-block: var(--space-section); overflow: clip; }
+  .fcta__grid { display: grid; gap: 2rem; align-items: center; }
+  .fcta__art { width: min(70vw, 300px); margin-inline: auto; }
+  .fcta__text { display: grid; gap: 1.1rem; justify-items: start; }
+  .fcta__text h2 { font-size: var(--fs-h1); }
+  .fcta__text .lead { color: var(--on-dark-muted); max-width: 52ch; }
+  .fcta__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+  @media (max-width: 480px) { .fcta__actions, .fcta__actions .btn { width: 100%; } }
+  @media (min-width: 900px) {
+    .fcta__grid { grid-template-columns: 1.2fr 0.8fr; gap: 4rem; }
+    .fcta__art { order: 2; width: 100%; max-width: 420px; }
+  }
+</style>
+
+<script>
+  // البرج يُبنى عند ظهور القسم ثم يتوهج بخفة
+  document.querySelectorAll<SVGElement>('.zig--cta').forEach((zig) => {
+    const io = new IntersectionObserver(([en]) => {
+      if (en.isIntersecting) { zig.classList.add('is-in'); io.disconnect(); }
+    }, { threshold: 0.35 });
+    io.observe(zig);
+  });
+</script>

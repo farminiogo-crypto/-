@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import Icon from '@/components/ui/Icon.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+
+const posts = (await getCollection('blog')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const fmt = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<BaseLayout
+  title="المدونة: دليل الباحث من اختيار الموضوع إلى التوثيق والتحليل"
+  description="مقالات عملية لطلاب الماجستير والدكتوراه: كيف تختار موضوع بحثك، أساسيات التحليل الإحصائي واختيار الاختبار المناسب، ودليل التوثيق بنظام APA."
+  motion={false}
+>
+  <PageHero
+    compact
+    crumbs={[{ href: '/blog/', label: 'المدونة' }]}
+    eyebrow="المدونة"
+    title="ما تحتاج معرفته قبل أن تبدأ الطبقة التالية."
+    lead="مقالات عملية نكتبها من أسئلة الطلاب التي تتكرر علينا."
+  />
+  <section class="section">
+    <div class="container">
+      <ul role="list" class="posts">
+        {posts.map((p) => (
+          <li>
+            <a class="post-card" href={`/blog/${p.id}/`}>
+              <span class="post-card__cat">{p.data.category}</span>
+              <h2 class="post-card__title">{p.data.title}</h2>
+              <p class="post-card__desc">{p.data.description}</p>
+              <span class="post-card__meta">
+                <span><Icon name="calendar" size={16} /> <time datetime={p.data.date.toISOString()}>{fmt.format(p.data.date)}</time></span>
+                <span><Icon name="clock" size={16} /> {p.data.readingMinutes} دقائق قراءة</span>
+              </span>
+              <span class="link-arrow">اقرأ المقال <Icon name="arrow-left" size={18} /></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .posts { display: grid; gap: 1.25rem; }
+  @media (min-width: 900px) { .posts { grid-template-columns: repeat(3, 1fr); } }
+  .post-card { display: flex; flex-direction: column; gap: 0.75rem; height: 100%; padding: 1.75rem; border-radius: var(--radius-card); background: var(--cream-50); border: 1px solid var(--line-light); text-decoration: none; transition: transform 0.4s var(--ease-expo), box-shadow 0.4s; }
+  .post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); }
+  .post-card__cat { align-self: flex-start; font-size: var(--fs-xs); font-weight: 600; color: var(--brick-600); background: var(--brick-tint); padding: 0.2rem 0.7rem; border-radius: var(--radius-pill); }
+  .post-card__title { font-size: 1.45rem; line-height: 1.5; }
+  .post-card__desc { color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.85; }
+  .post-card__meta { display: flex; flex-wrap: wrap; gap: 1rem; font-size: var(--fs-xs); color: var(--ink-muted); }
+  .post-card__meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .post-card .link-arrow { margin-top: auto; }
+</style>

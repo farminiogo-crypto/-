@@ -1,0 +1,62 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HomeHero from '@/components/home/HomeHero.astro';
+import TrustBar from '@/components/home/TrustBar.astro';
+import TowerSection from '@/components/home/TowerSection.astro';
+import Proofs from '@/components/home/Proofs.astro';
+import ServicesBento from '@/components/home/ServicesBento.astro';
+import WorkStrip from '@/components/home/WorkStrip.astro';
+import Testimonials from '@/components/home/Testimonials.astro';
+import MiniRequest from '@/components/home/MiniRequest.astro';
+import ProcessTimeline from '@/components/ProcessTimeline.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import FAQ from '@/components/FAQ.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { homeFaq } from '@/data/home';
+import { site } from '@/config/site';
+---
+<BaseLayout
+  title={`${site.nameAr} | تحليل إحصائي وتصميم استبانات وتنسيق رسائل الماجستير والدكتوراه`}
+  fullTitle
+  description="بابل أكاديمي يرافقك في رسالة الماجستير أو الدكتوراه من الفكرة إلى المناقشة: استشارة منهجية، تصميم استبانات وتحكيمها، تحليل إحصائي SPSS مشروح، تحرير وتنسيق وتحقق من المراجع، وتحضير للمناقشة."
+  preloader
+  preloadHeading
+>
+  <HomeHero />
+  <TrustBar />
+  <TowerSection />
+  <Proofs />
+  <ServicesBento />
+  <WorkStrip />
+
+  <section class="section section--cream50" aria-labelledby="how-title">
+    <div class="container">
+      <SectionTitle id="how-title" eyebrow="كيف نعمل" title="خمس خطوات واضحة، ولا مفاجآت." align="center" />
+      <ProcessTimeline />
+      <p class="how__more" data-reveal="fade">
+        <a class="link-arrow" href="/process/">التسعير والدفع والتعديلات بالتفصيل <Icon name="arrow-left" size={18} /></a>
+      </p>
+    </div>
+  </section>
+
+  <MiniRequest />
+
+  <Testimonials />
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="container container--narrow">
+      <SectionTitle id="faq-title" eyebrow="أسئلة شائعة" title="قبل أن تسأل." />
+      <FAQ items={homeFaq} />
+      <p class="how__more" data-reveal="fade">
+        <a class="link-arrow" href="/faq/">كل الأسئلة <Icon name="arrow-left" size={18} /></a>
+      </p>
+    </div>
+  </section>
+
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .how__more { display: flex; justify-content: center; margin-top: 2.5rem; }
+</style>

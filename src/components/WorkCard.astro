@@ -1,0 +1,53 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Mock from '@/components/Mock.astro';
+import { workCategories } from '@/data/work';
+interface Props { item: CollectionEntry<'portfolio'>; class?: string; headingLevel?: 'h2' | 'h3' }
+const { item, class: cls = '', headingLevel: H = 'h3' } = Astro.props;
+const d = item.data;
+---
+<a class={`work-card ${cls}`} href={`/work/${item.id}/`} data-cursor="افتح" data-mock-host>
+  <div class="work-card__visual">
+    {d.image ? <img src={d.image} alt={`لقطة مموهة من عمل: ${d.title}`} loading="lazy" /> : <Mock type={d.mock} title={d.mockTitle} />}
+  </div>
+  <div class="work-card__body">
+    <p class="work-card__meta">
+      <span class="chip">{d.level}</span>
+      <span class="chip">{d.field}</span>
+    </p>
+    <H class="work-card__title">{d.title}</H>
+    <p class="work-card__summary">{d.summary}</p>
+    <p class="work-card__cats">{d.categories.map((c) => workCategories[c]).join(' · ')}</p>
+  </div>
+</a>
+
+<style>
+  .work-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: var(--radius-card);
+    background: var(--cream-50);
+    border: 1px solid var(--line-light);
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform 0.5s var(--ease-expo), box-shadow 0.5s var(--ease-expo);
+  }
+  .work-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); }
+  .work-card__visual {
+    aspect-ratio: 4 / 3;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    background:
+      radial-gradient(ellipse at 50% 120%, rgba(166, 61, 64, 0.16), transparent 60%),
+      linear-gradient(160deg, #e9e2d3, #ddd4c2);
+    overflow: hidden;
+  }
+  .work-card__visual img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .work-card__body { display: grid; gap: 0.55rem; padding: 1.25rem 1.35rem 1.4rem; }
+  .work-card__meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .work-card__title { font-size: 1.2rem; line-height: 1.55; }
+  .work-card__summary { font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.75; }
+  .work-card__cats { font-size: var(--fs-xs); font-weight: 600; color: var(--brick-600); }
+</style>

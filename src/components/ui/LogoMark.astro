@@ -1,0 +1,18 @@
+---
+// رمز مؤقت: زقورة من 4 طبقات متدرجة مع درج أوسط.
+// TODO محمود: استبدله بالملف الرسمي في public/brand/ عند توفره.
+interface Props { size?: number; class?: string }
+const { size = 40, class: cls = '' } = Astro.props;
+---
+<svg class={`logo-mark ${cls}`} width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <g class="logo-mark__tiers" fill="currentColor">
+    <rect class="t t1" x="2" y="30" width="36" height="7" rx="1" />
+    <rect class="t t2" x="7" y="22.5" width="26" height="7" rx="1" />
+    <rect class="t t3" x="11.5" y="15" width="17" height="7" rx="1" />
+    <rect class="t t4" x="15.5" y="7.5" width="9" height="7" rx="1" />
+  </g>
+  <g class="logo-mark__stair">
+    <rect x="18" y="7.5" width="4" height="29.5" fill="var(--brick-600)" />
+    <path d="M18 33.5h4M18 26h4M18 18.5h4M18 11h4" stroke="var(--cream-50)" stroke-width="0.9" opacity="0.7" />
+  </g>
+</svg>

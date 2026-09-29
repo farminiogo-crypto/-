@@ -1,0 +1,177 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import Icon from '@/components/ui/Icon.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { layers } from '@/data/home';
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const fields = (await getCollection('fields')).sort((a, b) => a.data.order - b.data.order);
+const byId = Object.fromEntries(services.map((s) => [s.id, s]));
+const layerServices = [...new Set(layers.map((l) => l.service))];
+const beyond = services.filter((s) => !layerServices.includes(s.id));
+const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
+---
+<BaseLayout
+  title="خدمات الدعم الأكاديمي لطلاب الماجستير والدكتوراه"
+  description="كل خدمات بابل أكاديمي: استشارة منهجية وخطط بحث، تصميم استبانات وتحكيمها، تحليل إحصائي SPSS مشروح، تحرير وتدقيق، تنسيق وتوثيق وتحقق من المراجع، ترجمة أكاديمية، وعروض المناقشة."
+>
+  <PageHero
+    crumbs={[{ href: '/services/', label: 'الخدمات' }]}
+    eyebrow="الخدمات"
+    title="كل ما تحتاجه رسالتك، في مكان واحد."
+    lead="اختر الطبقة التي وصلت إليها في رسالتك، أو ابدأ طلبك ونقترح عليك الخطوة التالية."
+  >
+    <a slot="actions" class="btn btn--primary btn--lg" href="/request/" data-magnetic>ابدأ طلبك في دقيقة</a>
+  </PageHero>
+
+  <section class="section" aria-labelledby="journey-title">
+    <div class="container">
+      <SectionTitle id="journey-title" eyebrow="على طول الرسالة" title="خدمات مرتبة على طبقات البرج" lead="من الفكرة في القاعدة إلى المناقشة في القمة." />
+      <ol role="list" class="journey" data-reveal="stagger">
+        {layers.map((l, i) => {
+          const s = byId[l.service];
+          return (
+            <li class="journey__row" style={`--i:${i}`}>
+              <span class="journey__num">{digits[i]}</span>
+              <div class="journey__stage">
+                <p class="journey__layer">{l.title}</p>
+                <p class="muted">{l.text}</p>
+              </div>
+              <a class="journey__svc" href={`/services/${s.id}/`}>
+                <Icon name={s.data.icon} size={22} />
+                <span>{s.data.title}</span>
+                <Icon name="arrow-left" size={18} class="journey__arrow" />
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--cream50" aria-labelledby="beyond-title">
+    <div class="container">
+      <SectionTitle id="beyond-title" eyebrow="وأكثر" title="خدمات لما بعد الرسالة وما حولها" />
+      <ul role="list" class="svc-grid" data-reveal="stagger">
+        {beyond.map((s) => (
+          <li>
+            <a class="svc-card" href={`/services/${s.id}/`}>
+              <span class="svc-card__icon"><Icon name={s.data.icon} size={24} /></span>
+              <h3>{s.data.title}</h3>
+              <p class="muted">{s.data.short}</p>
+              <span class="link-arrow">تفاصيل الخدمة <Icon name="arrow-left" size={18} /></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" id="fields" aria-labelledby="fields-title">
+    <div class="container">
+      <SectionTitle id="fields-title" eyebrow="مجالات التخصص" title="نعرف لغة تخصصك." lead="لكل مجال أدواته وأسئلة لجانه المعتادة. هذه المجالات التي نعمل فيها باستمرار." />
+      <ul role="list" class="fields-grid" data-reveal="stagger">
+        {fields.map((f) => (
+          <li>
+            <a class="field-card" href={`/fields/${f.id}/`}>
+              <Icon name={f.data.icon} size={26} />
+              <span class="field-card__title">{f.data.title}</span>
+              <span class="field-card__short">{f.data.short}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .journey { display: grid; gap: 0.75rem; }
+  .journey__row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1.25rem;
+    align-items: center;
+    padding: 1.25rem 1.4rem;
+    border-radius: var(--radius-card);
+    background: var(--cream-50);
+    border: 1px solid var(--line-light);
+  }
+  .journey__num {
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--indigo-900);
+    color: var(--cream-100);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.4rem;
+  }
+  .journey__layer { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; color: var(--indigo-900); line-height: 1.5; }
+  .journey__stage .muted { font-size: var(--fs-small); }
+  .journey__svc {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 48px;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-pill);
+    background: var(--brick-tint);
+    color: var(--brick-600);
+    font-weight: 600;
+    text-decoration: none;
+    justify-self: start;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .journey__svc:hover { background: var(--brick-600); color: var(--cream-50); }
+  .journey__svc :global(.journey__arrow) { transition: transform 0.3s var(--ease-out); }
+  .journey__svc:hover :global(.journey__arrow) { transform: translateX(-4px); }
+  @media (min-width: 900px) {
+    .journey { gap: 0.6rem; }
+    .journey__row { grid-template-columns: auto 1fr auto; padding-inline-end: calc(1.4rem + (6 - var(--i)) * 2.5rem); }
+    .journey__num { grid-row: auto; }
+  }
+
+  .svc-grid { display: grid; gap: 1.25rem; }
+  @media (min-width: 720px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
+  .svc-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    height: 100%;
+    padding: 1.75rem;
+    border-radius: var(--radius-card);
+    background: var(--cream-100);
+    border: 1px solid var(--line-light);
+    text-decoration: none;
+    transition: transform 0.4s var(--ease-expo), box-shadow 0.4s;
+  }
+  .svc-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); }
+  .svc-card__icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--indigo-900); color: var(--cream-100); margin-bottom: 0.4rem; }
+  .svc-card .link-arrow { margin-top: auto; }
+
+  .fields-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 1rem; }
+  .field-card {
+    display: grid;
+    gap: 0.4rem;
+    height: 100%;
+    padding: 1.4rem;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line-light);
+    background: var(--cream-50);
+    text-decoration: none;
+    transition: border-color 0.3s, transform 0.4s var(--ease-expo);
+  }
+  .field-card :global(svg) { color: var(--brick-600); margin-bottom: 0.3rem; }
+  .field-card:hover { border-color: var(--brick-600); transform: translateY(-3px); }
+  .field-card__title { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; color: var(--indigo-900); line-height: 1.5; }
+  .field-card__short { font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.75; }
+</style>

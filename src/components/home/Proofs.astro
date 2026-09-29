@@ -1,0 +1,64 @@
+---
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import BeforeAfter from '@/components/proofs/BeforeAfter.astro';
+import StatsDemo from '@/components/proofs/StatsDemo.astro';
+import CitationCheck from '@/components/proofs/CitationCheck.astro';
+import ContractCard from '@/components/proofs/ContractCard.astro';
+---
+<section class="section proofs" aria-labelledby="proofs-title">
+  <div class="container">
+    <SectionTitle
+      id="proofs-title"
+      eyebrow="لماذا بابل؟"
+      title="لا نطلب منك أن تصدقنا. جرّب بنفسك."
+      lead="أربعة أشياء نعدك بها، وتستطيع أن تراها هنا قبل أن تراسلنا."
+    />
+    <div class="proofs__grid">
+      <article class="proof card" data-reveal="rise">
+        <header class="proof__head">
+          <span class="proof__num">٠١</span>
+          <h3>تنسيق عربي بلا أخطاء</h3>
+          <p class="muted">اسحب الشريط وقارن: هكذا تصلنا الصفحات عادة، وهكذا تخرج من عندنا.</p>
+        </header>
+        <BeforeAfter />
+      </article>
+      <article class="proof card" data-reveal="rise">
+        <header class="proof__head">
+          <span class="proof__num">٠٢</span>
+          <h3>إحصاء مشروح</h3>
+          <p class="muted">هكذا تستلم كل جدول: الرقم، ومعناه، وكيف تناقشه.</p>
+        </header>
+        <StatsDemo />
+      </article>
+      <article class="proof card" data-reveal="rise">
+        <header class="proof__head">
+          <span class="proof__num">٠٣</span>
+          <h3>مراجع حقيقية</h3>
+          <p class="muted">في زمن الذكاء الاصطناعي، المراجع الوهمية تُسقط الرسائل. نحن نفحص كل مرجع.</p>
+        </header>
+        <CitationCheck />
+      </article>
+      <article class="proof card" data-reveal="rise">
+        <header class="proof__head">
+          <span class="proof__num">٠٤</span>
+          <h3>سرية ووضوح</h3>
+          <p class="muted">قبل أن تدفع شيئًا، تعرف ماذا ستستلم، ومتى، وكم مرة يمكنك طلب التعديل.</p>
+        </header>
+        <ContractCard />
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  .proofs__grid { display: grid; gap: 1.25rem; }
+  .proof { padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+  .proof__head { display: grid; gap: 0.35rem; }
+  .proof__num { font-family: var(--font-display); font-weight: 700; color: var(--brick-600); font-size: 1.1rem; }
+  .proof__head h3 { font-size: clamp(1.35rem, 1.2rem + 0.6vw, 1.7rem); }
+  .proof__head p { font-size: var(--fs-small); line-height: 1.75; }
+  @media (min-width: 900px) {
+    .proofs__grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .proof { padding: 1.75rem; }
+  }
+</style>

@@ -1,0 +1,147 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import Mock from '@/components/Mock.astro';
+import Icon from '@/components/ui/Icon.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import WorkCard from '@/components/WorkCard.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { workCategories } from '@/data/work';
+import { wa, waMessages } from '@/config/site';
+
+export async function getStaticPaths() {
+  const works = (await getCollection('portfolio', (w) => w.data.published)).sort((a, b) => a.data.order - b.data.order);
+  return works.map((w, i) => ({
+    params: { slug: w.id },
+    props: { work: w, next: works[(i + 1) % works.length] },
+  }));
+}
+const { work, next } = Astro.props;
+const d = work.data;
+const services = (await getCollection('services', (s) => d.services.includes(s.id)));
+const msg = waMessages.work(d.title);
+const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
+---
+<BaseLayout title={`${d.title} — ${d.level}، ${d.field}`} description={`${d.summary} (${d.level} — ${d.field})`}>
+  <section class="case-hero section--dark">
+    <div class="container case-hero__grid">
+      <div class="case-hero__text">
+        <Breadcrumbs items={[{ href: '/work/', label: 'أعمالنا' }, { href: `/work/${work.id}/`, label: d.title }]} />
+        <p class="case-hero__meta">
+          <span class="chip">{d.level}</span>
+          <span class="chip">{d.field}</span>
+          {d.categories.map((c) => <span class="chip chip--brick">{workCategories[c]}</span>)}
+        </p>
+        <h1>{d.title}</h1>
+        <p class="lead">{d.summary}</p>
+      </div>
+      <div class="case-hero__visual">
+        {d.image ? <img src={d.image} alt={`لقطة مموهة من العمل: ${d.title}`} /> : <Mock type={d.mock} title={d.mockTitle} />}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container case">
+      <article class="case__main">
+        <section class="case__block" aria-labelledby="c1">
+          <p class="eyebrow">التحدي</p>
+          <h2 id="c1" data-reveal="heading">من أين بدأنا</h2>
+          <p class="lead" data-reveal="fade">{d.challenge}</p>
+        </section>
+
+        <section class="case__block" aria-labelledby="c2">
+          <p class="eyebrow">ما نفذناه</p>
+          <h2 id="c2" data-reveal="heading">العمل خطوة خطوة</h2>
+          <ol role="list" class="case__done" data-reveal="stagger">
+            {d.done.map((x, i) => (
+              <li><span class="case__n">{digits[i]}</span><span>{x}</span></li>
+            ))}
+          </ol>
+        </section>
+
+        <section class="case__block" aria-labelledby="c3">
+          <p class="eyebrow">ما استلمه العميل</p>
+          <h2 id="c3" data-reveal="heading">المخرجات</h2>
+          <ul role="list" class="case__got" data-reveal="stagger">
+            {d.received.map((x) => (
+              <li><Icon name="file-text" size={22} /><span>{x}</span></li>
+            ))}
+          </ul>
+        </section>
+      </article>
+
+      <aside class="case__side">
+        <div class="card case__card">
+          <h2 class="case__side-title">الأدوات</h2>
+          <ul role="list" class="case__tools">
+            {d.tools.map((t) => <li class="chip" lang="en" dir="ltr">{t}</li>)}
+          </ul>
+          {services.length > 0 && (
+            <>
+              <h2 class="case__side-title case__side-title--gap">الخدمات المستخدمة</h2>
+              <ul role="list" class="case__svcs">
+                {services.map((s) => (
+                  <li><a href={`/services/${s.id}/`}><Icon name={s.data.icon} size={18} /> {s.data.title}</a></li>
+                ))}
+              </ul>
+            </>
+          )}
+          <p class="case__privacy"><Icon name="lock" size={16} /> لا اسم عميل ولا جهة، ولا نص منقول من ملف العميل.</p>
+          <a class="btn btn--wa btn--block" href={wa(msg)} target="_blank" rel="noopener"><BrandIcon name="whatsapp" /> عندي عمل مشابه</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section section--tight section--cream50" aria-labelledby="next-title">
+    <div class="container case-next">
+      <h2 id="next-title" class="case-next__title">العمل التالي</h2>
+      <div class="case-next__card"><WorkCard item={next} /></div>
+      <a class="link-arrow" href="/work/">كل الأعمال <Icon name="arrow-left" size={18} /></a>
+    </div>
+  </section>
+
+  <FinalCTA title="عندك عمل مشابه؟" text="أرسل لنا تفاصيله، ونخبرك كيف نعمل عليه، وماذا ستستلم، ومتى، وبكم، قبل أي التزام." waMessage={msg} />
+</BaseLayout>
+
+<style>
+  .case-hero { padding-top: calc(var(--header-h) + 2.5rem); padding-bottom: 3.5rem; overflow: clip; }
+  .case-hero__grid { display: grid; gap: 2.5rem; align-items: center; }
+  .case-hero__text { display: grid; gap: 1rem; justify-items: start; }
+  .case-hero__text h1 { font-size: clamp(1.9rem, 1.3rem + 2.6vw, 3.2rem); line-height: 1.45; }
+  .case-hero__text .lead { color: var(--on-dark-muted); }
+  .case-hero__meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip--brick { background: rgba(166, 61, 64, 0.3) !important; border-color: rgba(196, 89, 91, 0.5) !important; }
+  .case-hero__visual { padding: 1rem; border-radius: var(--radius-card); background: radial-gradient(ellipse at 50% 110%, rgba(166, 61, 64, 0.35), transparent 60%), linear-gradient(160deg, #e9e2d3, #d8cfbd); aspect-ratio: 4 / 3; display: grid; place-items: center; }
+  .case-hero__visual img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  @media (min-width: 1024px) { .case-hero__grid { grid-template-columns: 1.1fr 0.9fr; gap: 4rem; } }
+
+  .case { display: grid; gap: 3rem; }
+  .case__main { display: grid; gap: 3.5rem; }
+  .case__block { display: grid; gap: 0.9rem; }
+  .case__done { display: grid; gap: 0.75rem; }
+  .case__done li { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem 1.25rem; border-radius: var(--radius-m); background: var(--cream-50); border: 1px solid var(--line-light); line-height: 1.8; }
+  .case__n { font-family: var(--font-display); font-weight: 700; color: var(--brick-600); font-size: 1.3rem; line-height: 1.4; min-width: 1.2em; }
+  .case__got { display: grid; gap: 0.75rem; }
+  .case__got li { display: flex; gap: 0.8rem; align-items: flex-start; line-height: 1.8; }
+  .case__got :global(svg) { color: var(--brick-600); margin-top: 0.2rem; }
+  .case__card { padding: 1.5rem; display: grid; gap: 0.75rem; }
+  .case__side-title { font-family: var(--font-body); font-size: var(--fs-small); font-weight: 600; color: var(--ink-muted); }
+  .case__side-title--gap { margin-top: 0.75rem; }
+  .case__tools { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .case__tools .chip { font-family: var(--font-latin); }
+  .case__svcs { display: grid; gap: 0.25rem; }
+  .case__svcs a { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 40px; color: var(--indigo-900); font-weight: 500; text-decoration: none; }
+  .case__svcs a:hover { color: var(--brick-600); }
+  .case__privacy { display: flex; gap: 0.5rem; align-items: center; font-size: var(--fs-xs); color: var(--ink-muted); margin-block: 0.5rem; }
+  @media (min-width: 1024px) {
+    .case { grid-template-columns: 1fr 340px; gap: 4rem; align-items: start; }
+    .case__side { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+  }
+
+  .case-next { display: grid; gap: 1.25rem; justify-items: start; }
+  .case-next__title { font-size: var(--fs-h3); }
+  .case-next__card { width: min(100%, 420px); }
+</style>

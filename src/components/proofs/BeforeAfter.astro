@@ -1,0 +1,186 @@
+---
+// صفحة وورد مصغرة بنسختين فوق بعض وشريط سحب بينهما. نص تجريبي عام — لا شيء من عمل حقيقي.
+---
+<div class="ba" data-ba>
+  <div class="ba__stage">
+    <!-- قبل: الأخطاء الشائعة في التنسيق العربي -->
+    <div class="ba__page ba__page--before" aria-hidden="true">
+      <p class="bf-h" dir="ltr">1.3 Digital Transformation أثر التحول الرقمي</p>
+      <p class="bf-p" dir="ltr">يشير التحول الرقمي (Digital Transformation) إلى دمج التقنيات الرقمية في جميع مجالات العمل, مما يغير طريقة تقديم القيمة للمستفيدين; وقد تناولته دراسات عديدة.</p>
+      <table class="bf-t" dir="ltr">
+        <tr><th>النسبة</th><th>العدد</th><th>الفئة</th></tr>
+        <tr><td>46.7%</td><td>112</td><td>ذكر</td></tr>
+        <tr><td>53.3%</td><td>128</td><td>أنثى</td></tr>
+      </table>
+      <p class="bf-cap" dir="ltr">(1.3 الشكل) توزيع العينة</p>
+      <p class="bf-p" dir="ltr">ويعد الأداء المؤسسي, (Organizational Performance) من أهم المتغيرات.</p>
+    </div>
+    <!-- بعد: تنسيق صحيح من اليمين لليسار -->
+    <div class="ba__page ba__page--after" data-ba-after>
+      <p class="af-h">٣-١ أثر التحول الرقمي في الأداء المؤسسي</p>
+      <p class="af-p">يشير التحول الرقمي <bdi dir="ltr">(Digital Transformation)</bdi> إلى دمج التقنيات الرقمية في جميع مجالات العمل، مما يغير طريقة تقديم القيمة للمستفيدين؛ وقد تناولته دراسات عديدة.</p>
+      <table class="af-t">
+        <caption>جدول (٣-١) توزيع أفراد العينة حسب النوع</caption>
+        <tr><th>الفئة</th><th>العدد</th><th>النسبة</th></tr>
+        <tr><td>ذكر</td><td>١١٢</td><td>٤٦٫٧٪</td></tr>
+        <tr><td>أنثى</td><td>١٢٨</td><td>٥٣٫٣٪</td></tr>
+      </table>
+      <p class="af-p">ويعد الأداء المؤسسي <bdi dir="ltr">(Organizational Performance)</bdi> من أهم المتغيرات التابعة في دراسات الإدارة.</p>
+    </div>
+    <span class="ba__tag ba__tag--before" aria-hidden="true">قبل</span>
+    <span class="ba__tag ba__tag--after" aria-hidden="true">بعد</span>
+    <div
+      class="ba__handle"
+      role="slider"
+      tabindex="0"
+      aria-label="قارن التنسيق قبل وبعد"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="50"
+      aria-valuetext="50٪ من الصفحة بعد التنسيق"
+      data-ba-handle
+    >
+      <span class="ba__knob" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" transform="translate(-3 0)" /><path d="m9 18 6-6-6-6" transform="translate(3 0)" /></svg>
+      </span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ba { --pos: 50; }
+  .ba__stage {
+    position: relative;
+    aspect-ratio: 1 / 1.08;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e9e3d6;
+    user-select: none;
+    touch-action: pan-y;
+    container-type: inline-size;
+  }
+  .ba__page {
+    position: absolute;
+    inset: 5% 7%;
+    background: #fffdf8;
+    box-shadow: 0 16px 34px -18px rgba(26, 15, 43, 0.45);
+    padding: 7cqw 6cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.4cqw;
+    font-size: 3.1cqw;
+    line-height: 1.75;
+    color: #2a2233;
+    overflow: hidden;
+  }
+  /* بعد يظهر من اليمين حتى موضع المقبض */
+  .ba__page--after { clip-path: inset(-1px -1px -1px max(0%, calc((var(--pos) - 7) * 100% / 86))); }
+
+  .bf-h { font-family: Arial, sans-serif; font-weight: 700; font-size: 3.6cqw; text-align: left; color: #1f3b73; }
+  .bf-p { text-align: left; font-family: 'Times New Roman', serif; }
+  .bf-t, .af-t { width: 100%; border-collapse: collapse; font-size: 2.8cqw; }
+  .bf-t th, .bf-t td { border: 1px solid #9b9b9b; padding: 0.6cqw 1cqw; text-align: left; font-family: Arial, sans-serif; }
+  .bf-cap { font-size: 2.6cqw; text-align: left; font-family: Arial, sans-serif; color: #555; }
+
+  .af-h { font-family: var(--font-display); font-weight: 700; font-size: 4.2cqw; color: var(--indigo-900); line-height: 1.5; }
+  .af-p { text-align: justify; text-justify: inter-word; }
+  .af-p bdi { font-family: var(--font-latin); font-size: 0.9em; }
+  .af-t caption { font-size: 2.7cqw; font-weight: 600; color: var(--indigo-900); text-align: start; padding-bottom: 1cqw; }
+  .af-t th { background: var(--indigo-900); color: var(--cream-50); font-weight: 600; padding: 0.8cqw; }
+  .af-t td { border-bottom: 1px solid rgba(30, 21, 48, 0.14); padding: 0.8cqw; text-align: center; }
+  .af-t td:first-child, .af-t th:first-child { text-align: start; }
+
+  .ba__tag {
+    position: absolute;
+    top: 0.75rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    z-index: 2;
+  }
+  .ba__tag--before { left: 0.75rem; background: rgba(30, 21, 48, 0.75); color: var(--cream-50); }
+  .ba__tag--after { right: 0.75rem; background: var(--brick-600); color: var(--cream-50); }
+
+  .ba__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--pos) * 1%);
+    width: 44px;
+    margin-left: -22px;
+    cursor: ew-resize;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    touch-action: none;
+  }
+  .ba__handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--brick-600); }
+  .ba__knob {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--brick-600);
+    color: var(--cream-50);
+    box-shadow: 0 6px 18px -4px rgba(166, 61, 64, 0.6);
+    transition: transform var(--dur-s) var(--ease-out);
+  }
+  .ba__handle:hover .ba__knob, .ba__handle:focus-visible .ba__knob { transform: scale(1.1); }
+  .ba__handle:focus-visible { outline: none; }
+  .ba__handle:focus-visible .ba__knob { outline: 2px solid var(--brick-600); outline-offset: 3px; }
+</style>
+
+<script>
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-ba]').forEach((root) => {
+      const stage = root.querySelector<HTMLElement>('.ba__stage')!;
+      const handle = root.querySelector<HTMLElement>('[data-ba-handle]')!;
+      const state = { pos: 50 };
+      const set = (v: number) => {
+        state.pos = Math.max(0, Math.min(100, v));
+        root.style.setProperty('--pos', state.pos.toFixed(2));
+        const r = Math.round(100 - state.pos);
+        handle.setAttribute('aria-valuenow', String(r));
+        handle.setAttribute('aria-valuetext', `${r}٪ من الصفحة بعد التنسيق`);
+      };
+
+      // السحب باللمس وبالماوس
+      let dragging = false;
+      const fromEvent = (e: PointerEvent) => {
+        const b = stage.getBoundingClientRect();
+        set(((e.clientX - b.left) / b.width) * 100);
+      };
+      handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); gsap.killTweensOf(state); });
+      handle.addEventListener('pointermove', (e) => { if (dragging) fromEvent(e); });
+      handle.addEventListener('pointerup', () => { dragging = false; });
+      stage.addEventListener('click', (e) => { if (e.target === stage || (e.target as HTMLElement).closest('.ba__page')) fromEvent(e as PointerEvent); });
+
+      // الكيبورد: القيمة = نسبة «بعد»، والسهم الأيمن يزيدها (اتجاه القراءة العربية)
+      handle.addEventListener('keydown', (e) => {
+        const stepSize = e.shiftKey ? 20 : 5;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { set(state.pos - stepSize); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { set(state.pos + stepSize); e.preventDefault(); }
+        else if (e.key === 'Home') { set(100); e.preventDefault(); }
+        else if (e.key === 'End') { set(0); e.preventDefault(); }
+      });
+
+      // حركة افتتاحية مرة واحدة: من 80% إلى 30% ثم المنتصف
+      if (!reducedMotion()) {
+        const io = new IntersectionObserver(([en]) => {
+          if (!en.isIntersecting) return;
+          io.disconnect();
+          const tl = gsap.timeline({ delay: 0.3, onUpdate: () => set(state.pos) });
+          tl.fromTo(state, { pos: 80 }, { pos: 30, duration: 1.1, ease: 'power2.inOut' })
+            .to(state, { pos: 50, duration: 0.8, ease: 'power3.out' });
+        }, { threshold: 0.5 });
+        io.observe(root);
+      }
+    });
+  });
+</script>

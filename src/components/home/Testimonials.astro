@@ -1,0 +1,29 @@
+---
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import { site } from '@/config/site';
+const items = site.testimonials;
+---
+{items.length > 0 && (
+  <section class="section" aria-labelledby="t-title">
+    <div class="container">
+      <SectionTitle id="t-title" eyebrow="بكلماتهم" title="ما يقوله من عملنا معهم." />
+      <ul role="list" class="tst" data-reveal="stagger">
+        {items.map((t) => (
+          <li class="tst__card card">
+            <blockquote><p>{t.quote}</p></blockquote>
+            <p class="tst__who">{t.role}{t.field && <span> · {t.field}</span>}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}
+
+<style>
+  .tst { display: grid; gap: 1.25rem; }
+  @media (min-width: 900px) { .tst { grid-template-columns: repeat(3, 1fr); } }
+  .tst__card { padding: 2rem; display: flex; flex-direction: column; gap: 1.25rem; position: relative; }
+  .tst__card::before { content: '”'; position: absolute; top: 0.25rem; inset-inline-start: 1.25rem; font-family: var(--font-display); font-size: 5rem; line-height: 1; color: var(--brick-600); opacity: 0.18; }
+  .tst__card blockquote p { font-family: var(--font-display); font-size: 1.3rem; line-height: 1.85; color: var(--indigo-900); }
+  .tst__who { margin-top: auto; font-size: var(--fs-small); font-weight: 600; color: var(--brick-600); }
+</style>

@@ -1,0 +1,98 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+import { commitments } from '@/data/home';
+const stats = site.stats;
+---
+<section class="trust" aria-label={stats ? 'أرقامنا' : 'التزاماتنا'}>
+  <div class="container">
+    {stats ? (
+      <ul role="list" class="trust__list" data-reveal="stagger">
+        {stats.map((s) => (
+          <li class="trust__item trust__item--stat">
+            <span class="trust__num num" data-count={s.value}>{s.value.toLocaleString('ar-SA')}{s.suffix ?? ''}</span>
+            <span class="trust__label">{s.label}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <ul role="list" class="trust__list" data-reveal="stagger">
+        {commitments.map((c) => (
+          <li class="trust__item">
+            <span class="trust__icon"><Icon name={c.icon} size={22} /></span>
+            <span class="trust__label">{c.label}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</section>
+
+<style>
+  .trust { position: relative; z-index: 2; margin-top: -2.5rem; }
+  .trust__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--cream-50);
+    border: 1px solid var(--line-light);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+  }
+  .trust__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.1rem 1rem;
+    font-weight: 600;
+    color: var(--indigo-900);
+    line-height: 1.5;
+    font-size: var(--fs-small);
+  }
+  .trust__item:nth-child(odd) { border-inline-end: 1px solid var(--line-light); }
+  .trust__item:nth-child(-n + 2) { border-bottom: 1px solid var(--line-light); }
+  .trust__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--brick-tint);
+    color: var(--brick-600);
+  }
+  .trust__item--stat { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .trust__num { font-family: var(--font-display); font-size: 2rem; color: var(--brick-600); line-height: 1.2; }
+  @media (min-width: 900px) {
+    .trust__list { grid-template-columns: repeat(4, 1fr); }
+    .trust__item { padding: 1.5rem 1.4rem; font-size: 1rem; }
+    .trust__item:nth-child(-n + 2) { border-bottom: 0; }
+    .trust__item:not(:last-child) { border-inline-end: 1px solid var(--line-light); }
+  }
+</style>
+
+<script>
+  // عدادات تبدأ من الصفر عند الظهور (فقط إن وُجدت أرقام في الإعدادات)
+  const nums = document.querySelectorAll<HTMLElement>('[data-count]');
+  if (nums.length && !document.documentElement.classList.contains('rm')) {
+    const fmt = new Intl.NumberFormat('ar-SA');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        io.unobserve(en.target);
+        const el = en.target as HTMLElement;
+        const target = Number(el.dataset.count);
+        const suffix = el.textContent?.replace(/[\d٠-٩٬,.]/g, '') ?? '';
+        const t0 = performance.now();
+        const tick = (now: number) => {
+          const p = Math.min(1, (now - t0) / 1600);
+          const e = 1 - Math.pow(1 - p, 3);
+          el.textContent = fmt.format(Math.round(target * e)) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.6 });
+    nums.forEach((n) => io.observe(n));
+  }
+</script>

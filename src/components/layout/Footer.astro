@@ -1,0 +1,179 @@
+---
+import { getCollection } from 'astro:content';
+import Logo from '@/components/ui/Logo.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site, wa, waMessages, type SocialKey } from '@/config/site';
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const socialLabels: Record<SocialKey, string> = {
+  instagram: 'إنستغرام',
+  x: 'إكس',
+  snapchat: 'سناب شات',
+  tiktok: 'تيك توك',
+  facebook: 'فيسبوك',
+  linkedin: 'لينكدإن',
+};
+const socials = (Object.entries(site.social) as [SocialKey, string | null][]).filter(([, url]) => Boolean(url)) as [SocialKey, string][];
+const phoneDisplay = `+${site.whatsapp.slice(0, 3)} ${site.whatsapp.slice(3, 5)} ${site.whatsapp.slice(5, 8)} ${site.whatsapp.slice(8)}`;
+const year = new Date().getFullYear();
+const siteLinks = [
+  { href: '/work/', label: 'أعمالنا' },
+  { href: '/process/', label: 'كيف نعمل' },
+  { href: '/about/', label: 'من نحن' },
+  { href: '/blog/', label: 'المدونة' },
+  { href: '/faq/', label: 'الأسئلة الشائعة' },
+  { href: '/contact/', label: 'تواصل معنا' },
+  { href: '/request/', label: 'ابدأ طلبك' },
+];
+---
+<footer class="site-footer" id="footer-nav">
+  <div class="brick-line" aria-hidden="true"></div>
+  <div class="container site-footer__grid">
+    <div class="site-footer__brand">
+      <Logo size="lg" />
+      <p class="site-footer__tagline">{site.tagline}</p>
+      {socials.length > 0 && (
+        <ul role="list" class="site-footer__social">
+          {socials.map(([key, url]) => (
+            <li>
+              <a href={url} target="_blank" rel="noopener" aria-label={socialLabels[key]}>
+                <BrandIcon name={key} size={18} />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    <nav aria-labelledby="ft-services">
+      <h2 class="site-footer__title" id="ft-services">الخدمات</h2>
+      <ul role="list" class="site-footer__links">
+        {services.map((s) => <li><a href={`/services/${s.id}/`}>{s.data.title}</a></li>)}
+      </ul>
+    </nav>
+
+    <nav aria-labelledby="ft-site">
+      <h2 class="site-footer__title" id="ft-site">الموقع</h2>
+      <ul role="list" class="site-footer__links">
+        {siteLinks.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="site-footer__title">التواصل</h2>
+      <ul role="list" class="site-footer__contact">
+        <li>
+          <BrandIcon name="whatsapp" size={18} />
+          <a href={wa(waMessages.general)} target="_blank" rel="noopener"><span dir="ltr">{phoneDisplay}</span></a>
+        </li>
+        {site.email && (
+          <li>
+            <Icon name="mail" size={18} />
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+          </li>
+        )}
+        <li>
+          <Icon name="map-pin" size={18} />
+          <span>{site.city}، المملكة العربية السعودية</span>
+        </li>
+      </ul>
+      <a class="btn btn--primary btn--sm site-footer__cta" href="/request/">ابدأ طلبك</a>
+    </div>
+  </div>
+
+  <div class="container site-footer__bottom">
+    <p>
+      © {year} {site.nameAr}
+      {site.legalEntity && <span class="site-footer__legal"> · {site.legalEntity}</span>}
+    </p>
+    <ul role="list" class="site-footer__legal-links">
+      <li><a href="/privacy/">سياسة الخصوصية</a></li>
+      <li><a href="/terms/">الشروط والأحكام</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    background: var(--indigo-950);
+    color: var(--on-dark-muted);
+    padding-top: 0;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    font-size: var(--fs-small);
+  }
+  /* خط زخرفي مستوحى من نقش الطوب البابلي */
+  .brick-line {
+    height: 14px;
+    background-color: var(--indigo-900);
+    background-image:
+      linear-gradient(90deg, var(--indigo-950) 2px, transparent 2px),
+      linear-gradient(90deg, var(--indigo-950) 2px, transparent 2px),
+      linear-gradient(180deg, transparent 6px, var(--indigo-950) 6px, var(--indigo-950) 8px, transparent 8px),
+      linear-gradient(90deg, transparent 0, rgba(166, 61, 64, 0.55) 0);
+    background-size: 28px 7px, 28px 7px, 100% 14px, 100% 2px;
+    background-position: 0 0, 14px 7px, 0 0, 0 100%;
+    background-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+    border-top: 2px solid rgba(166, 61, 64, 0.55);
+  }
+  .site-footer__grid {
+    display: grid;
+    gap: 2.5rem;
+    padding-block: 3.5rem 2.5rem;
+  }
+  @media (min-width: 720px) { .site-footer__grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .site-footer__grid { grid-template-columns: 1.4fr 1.3fr 0.8fr 1fr; gap: 3rem; } }
+  .site-footer :global(.logo) { color: var(--on-dark); }
+  .site-footer__tagline {
+    margin-top: 1rem;
+    max-width: 34ch;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: var(--on-dark);
+  }
+  .site-footer__social { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+  .site-footer__social a {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--line-dark);
+    color: var(--on-dark);
+    transition: background-color var(--dur-s), border-color var(--dur-s);
+  }
+  .site-footer__social a:hover { background: var(--brick-600); border-color: var(--brick-600); }
+  .site-footer__title {
+    font-family: var(--font-body);
+    font-size: var(--fs-small);
+    font-weight: 600;
+    color: var(--on-dark);
+    margin-bottom: 1rem;
+  }
+  .site-footer__links { display: grid; gap: 0.1rem; }
+  .site-footer__links a, .site-footer__contact a, .site-footer__legal-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    color: var(--on-dark-muted);
+    text-decoration: none;
+    transition: color var(--dur-s);
+  }
+  .site-footer a:hover { color: var(--on-dark); text-decoration: underline; }
+  .site-footer__contact { display: grid; gap: 0.35rem; }
+  .site-footer__contact li { display: flex; align-items: center; gap: 0.6rem; min-height: 40px; }
+  .site-footer__contact :global(svg) { color: var(--brick-400); flex-shrink: 0; }
+  .site-footer__cta { margin-top: 1.25rem; }
+  .site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line-dark);
+  }
+  .site-footer__legal-links { display: flex; gap: 1.25rem; }
+</style>

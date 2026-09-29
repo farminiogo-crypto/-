@@ -1,0 +1,24 @@
+---
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  align?: 'center' | 'start';
+  as?: 'h1' | 'h2';
+  id?: string;
+  class?: string;
+}
+const { eyebrow, title, lead, align = 'start', as: Tag = 'h2', id, class: cls = '' } = Astro.props;
+---
+<div class={`section-title section-title--${align} ${cls}`}>
+  {eyebrow && <p class="eyebrow" data-reveal="fade">{eyebrow}</p>}
+  <Tag id={id} data-reveal="heading">{title}</Tag>
+  {lead && <p class="lead muted" data-reveal="fade" data-delay="0.15">{lead}</p>}
+  <slot />
+</div>
+
+<style>
+  .section-title { display: grid; gap: 0.9rem; max-width: 760px; margin-bottom: clamp(2.25rem, 1.5rem + 3vw, 4rem); }
+  .section-title--center { margin-inline: auto; text-align: center; justify-items: center; }
+  .section-title .lead { max-width: 62ch; }
+</style>

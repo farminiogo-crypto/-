@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import WorkCard from '@/components/WorkCard.astro';
+import Icon from '@/components/ui/Icon.astro';
+const works = (await getCollection('portfolio', (w) => w.data.published && w.data.featured))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 6);
+---
+{works.length > 0 && (
+  <section class="strip" aria-labelledby="work-title" data-strip>
+    <div class="strip__pin" data-strip-pin>
+      <div class="container strip__head">
+        <SectionTitle id="work-title" eyebrow="أعمالنا" title="عيّنات من شغلنا — بلا أسماء، وبكل التفاصيل." />
+        <a class="btn btn--outline strip__all" href="/work/">شاهد كل الأعمال <Icon name="arrow-left" size={18} /></a>
+      </div>
+      <div class="strip__viewport" data-strip-viewport>
+        <ul role="list" class="strip__row" data-strip-row>
+          {works.map((w) => (
+            <li class="strip__item"><WorkCard item={w} /></li>
+          ))}
+          <li class="strip__item strip__item--end">
+            <a class="strip__more" href="/work/">
+              <span>كل الأعمال</span>
+              <Icon name="arrow-left" size={28} />
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .strip { padding-block: var(--space-section); overflow: clip; }
+  .strip__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0 2rem; }
+  .strip__head :global(.section-title) { margin-bottom: 2rem; }
+  .strip__all { margin-bottom: 2rem; }
+  .strip__viewport {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-inline: var(--gutter);
+    padding-bottom: 1rem;
+  }
+  .strip__viewport::-webkit-scrollbar { display: none; }
+  .strip__row { display: flex; gap: 1rem; width: max-content; }
+  .strip__item { width: min(82vw, 380px); scroll-snap-align: center; flex-shrink: 0; }
+  .strip__more {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    height: 100%;
+    min-height: 300px;
+    border-radius: var(--radius-card);
+    border: 1.5px dashed rgba(44, 26, 69, 0.3);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--indigo-900);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .strip__more:hover { background: var(--indigo-900); color: var(--cream-100); }
+  .strip__item--end { width: min(60vw, 240px); }
+
+  /* الديسكتوب مع JS: الشريط يتحرك أفقيًا مع التمرير العمودي */
+  @media (min-width: 1024px) {
+    :global(.js:not(.rm)) .strip { padding-block: 0; }
+    :global(.js:not(.rm)) .strip__pin { height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+    :global(.js:not(.rm)) .strip__viewport { overflow: visible; scroll-snap-type: none; padding-bottom: 0; }
+    .strip__item { width: 400px; }
+    .strip__row { gap: 1.5rem; }
+    .strip__viewport { padding-inline: max(var(--gutter), calc((100vw - var(--container)) / 2)); }
+  }
+</style>
+
+<script>
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    const pin = document.querySelector<HTMLElement>('[data-strip-pin]');
+    const row = document.querySelector<HTMLElement>('[data-strip-row]');
+    const viewport = document.querySelector<HTMLElement>('[data-strip-viewport]');
+    if (pin && row && viewport && !reducedMotion()) {
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 1024px)', () => {
+        // في RTL يبدأ الصف من اليمين؛ نحركه نحو اليمين ليكشف ما على اليسار
+        const distance = () => Math.max(0, row.scrollWidth - viewport.clientWidth + parseFloat(getComputedStyle(viewport).paddingInlineStart) * 2);
+        const tween = gsap.to(row, {
+          x: () => distance(),
+          ease: 'none',
+          scrollTrigger: {
+            trigger: pin,
+            start: 'top top',
+            end: () => `+=${distance()}`,
+            pin: true,
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        });
+        return () => tween.scrollTrigger?.kill();
+      });
+    }
+  });
+</script>

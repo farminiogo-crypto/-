@@ -1,0 +1,109 @@
+/* نظام التصميم — مصدر واحد لكل القيم */
+
+/* الخطوط: ملف واحد لكل وزن يجمع العربي واللاتيني (انظر scripts/build-fonts.py) */
+@font-face {
+  font-family: 'Amiri';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/amiri-700.woff2') format('woff2');
+  unicode-range: U+0020, U+0600-06FF, U+200C-200F, U+2026, U+00AB, U+00BB;
+}
+@font-face {
+  font-family: 'Plex Arabic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/plex-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plex Arabic';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/plex-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/lora-400.woff2') format('woff2');
+}
+
+:root {
+  /* الألوان */
+  --indigo-900: #2C1A45;
+  --indigo-700: #3D2860;
+  --brick-600: #A63D40;
+  --cream-100: #F4EFE4;
+  --ink: #1E1530;
+  --on-dark: #F4EFE4;
+  /* مشتقات للعمق فقط */
+  --indigo-950: #1A0F2B;
+  --brick-400: #C4595B;
+  --cream-50: #FAF7F0;
+  --line-dark: rgba(244, 239, 228, 0.12);
+  --line-light: rgba(44, 26, 69, 0.12);
+  --whatsapp: #25D366;
+
+  /* مشتقات شفافة من نفس الألوان */
+  --ink-muted: rgba(30, 21, 48, 0.74);
+  --on-dark-muted: rgba(244, 239, 228, 0.76);
+  --indigo-tint: rgba(44, 26, 69, 0.05);
+  --brick-tint: rgba(166, 61, 64, 0.08);
+
+  /* الخطوط */
+  --font-display: 'Amiri', 'Lora', 'Times New Roman', serif;
+  --font-body: 'Plex Arabic', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  --font-latin: 'Lora', Georgia, serif;
+
+  --fs-display: clamp(2.5rem, 1.35rem + 5.2vw, 5.4rem);
+  --fs-h1: clamp(2.2rem, 1.45rem + 3.4vw, 4rem);
+  --fs-h2: clamp(1.85rem, 1.3rem + 2.4vw, 3.1rem);
+  --fs-h3: clamp(1.25rem, 1.12rem + 0.6vw, 1.55rem);
+  --fs-lead: clamp(1.08rem, 1rem + 0.35vw, 1.25rem);
+  --fs-body: 1.0625rem;
+  --fs-small: 0.9375rem;
+  --fs-xs: 0.8125rem;
+
+  /* المسافات */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-s: 0.75rem;
+  --space-m: 1rem;
+  --space-l: 1.5rem;
+  --space-xl: 2.25rem;
+  --space-2xl: 3.5rem;
+  --space-section: clamp(4.5rem, 2.8rem + 6vw, 8.5rem);
+  --gutter: 16px;
+  --container: 1240px;
+  --header-h: 72px;
+
+  /* الأشكال */
+  --radius-card: 20px;
+  --radius-m: 14px;
+  --radius-s: 10px;
+  --radius-pill: 999px;
+  --shadow-1: 0 1px 2px rgba(44, 26, 69, 0.06), 0 6px 18px -6px rgba(44, 26, 69, 0.12);
+  --shadow-2: 0 18px 50px -18px rgba(44, 26, 69, 0.35), 0 2px 6px rgba(44, 26, 69, 0.06);
+  --shadow-3: 0 30px 80px -24px rgba(26, 15, 43, 0.55);
+
+  /* الحركة */
+  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1); /* ≈ power3.out */
+  --ease-in-out: cubic-bezier(0.455, 0.03, 0.515, 0.955); /* ≈ power2.inOut */
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1); /* ≈ expo.out */
+  --dur-s: 240ms;
+  --dur-m: 700ms;
+  --dur-l: 1400ms;
+
+  /* ملمس الورق */
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.17 0 0 0 0 0.1 0 0 0 0 0.27 0 0 0 0.075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (min-width: 640px) {
+  :root { --gutter: 24px; }
+}
+@media (min-width: 1024px) {
+  :root { --gutter: 40px; --header-h: 80px; }
+}

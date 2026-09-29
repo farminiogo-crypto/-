@@ -1,0 +1,106 @@
+---
+// خمسة مراجع بصيغة APA: أربعة حقيقية تحققنا من بياناتها وDOI الخاص بها، وواحد مصطنع عمدًا للتوضيح.
+const refs = [
+  { text: 'Cronbach, L. J. (1951). Coefficient alpha and the internal structure of tests. <i>Psychometrika, 16</i>(3), 297–334.', doi: '10.1007/BF02310555', ok: true },
+  { text: 'Fornell, C., & Larcker, D. F. (1981). Evaluating structural equation models with unobservable variables and measurement error. <i>Journal of Marketing Research, 18</i>(1), 39–50.', doi: '10.1177/002224378101800104', ok: true },
+  { text: 'Hair, J. F., Risher, J. J., Sarstedt, M., & Ringle, C. M. (2019). When to use and how to report the results of PLS-SEM. <i>European Business Review, 31</i>(1), 2–24.', doi: '10.1108/EBR-11-2018-0203', ok: true },
+  { text: 'Harlow, M., & Qasim, S. (2021). Digital transformation and institutional performance in Gulf universities: A meta-analytic review. <i>Journal of Contemporary Management Studies, 14</i>(3), 211–236.', doi: '10.5555/jcms.2021.14.3.211', ok: false },
+  { text: 'Henseler, J., Ringle, C. M., & Sarstedt, M. (2015). A new criterion for assessing discriminant validity in variance-based structural equation modeling. <i>Journal of the Academy of Marketing Science, 43</i>(1), 115–135.', doi: '10.1007/s11747-014-0403-8', ok: true },
+];
+---
+<div class="cc" data-cc>
+  <div class="cc__list">
+    <span class="cc__scan" aria-hidden="true" data-cc-scan></span>
+    <ol role="list">
+      {refs.map((r) => (
+        <li class={`cc__ref ${r.ok ? 'is-ok' : 'is-bad'}`} data-cc-ref>
+          <p class="cc__text" lang="en" dir="ltr" set:html={r.text} />
+          <p class="cc__result">
+            {r.ok ? (
+              <>
+                <span class="cc__mark cc__mark--ok" aria-hidden="true">✓</span>
+                <span class="sr-only">مرجع حقيقي تحققنا منه:</span>
+                <a class="cc__doi" dir="ltr" href={`https://doi.org/${r.doi}`} target="_blank" rel="noopener">doi.org/{r.doi}</a>
+              </>
+            ) : (
+              <>
+                <span class="cc__mark cc__mark--bad" aria-hidden="true">✕</span>
+                <span class="cc__warn">هذا المرجع غير موجود — نحذفه ونقترح بديلًا موثقًا.</span>
+              </>
+            )}
+          </p>
+        </li>
+      ))}
+    </ol>
+  </div>
+</div>
+
+<style>
+  .cc__list {
+    position: relative;
+    background: #fffdf8;
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 14px 30px -20px rgba(26, 15, 43, 0.45);
+    overflow: hidden;
+  }
+  .cc__ref { padding: 0.7rem 0; border-bottom: 1px solid var(--line-light); display: grid; gap: 0.3rem; }
+  .cc__ref:last-child { border-bottom: 0; }
+  .cc__text {
+    font-family: var(--font-latin);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    text-align: left;
+    padding-left: 1.6em;
+    text-indent: -1.6em;
+    color: #2a2233;
+  }
+  .cc__result { display: flex; align-items: center; gap: 0.45rem; font-size: var(--fs-xs); line-height: 1.5; min-height: 1.6em; transition: opacity 0.4s, transform 0.4s var(--ease-expo); }
+  .cc__mark { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+  .cc__mark--ok { background: rgba(37, 211, 102, 0.16); color: #127a3a; }
+  .cc__mark--bad { background: var(--brick-600); color: var(--cream-50); }
+  .cc__doi { font-family: var(--font-latin); color: var(--ink-muted); text-decoration: none; word-break: break-all; }
+  .cc__doi:hover { color: var(--brick-600); text-decoration: underline; }
+  .cc__warn { color: var(--brick-600); font-weight: 600; }
+  .cc__ref.is-bad .cc__text { transition: text-decoration-color 0.4s; }
+  .cc.is-checked .cc__ref.is-bad .cc__text, :global(html:not(.js)) .cc__ref.is-bad .cc__text, :global(.rm) .cc__ref.is-bad .cc__text { text-decoration: line-through; text-decoration-color: rgba(166, 61, 64, 0.7); }
+  .cc__scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 46px;
+    background: linear-gradient(180deg, transparent, rgba(166, 61, 64, 0.12) 70%, rgba(166, 61, 64, 0.5) 98%, transparent);
+    pointer-events: none;
+    opacity: 0;
+  }
+  :global(.js:not(.rm)) .cc__ref:not(.is-seen) .cc__result { opacity: 0; transform: translateX(8px); }
+</style>
+
+<script>
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-cc]').forEach((root) => {
+      if (reducedMotion()) { root.classList.add('is-checked'); return; }
+      const scan = root.querySelector<HTMLElement>('[data-cc-scan]')!;
+      const list = root.querySelector<HTMLElement>('.cc__list')!;
+      const refs = [...root.querySelectorAll<HTMLElement>('[data-cc-ref]')];
+      const io = new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        const tl = gsap.timeline({ delay: 0.2 });
+        tl.set(scan, { opacity: 1, y: -46 });
+        refs.forEach((ref) => {
+          const bottom = ref.offsetTop + ref.offsetHeight - 30;
+          tl.to(scan, { y: bottom, duration: 0.55, ease: 'power1.inOut' });
+          tl.add(() => ref.classList.add('is-seen'));
+          if (ref.classList.contains('is-bad')) tl.add(() => root.classList.add('is-checked')).to({}, { duration: 0.6 });
+        });
+        tl.to(scan, { y: list.offsetHeight, opacity: 0, duration: 0.4 });
+      }, { threshold: 0.4 });
+      io.observe(root);
+    });
+  });
+</script>

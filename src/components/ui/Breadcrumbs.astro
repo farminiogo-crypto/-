@@ -1,0 +1,33 @@
+---
+import { siteUrl } from '@/config/site';
+export interface Crumb { href: string; label: string }
+interface Props { items: Crumb[] }
+const { items } = Astro.props;
+const all = [{ href: '/', label: 'الرئيسية' }, ...items];
+const ld = siteUrl
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: all.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.label, item: new URL(c.href, siteUrl as string).href })),
+    }
+  : null;
+---
+<nav class="crumbs" aria-label="مسار التنقل">
+  <ol role="list">
+    {all.map((c, i) => (
+      <li>
+        {i < all.length - 1 ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+      </li>
+    ))}
+  </ol>
+</nav>
+{ld && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
+
+<style>
+  .crumbs ol { display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; font-size: var(--fs-small); }
+  .crumbs li { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--on-dark-muted); }
+  .crumbs li + li::before { content: '‹'; opacity: 0.6; }
+  .crumbs a { color: var(--on-dark-muted); text-decoration: none; display: inline-flex; min-height: 32px; align-items: center; }
+  .crumbs a:hover { color: var(--on-dark); text-decoration: underline; }
+  .crumbs [aria-current] { color: var(--on-dark); }
+</style>

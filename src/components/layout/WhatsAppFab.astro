@@ -1,0 +1,129 @@
+---
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { wa, waMessages } from '@/config/site';
+const href = wa(waMessages.general);
+---
+<div class="wa-fab" data-wa-fab>
+  <div class="wa-fab__bubble" id="wa-bubble" role="dialog" aria-label="تواصل عبر واتساب" hidden data-wa-bubble>
+    <button class="wa-fab__close" type="button" aria-label="إغلاق" data-wa-close><Icon name="x" size={18} /></button>
+    <p>أهلًا 👋 أرسل لنا تفاصيل طلبك ونرد عليك سريعًا</p>
+    <a class="btn btn--wa btn--sm btn--block" href={href} target="_blank" rel="noopener" data-wa-go>
+      <BrandIcon name="whatsapp" size={18} /> افتح المحادثة
+    </a>
+  </div>
+  <a class="wa-fab__btn" href={href} target="_blank" rel="noopener" aria-label="تواصل معنا عبر واتساب" data-wa-btn>
+    <BrandIcon name="whatsapp" size={30} />
+  </a>
+</div>
+
+<style>
+  .wa-fab {
+    position: fixed;
+    left: calc(16px + env(safe-area-inset-left));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out), visibility 0.4s;
+  }
+  @media (min-width: 1024px) { .wa-fab { left: 28px; bottom: 28px; } }
+  :global(.js) .wa-fab:not(.is-visible),
+  .wa-fab.is-tucked { opacity: 0; transform: translateY(16px) scale(0.9); visibility: hidden; pointer-events: none; }
+  .wa-fab__btn {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--whatsapp);
+    color: #fff;
+    box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5);
+    animation: wa-pulse 10s var(--ease-out) 3s infinite;
+    transition: transform var(--dur-s) var(--ease-out);
+  }
+  .wa-fab__btn:hover { transform: scale(1.06); }
+  @keyframes wa-pulse {
+    0% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 0 rgba(37, 211, 102, 0.55); }
+    9% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 16px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 0 rgba(37, 211, 102, 0); }
+  }
+  .wa-fab__bubble {
+    position: relative;
+    width: min(290px, calc(100vw - 32px));
+    padding: 1.1rem 1.1rem 1rem;
+    background: var(--cream-50);
+    color: var(--ink);
+    border: 1px solid var(--line-light);
+    border-radius: 18px 18px 18px 6px;
+    box-shadow: var(--shadow-3);
+    font-size: var(--fs-small);
+    line-height: 1.7;
+    animation: bubble-in 0.35s var(--ease-out);
+  }
+  .wa-fab__bubble[hidden] { display: none; }
+  .wa-fab__bubble p { margin-bottom: 0.85rem; padding-inline-end: 1.5rem; }
+  @keyframes bubble-in { from { opacity: 0; transform: translateY(10px) scale(0.96); } }
+  .wa-fab__close {
+    position: absolute;
+    top: 0.35rem;
+    inset-inline-end: 0.35rem;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: none;
+    color: var(--ink-muted);
+    border-radius: 50%;
+  }
+</style>
+
+<script>
+  const fab = document.querySelector<HTMLElement>('[data-wa-fab]')!;
+  const btn = fab.querySelector<HTMLAnchorElement>('[data-wa-btn]')!;
+  const bubble = fab.querySelector<HTMLElement>('[data-wa-bubble]')!;
+  const close = fab.querySelector<HTMLButtonElement>('[data-wa-close]')!;
+
+  // يظهر بعد 3 ثوانٍ أو بعد تمرير 30% من الصفحة، أيهما أسبق
+  const show = () => fab.classList.add('is-visible');
+  const timer = window.setTimeout(show, 3000);
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    if (max > 0 && window.scrollY / max > 0.3) { show(); clearTimeout(timer); window.removeEventListener('scroll', onScroll); }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // الضغطة الأولى تظهر الفقاعة، والثانية تفتح المحادثة
+  let greeted = false;
+  try { greeted = sessionStorage.getItem('babel-wa-greeted') === '1'; } catch {}
+  btn.addEventListener('click', (e) => {
+    if (greeted) return;
+    e.preventDefault();
+    greeted = true;
+    try { sessionStorage.setItem('babel-wa-greeted', '1'); } catch {}
+    bubble.hidden = false;
+    bubble.querySelector<HTMLElement>('[data-wa-go]')?.focus();
+  });
+  close.addEventListener('click', () => { bubble.hidden = true; btn.focus(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !bubble.hidden) { bubble.hidden = true; btn.focus(); } });
+
+  // يختفي فوق الفوتر دائمًا، وفي الجوال أيضًا حين تظهر أزرار الصفحة الأساسية حتى لا يغطيها
+  const mobile = window.matchMedia('(max-width: 767px)');
+  const blockers = document.querySelectorAll<HTMLElement>('[data-fab-hide], .site-footer');
+  if (blockers.length && 'IntersectionObserver' in window) {
+    const visible = new Set<Element>();
+    const update = () => {
+      const hide = [...visible].some((el) => el.classList.contains('site-footer') || mobile.matches);
+      fab.classList.toggle('is-tucked', hide);
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => (en.isIntersecting ? visible.add(en.target) : visible.delete(en.target)));
+      update();
+    }, { rootMargin: '0px 0px -40px 0px' });
+    blockers.forEach((b) => io.observe(b));
+    mobile.addEventListener('change', update);
+  }
+</script>

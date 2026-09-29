@@ -1,0 +1,99 @@
+---
+// جدول ارتباط بيرسون تجريبي يُبنى خلية خلية ثم يُكتب تفسيره كلمة كلمة.
+const vars = ['التحول الرقمي', 'الأداء المؤسسي', 'رضا العاملين'];
+const r = [
+  [null, null, null],
+  [0.68, null, null],
+  [0.52, 0.61, null],
+];
+const interpretation =
+  'توجد علاقة طردية دالة إحصائيًا عند مستوى 0.01 بين التحول الرقمي والأداء المؤسسي (ر = 0.68)، وهذا يعني عمليًا أن المؤسسات الأعلى في تبني الأدوات الرقمية تميل إلى أداء أفضل، وأن المتغيرين يشتركان في نحو 46٪ من التباين.';
+---
+<div class="sd" data-sd>
+  <div class="sd__table-wrap">
+    <table class="sd__table">
+      <caption>معاملات ارتباط بيرسون بين متغيرات الدراسة (ن = 240)</caption>
+      <thead>
+        <tr><th scope="col">المتغير</th>{vars.map((_, i) => <th scope="col" class="num">{i + 1}</th>)}</tr>
+      </thead>
+      <tbody>
+        {vars.map((v, i) => (
+          <tr>
+            <th scope="row">{i + 1}. {v}</th>
+            {vars.map((_, j) => (
+              <td class="num">
+                {j === i ? '1' : j < i && r[i][j] !== null ? (
+                  <span class="sd__cell"><span data-sd-val={r[i][j]}>{r[i][j]!.toFixed(2)}</span><sup class="sd__star" data-sd-star>**</sup></span>
+                ) : ''}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="sd__note">** دالة عند مستوى 0.01</p>
+  </div>
+  <div class="sd__bubble" data-sd-bubble>
+    <p class="sd__bubble-label">تفسير النتيجة</p>
+    <p class="sd__text" data-sd-text>{interpretation}</p>
+  </div>
+</div>
+
+<style>
+  .sd { display: grid; gap: 1rem; }
+  .sd__table-wrap { background: #fffdf8; border-radius: 14px; padding: 1rem; box-shadow: 0 14px 30px -20px rgba(26, 15, 43, 0.45); overflow-x: auto; }
+  .sd__table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 300px; }
+  .sd__table caption { text-align: start; font-weight: 600; color: var(--indigo-900); padding-bottom: 0.6rem; font-size: 0.88rem; line-height: 1.6; }
+  .sd__table th, .sd__table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--line-light); text-align: center; }
+  .sd__table thead th { background: var(--indigo-900); color: var(--cream-50); font-weight: 600; }
+  .sd__table tbody th { text-align: start; font-weight: 500; color: var(--indigo-900); white-space: nowrap; }
+  .sd__table td { font-weight: 600; color: var(--indigo-900); direction: ltr; }
+  .sd__cell { display: inline-flex; align-items: flex-start; gap: 1px; }
+  .sd__star { color: var(--brick-600); font-size: 0.75em; transition: opacity 0.4s, transform 0.4s var(--ease-expo); }
+  .sd__note { font-size: var(--fs-xs); color: var(--ink-muted); margin-top: 0.5rem; }
+  .sd__bubble {
+    position: relative;
+    background: var(--indigo-900);
+    color: var(--on-dark);
+    border-radius: 16px 16px 16px 4px;
+    padding: 1rem 1.15rem;
+    font-size: 0.95rem;
+    line-height: 1.85;
+  }
+  .sd__bubble-label { font-size: var(--fs-xs); font-weight: 600; color: var(--brick-400); margin-bottom: 0.25rem; }
+  .sd__text { min-height: 7.4em; }
+  .sd__text :global(.tw) { opacity: 0; transition: opacity 0.25s; }
+  .sd__text :global(.tw.on) { opacity: 1; }
+  :global(.js:not(.rm)) .sd:not(.is-done) .sd__star { opacity: 0; transform: scale(0.4); }
+</style>
+
+<script>
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-sd]').forEach((root) => {
+      if (reducedMotion()) { root.classList.add('is-done'); return; }
+      const vals = [...root.querySelectorAll<HTMLElement>('[data-sd-val]')];
+      const text = root.querySelector<HTMLElement>('[data-sd-text]')!;
+      // تقسيم التفسير إلى كلمات (لا حروف)
+      const words = (text.textContent || '').trim().split(/\s+/);
+      text.innerHTML = words.map((w) => `<span class="tw">${w}</span>`).join(' ');
+      const spans = [...text.querySelectorAll<HTMLElement>('.tw')];
+      vals.forEach((v) => (v.textContent = '0.00'));
+
+      const io = new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        const tl = gsap.timeline({ delay: 0.2 });
+        vals.forEach((v, i) => {
+          const o = { n: 0 };
+          tl.to(o, { n: Number(v.dataset.sdVal), duration: 0.9, ease: 'power2.out', onUpdate: () => (v.textContent = o.n.toFixed(2)) }, i * 0.35);
+        });
+        tl.add(() => root.classList.add('is-done'), '+=0.1');
+        spans.forEach((s, i) => tl.add(() => s.classList.add('on'), `+=${i === 0 ? 0.35 : 0.075}`));
+      }, { threshold: 0.45 });
+      io.observe(root);
+    });
+  });
+</script>

@@ -1,0 +1,124 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import Icon from '@/components/ui/Icon.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { site } from '@/config/site';
+
+const principles = [
+  { icon: 'pen-line', t: 'العمل عملك', d: 'نرشد ونراجع ونحرر وننظم، وتبقى الرسالة رسالتك وقراراتها قراراتك. نشرح لك كل ما نفعله حتى تستطيع الدفاع عنه.' },
+  { icon: 'receipt-text', t: 'كل شيء مكتوب', d: 'نطاق العمل والسعر والمراحل وعدد التعديلات والموعد، في عرض مكتوب تقرؤه قبل أن تدفع شيئًا.' },
+  { icon: 'scan-search', t: 'نتحقق ولا نفترض', d: 'نفحص كل مرجع، ونراجع كل رقم، ونثبت كل مصطلح. ما لا يصمد أمام الفحص لا يدخل ملفك.' },
+  { icon: 'lock', t: 'السرية قبل كل شيء', d: 'ملفاتك وبياناتك لا تخرج من عندنا، ولا يظهر أي عمل في معرضنا إلا بعد حذف كل ما يدل على صاحبه.' },
+];
+const team = site.team;
+---
+<BaseLayout
+  title="من نحن"
+  description="بابل أكاديمي فريق من الباحثين والمحللين والمترجمين يرافق طلاب الماجستير والدكتوراه في المملكة من الفكرة إلى المناقشة، بدقة وسرية وفي الموعد."
+>
+  <PageHero
+    crumbs={[{ href: '/about/', label: 'من نحن' }]}
+    eyebrow="من نحن"
+    title="اسمنا من مدينة بُنيت طبقةً فوق طبقة، وتكلّمت لغات كثيرة."
+    lead={site.tagline}
+  />
+
+  <section class="section">
+    <div class="container ab-story">
+      <div class="prose" data-reveal="fade">
+        <h2>لماذا بابل؟</h2>
+        <p>الرسالة العلمية تُبنى كما بُنيت زقورة بابل: طبقة فوق طبقة. الفكرة في القاعدة، ثم الخطة، ثم الأداة، ثم البيانات، ثم الكتابة والتحرير، ثم التنسيق، وفي القمة يوم المناقشة. كل طبقة تعتمد على ما تحتها، وأي خلل في الأسفل يظهر أثره في الأعلى.</p>
+        <p>وبابل في الذاكرة أيضًا مدينة اللغات. لذلك جمعنا في فريق واحد الباحث المنهجي، والمحلل الإحصائي، والمحرر اللغوي، والمترجم، والمصمم، حتى لا تتنقل برسالتك بين جهات لا يعرف بعضها ما فعله الآخر.</p>
+        <h2>ماذا نفعل بالضبط؟</h2>
+        <p>نرافق طلاب الماجستير والدكتوراه والباحثين في المملكة وخارجها في مراحل رسائلهم: نساعد في بناء الخطة والمنهج، ونصمم أدوات القياس ونجهزها للتحكيم، ونجري التحليل الإحصائي ونشرحه، ونحرر النص وننسقه ونتحقق من مراجعه، ونترجم، ونجهز عرض المناقشة ونتدرب معك عليه.</p>
+        <p>ونعمل كذلك مع طلاب البكالوريوس في مشاريع التخرج والعروض، ومع الأفراد والمؤسسات في الترجمة والسير الذاتية والحلول التقنية.</p>
+      </div>
+      <figure class="ab-quote" data-reveal="fade" data-delay="0.1">
+        <blockquote>«نرافقك من الفكرة إلى المناقشة — بدقة، وسرية، وفي الموعد.»</blockquote>
+        <figcaption>وعد بابل أكاديمي</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section section--dark" aria-labelledby="pr-title">
+    <div class="container">
+      <SectionTitle id="pr-title" eyebrow="مبادئنا" title="أربعة أشياء لا نتنازل عنها." />
+      <ul role="list" class="ab-principles" data-reveal="stagger">
+        {principles.map((p) => (
+          <li class="ab-principle">
+            <span class="ab-principle__icon"><Icon name={p.icon} size={26} /></span>
+            <h3>{p.t}</h3>
+            <p>{p.d}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="int-title">
+    <div class="container container--narrow">
+      <div class="ab-integrity" data-reveal="fade">
+        <p class="eyebrow">النزاهة العلمية</p>
+        <h2 id="int-title">ما نقدمه، وما لا نقدمه.</h2>
+        <p>خدماتنا استشارة وإرشاد ومراجعة وتحليل وتحرير وتنسيق وترجمة وتدريب. هدفنا أن تخرج من كل مرحلة وأنت تفهم عملك أكثر، لا أن تستلم ملفًا لا تعرف ما فيه.</p>
+        <ul role="list">
+          <li><Icon name="check" size={20} /> نلتزم بدليل جامعتك وتعليمات مشرفك في كل ما نعمل عليه.</li>
+          <li><Icon name="check" size={20} /> نشرح لك الاختيارات المنهجية والإحصائية حتى تستطيع مناقشتها.</li>
+          <li><Icon name="check" size={20} /> نقدم فحص أصالة بتقرير مفصل، ونساعدك في تحسين الصياغة والتوثيق.</li>
+          <li><Icon name="x" size={20} /> لا نعد بدرجة أو قبول، فهذا قرار لجنتك وحدها؛ نعدك بمعايير الجودة التي تطلبها لجان المناقشة.</li>
+          <li><Icon name="x" size={20} /> لا نقبل عملًا يُطلب تقديمه باسم غير صاحبه.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--cream50" aria-labelledby="team-title">
+    <div class="container">
+      <SectionTitle id="team-title" eyebrow="الفريق" title="باحثون ومحللون ومترجمون ومصممون." lead="يعمل على كل طلب مختص في نوع الخدمة ومجال رسالتك، ونبقى على تواصل معك من البداية إلى التسليم." />
+      {team.length > 0 && (
+        <ul role="list" class="ab-team" data-reveal="stagger">
+          {team.map((m) => (
+            <li class="ab-member card">
+              {m.photo ? <img src={m.photo} alt={m.name} width="120" height="120" loading="lazy" /> : <span class="ab-member__ph" aria-hidden="true"><Icon name="users-round" size={34} /></span>}
+              <p class="ab-member__name">{m.name}</p>
+              <p class="muted">{m.role}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {site.legalEntity && <p class="ab-legal">{site.nameAr}: {site.legalEntity}</p>}
+    </div>
+  </section>
+
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .ab-story { display: grid; gap: 3rem; align-items: start; }
+  .ab-story .prose h2:first-child { margin-top: 0; }
+  .ab-quote { padding: 2rem; border-radius: var(--radius-card); background: var(--indigo-900); color: var(--on-dark); }
+  .ab-quote blockquote { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 1.2rem + 1.3vw, 2.2rem); line-height: 1.7; }
+  .ab-quote figcaption { margin-top: 1rem; color: var(--on-dark-muted); font-size: var(--fs-small); }
+  @media (min-width: 1024px) { .ab-story { grid-template-columns: 1.3fr 1fr; gap: 5rem; } .ab-quote { position: sticky; top: calc(var(--header-h) + 2rem); } }
+
+  .ab-principles { display: grid; gap: 1rem; }
+  @media (min-width: 720px) { .ab-principles { grid-template-columns: 1fr 1fr; } }
+  .ab-principle { padding: 1.75rem; border-radius: var(--radius-card); border: 1px solid var(--line-dark); background: rgba(244, 239, 228, 0.04); display: grid; gap: 0.6rem; }
+  .ab-principle__icon { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 14px; background: rgba(166, 61, 64, 0.25); color: var(--cream-100); }
+  .ab-principle h3 { font-size: var(--fs-h3); }
+  .ab-principle p { color: var(--on-dark-muted); line-height: 1.85; }
+
+  .ab-integrity { padding: clamp(1.5rem, 1rem + 2vw, 2.75rem); border-radius: var(--radius-card); background: var(--cream-50); border: 1px solid var(--line-light); border-inline-start: 4px solid var(--brick-600); display: grid; gap: 1rem; }
+  .ab-integrity ul { display: grid; gap: 0.75rem; margin-top: 0.5rem; }
+  .ab-integrity li { display: flex; gap: 0.65rem; align-items: flex-start; line-height: 1.8; }
+  .ab-integrity li :global(svg) { margin-top: 0.3rem; color: var(--brick-600); }
+
+  .ab-team { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .ab-member { padding: 1.5rem; display: grid; justify-items: center; text-align: center; gap: 0.4rem; }
+  .ab-member img, .ab-member__ph { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; }
+  .ab-member__ph { display: grid; place-items: center; background: var(--indigo-tint); color: var(--indigo-900); }
+  .ab-member__name { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--indigo-900); }
+  .ab-legal { margin-top: 2rem; font-size: var(--fs-small); color: var(--ink-muted); }
+</style>

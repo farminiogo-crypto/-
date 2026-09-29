@@ -1,0 +1,148 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import ProcessTimeline from '@/components/ProcessTimeline.astro';
+import FAQ from '@/components/FAQ.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+
+const p = site.policy;
+const rounds = p.revisionRounds ? `${p.revisionRounds} جولات تعديل` : 'عدد جولات التعديل';
+const details = [
+  {
+    id: 'request',
+    icon: 'message-circle',
+    t: 'الطلب',
+    body: [
+      'ترسل تفاصيل عملك على واتساب أو عبر صفحة الطلب: مرحلتك، والخدمة، والموعد، وما أنجزته حتى الآن. كلما أرسلت ملفات أكثر (دليل الجامعة، ملاحظات المشرف، مسودتك) كان تقديرنا أدق.',
+      'المراجعة الأولية مجانية ولا تلزمك بشيء.',
+    ],
+  },
+  {
+    id: 'pricing',
+    icon: 'receipt-text',
+    t: 'التسعير',
+    body: [
+      'يتحدد السعر بثلاثة أشياء: نوع الخدمة، وحجم العمل (عدد الصفحات أو المتغيرات أو حجم العينة)، والموعد المطلوب. لا نعلن أسعارًا ثابتة لأن رسالتين في التخصص نفسه قد تختلفان كثيرًا في الجهد.',
+      'قبل أي دفع نرسل لك عرضًا مكتوبًا فيه: ما ستستلمه بالضبط، والمراحل وتسليم كل منها، و' + rounds + ' المشمولة، والموعد النهائي، والتكلفة.',
+    ],
+  },
+  {
+    id: 'payment',
+    icon: 'wallet',
+    t: 'الدفع على مراحل',
+    body: [
+      p.firstPaymentPercent
+        ? `تبدأ بدفعة أولى قدرها ${p.firstPaymentPercent}٪، والباقي موزع على مراحل مرتبطة بتسليمات واضحة.`
+        : 'تبدأ بدفعة أولى، والباقي موزع على مراحل مرتبطة بتسليمات واضحة.',
+      'تستلم كل مرحلة وتراجعها قبل أن ننتقل للتي بعدها، فلا تدفع مقابل عمل لم تره.',
+    ],
+  },
+  {
+    id: 'revisions',
+    icon: 'repeat',
+    t: 'التعديلات',
+    body: [
+      `التعديلات المتعلقة بنطاق العمل المتفق عليه مشمولة ضمن ${rounds} المحدد في العرض، سواء جاءت منك أو من مشرفك${p.revisionWindowDays ? `، خلال ${p.revisionWindowDays} يومًا من التسليم` : ''}.`,
+      'إن طلب المشرف تغييرًا يخرج عن النطاق الأصلي (منهج مختلف، أو متغيرات جديدة، أو فصل إضافي) نوضح لك ذلك ونتفق عليه كتابيًا قبل التنفيذ.',
+    ],
+  },
+  {
+    id: 'delivery',
+    icon: 'flag-triangle-right',
+    t: 'التسليم والدعم',
+    body: [
+      'تستلم ملفات نهائية منسقة بالصيغ المتفق عليها، مع شرح مكتوب لما يلزمك فهمه، ونجيب عن أسئلتك بعد التسليم.',
+      'في خدمات الرسائل نبقى معك حتى يوم المناقشة: أسئلة اللجنة، وتعديلات ما بعد المناقشة المتعلقة بعملنا.',
+    ],
+  },
+  {
+    id: 'privacy',
+    icon: 'lock',
+    t: 'السرية',
+    body: [
+      'لا نشارك ملفاتك أو بياناتك مع أي جهة، ولا يطلع عليها إلا المختص الذي يعمل على طلبك.',
+      'لا نعرض أي عمل في معرضنا إلا بعد حذف كل ما يدل على صاحبه.',
+    ],
+  },
+];
+const faq = [
+  { q: 'كم يستغرق الرد على طلبي؟', a: 'نرد على الرسائل حسب ترتيب وصولها. وكلما كانت التفاصيل والملفات كاملة في الرسالة الأولى، كان العرض المكتوب أسرع وأدق.' },
+  { q: 'هل يمكن تغيير الموعد بعد الاتفاق؟', a: 'نعم إن سمح نطاق العمل بذلك. الموعد جزء من العرض المكتوب، وأي تغيير فيه نتفق عليه قبل تطبيقه.' },
+  { q: 'ماذا لو لم تعجبني مرحلة من المراحل؟', a: 'لهذا نسلم على مراحل. تراجع كل مرحلة، ونعدل حسب ملاحظاتك ضمن ما اتفقنا عليه، قبل أن ننتقل للمرحلة التالية.' },
+  { q: 'كيف أدفع؟', a: 'نرسل لك طرق الدفع المتاحة مع العرض المكتوب. لا نطلب أي دفعة قبل أن تطلع على العرض وتوافق عليه.' },
+];
+---
+<BaseLayout
+  title="كيف نعمل: الطلب والتسعير والدفع على مراحل والتعديلات"
+  description="كيف يعمل بابل أكاديمي: عرض مكتوب قبل الدفع، دفع على مراحل مرتبطة بتسليمات، تعديلات محددة ومتفق عليها، وسرية تامة للملفات، ودعم حتى يوم المناقشة."
+>
+  <PageHero
+    crumbs={[{ href: '/process/', label: 'كيف نعمل' }]}
+    eyebrow="كيف نعمل"
+    title="خمس خطوات واضحة، ولا مفاجآت."
+    lead="تعرف قبل أن تدفع ماذا ستستلم، ومتى، وكم مرة يمكنك طلب التعديل. وتدفع على مراحل، مقابل عمل تراه."
+  />
+
+  <section class="section section--cream50" aria-label="الخطوات">
+    <div class="container">
+      <ProcessTimeline />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="det-title">
+    <div class="container pr">
+      <nav class="pr__toc" aria-label="أقسام الصفحة">
+        <p class="pr__toc-title">في هذه الصفحة</p>
+        <ul role="list">
+          {details.map((d) => <li><a href={`#${d.id}`}><Icon name={d.icon} size={18} /> {d.t}</a></li>)}
+        </ul>
+      </nav>
+      <div class="pr__main">
+        <h2 id="det-title" class="sr-only">التفاصيل</h2>
+        {details.map((d) => (
+          <section class="pr__block" id={d.id} aria-labelledby={`h-${d.id}`} data-reveal="fade">
+            <span class="pr__icon"><Icon name={d.icon} size={26} /></span>
+            <div class="prose">
+              <h3 id={`h-${d.id}`}>{d.t}</h3>
+              {d.body.map((b) => <p>{b}</p>)}
+            </div>
+          </section>
+        ))}
+        <p class="pr__terms">التفاصيل الكاملة في <a href="/terms/">الشروط والأحكام</a> و<a href="/privacy/">سياسة الخصوصية</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--cream50" aria-labelledby="pfaq-title">
+    <div class="container container--narrow">
+      <SectionTitle id="pfaq-title" eyebrow="أسئلة شائعة" title="عن الطلب والدفع والمواعيد" />
+      <FAQ items={faq} />
+    </div>
+  </section>
+
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .pr { display: grid; gap: 2rem; }
+  .pr__toc { display: none; }
+  .pr__main { display: grid; gap: 1.25rem; }
+  .pr__block { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; padding: 1.75rem; border-radius: var(--radius-card); background: var(--cream-50); border: 1px solid var(--line-light); scroll-margin-top: calc(var(--header-h) + 1rem); }
+  .pr__block .prose { max-width: none; }
+  .pr__block h3 { margin-top: 0; font-size: var(--fs-h3); }
+  .pr__icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--indigo-900); color: var(--cream-100); }
+  .pr__terms { color: var(--ink-muted); }
+  .pr__terms a { color: var(--brick-600); }
+  @media (min-width: 1024px) {
+    .pr { grid-template-columns: 240px 1fr; gap: 4rem; align-items: start; }
+    .pr__toc { display: block; position: sticky; top: calc(var(--header-h) + 1.5rem); }
+    .pr__toc-title { font-size: var(--fs-small); font-weight: 600; color: var(--ink-muted); margin-bottom: 0.75rem; }
+    .pr__toc a { display: flex; align-items: center; gap: 0.5rem; min-height: 40px; color: var(--indigo-900); text-decoration: none; font-weight: 500; }
+    .pr__toc a:hover { color: var(--brick-600); }
+    .pr__toc :global(svg) { color: var(--brick-600); }
+  }
+  @media (max-width: 560px) { .pr__block { grid-template-columns: 1fr; padding: 1.35rem; } }
+</style>
