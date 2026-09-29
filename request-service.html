@@ -16,6 +16,7 @@
     
     <!-- Icons (FontAwesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta property="og:image" content="https://alacadmeya.com/images/hero.webp">
 </head>
 <body class="bg-light">
 
@@ -38,7 +39,7 @@
             </nav>
             
             <div class="header-actions">
-                <a href="https://wa.me/966582744514?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D9%86%20%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9%20%D9%84%D9%84%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%A9." class="btn btn-whatsapp" aria-label="تواصل عبر واتساب" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="https://wa.me/966582744514?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D9%86%20%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9%20%D9%84%D9%84%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%A9." class="btn btn-whatsapp" aria-label="تواصل عبر واتساب" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i></a>
                 <a href="request-service.html" class="btn btn-primary">اطلب خدمة</a>
                 <button class="mobile-menu-toggle" aria-label="افتح القائمة"><i class="fa-solid fa-bars"></i></button>
             </div>
@@ -61,7 +62,7 @@
                 </p>
                 
                 <div class="hero-actions">
-                    <a href="https://wa.me/966582744514?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D9%86%20%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9%20%D9%84%D9%84%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%A9." class="btn btn-primary" target="_blank"><i class="fa-brands fa-whatsapp"></i> تواصل عبر واتساب</a>
+                    <a href="https://wa.me/966582744514?text=%D9%85%D8%B1%D8%AD%D8%A8%D9%8B%D8%A7%D8%8C%20%D8%A3%D9%88%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%AE%D8%AF%D9%85%D8%A9%20%D9%85%D9%86%20%D8%A7%D9%84%D8%A3%D9%83%D8%A7%D8%AF%D9%8A%D9%85%D9%8A%D8%A9%20%D9%84%D9%84%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AA%D8%B9%D9%84%D9%8A%D9%85%D9%8A%D8%A9." class="btn btn-primary" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> تواصل عبر واتساب</a>
                     <a href="#request-form" class="btn btn-outline">أكمل نموذج الطلب أسفله</a>
                 </div>
                 
@@ -111,7 +112,10 @@
                             <i class="fa-solid fa-triangle-exclamation"></i> لتجربة أفضل، يرجى تفعيل JavaScript. يمكنك أيضًا التواصل مباشرة عبر واتساب.
                         </div>
                     </noscript>
-                    <form id="serviceRequestForm" action="https://wa.me/966582744514" method="get" target="_blank">
+                    <form id="serviceRequestForm" action="https://wa.me/966582744514" method="get" target="_blank" rel="noopener noreferrer">
+                        
+                        <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-light-gray); padding-bottom: 0.5rem;"><i class="fa-solid fa-address-card text-accent ml-2"></i> بيانات التواصل</h3>
+                        
                         <div class="form-group">
                             <label for="name" class="form-label">الاسم الكريم <span style="color:red">*</span></label>
                             <input type="text" id="name" class="form-control" placeholder="اكتب اسمك هنا" required>
@@ -126,6 +130,8 @@
                             <label for="email" class="form-label">البريد الإلكتروني</label>
                             <input type="email" id="email" class="form-control" placeholder="name@example.com" dir="ltr" style="text-align: right;">
                         </div>
+                        
+                        <h3 style="font-size: 1.3rem; margin-top: 2.5rem; margin-bottom: 1.5rem; color: var(--color-primary); border-bottom: 2px solid var(--color-light-gray); padding-bottom: 0.5rem;"><i class="fa-solid fa-file-pen text-accent ml-2"></i> تفاصيل الطلب الأكاديمي</h3>
                         
                         <div class="form-group">
                             <label for="level" class="form-label">المرحلة الأكاديمية <span style="color:red">*</span></label>
@@ -178,10 +184,15 @@
                         <div class="form-group">
                             <label class="form-label">رفع ملفات توضيحية</label>
                             <input type="file" id="file" class="form-control" style="padding: 0.5rem;">
-                            <span class="file-upload-note"><i class="fa-solid fa-circle-info"></i> سيتم ذكر اسم الملف فقط في رسالة واتساب، ويرجى إرسال الملف نفسه داخل المحادثة لضمان السرية.</span>
+                            <span class="file-upload-note"><i class="fa-solid fa-circle-info text-accent"></i> سيتم ذكر اسم الملف فقط في رسالة واتساب، ويرجى إرسال الملف نفسه داخل المحادثة لضمان السرية.</span>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1rem;">
+                        <div class="trust-note" style="background-color: rgba(22, 163, 74, 0.05); border: 1px solid var(--color-border); border-right: 4px solid var(--color-whatsapp); padding: 1rem; border-radius: 8px; margin: 2rem 0 1rem; font-size: 0.95rem;">
+                            <i class="fa-solid fa-lock" style="color: var(--color-whatsapp); margin-left: 0.5rem;"></i>
+                            <strong>تعهد بالسرية:</strong> جميع بياناتك وملفاتك تعامل بسرية تامة. المراجعة الأولية لطلبك مجانية بالكامل.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-top: 1rem; justify-content: center;">
                             <i class="fa-brands fa-whatsapp" style="margin-left: 8px;"></i> إرسال الطلب عبر واتساب
                         </button>
                     </form>
@@ -307,9 +318,9 @@
                     <a href="index.html" class="footer-logo">الأكاديمية<span>.</span></a>
                     <p class="footer-about">منصة متخصصة في الدعم الأكاديمي والإرشاد البحثي، نلتزم بتقديم استشارات وخدمات تعتمد على الموثوقية والمعايير العلمية الدقيقة.</p>
                     <div class="footer-social">
-                        <a href="#" aria-label="تويتر"><i class="fa-brands fa-twitter"></i></a>
-                        <a href="#" aria-label="لينكد إن"><i class="fa-brands fa-linkedin-in"></i></a>
-                        <a href="#" aria-label="إنستجرام"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="javascript:void(0)" aria-label="تويتر"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="javascript:void(0)" aria-label="لينكد إن"><i class="fa-brands fa-linkedin-in"></i></a>
+                        <a href="javascript:void(0)" aria-label="إنستجرام"><i class="fa-brands fa-instagram"></i></a>
                     </div>
                 </div>
                 
