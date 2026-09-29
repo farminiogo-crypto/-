@@ -4,15 +4,17 @@ interface Props {
   type: 'doc' | 'stats' | 'deck' | 'bilingual' | 'cv' | 'questionnaire' | 'app';
   tilt?: boolean;
   class?: string;
+  title?: string; // عنوان عام يميز المجسم
 }
-const { type, tilt = true, class: cls = '' } = Astro.props;
+const { type, tilt = true, class: cls = '', title } = Astro.props;
+const isLatin = title ? /^[A-Za-z]/.test(title) : false;
 const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ length: n }, (_, i) => widths[i % widths.length]);
 ---
 <div class={`mock mock--${type} ${tilt ? 'mock--tilt' : ''} ${cls}`} aria-hidden="true">
   {type === 'doc' && (
     <div class="paper">
       <p class="m-chapter">الفصل الثالث</p>
-      <p class="m-h">منهجية الدراسة وإجراءاتها</p>
+      <p class="m-h">{title ?? 'منهجية الدراسة وإجراءاتها'}</p>
       <p class="m-sub">٣-١ منهج الدراسة</p>
       <div class="m-lines">{lines(5).map((w) => <span style={`width:${w}%`} />)}</div>
       <p class="m-sub">٣-٢ مجتمع الدراسة وعينتها</p>
@@ -55,7 +57,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
       </div>
       <div class="slide__text">
         <p class="slide__kicker">عرض مناقشة رسالة الماجستير</p>
-        <p class="slide__title">أثر التحول الرقمي في الأداء المؤسسي</p>
+        <p class={`slide__title ${isLatin ? 'latin' : ''}`} dir={isLatin ? 'ltr' : undefined}>{title ?? 'أثر التحول الرقمي في الأداء المؤسسي'}</p>
         <div class="slide__rule" />
         <p class="slide__meta">المنهج · النتائج · التوصيات</p>
       </div>

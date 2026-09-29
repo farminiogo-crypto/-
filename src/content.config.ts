@@ -51,6 +51,7 @@ const portfolio = defineCollection({
     field: z.string(), // المجال
     categories: z.array(z.enum(Object.keys(workCategories) as [keyof typeof workCategories, ...(keyof typeof workCategories)[]])),
     mock: z.enum(['doc', 'stats', 'deck', 'bilingual', 'cv', 'questionnaire', 'app']),
+    mockTitle: z.string().optional(), // عنوان عام للمجسم (ليس من ملف العميل)
     summary: z.string(), // ما نفذناه باختصار
     challenge: z.string(),
     done: z.array(z.string()),
