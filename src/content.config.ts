@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { workCategories } from './data/work';
 
 const qa = z.object({ q: z.string(), a: z.string() });
 const step = z.object({ title: z.string(), text: z.string() });
@@ -40,15 +41,7 @@ const fields = defineCollection({
   }),
 });
 
-export const workCategories = {
-  stats: 'تحليل إحصائي',
-  questionnaire: 'استبانات',
-  editing: 'تنسيق وتحرير',
-  translation: 'ترجمة',
-  decks: 'عروض',
-  cv: 'سير ذاتية',
-  tech: 'تقنية',
-} as const;
+export { workCategories };
 
 const portfolio = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/portfolio' }),

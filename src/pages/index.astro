@@ -1,18 +1,58 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import PageHero from '@/components/PageHero.astro';
+import HomeHero from '@/components/home/HomeHero.astro';
+import TrustBar from '@/components/home/TrustBar.astro';
+import TowerSection from '@/components/home/TowerSection.astro';
+import Proofs from '@/components/home/Proofs.astro';
+import ServicesBento from '@/components/home/ServicesBento.astro';
+import WorkStrip from '@/components/home/WorkStrip.astro';
+import Testimonials from '@/components/home/Testimonials.astro';
+import ProcessTimeline from '@/components/ProcessTimeline.astro';
 import SectionTitle from '@/components/ui/SectionTitle.astro';
+import FAQ from '@/components/FAQ.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { homeFaq } from '@/data/home';
+import { site } from '@/config/site';
 ---
-<BaseLayout title="بابل أكاديمي" fullTitle>
-  <PageHero eyebrow="المرحلة الأولى" title="من الفكرة إلى المناقشة… نصعد معك درجةً درجة." lead="صفحة مؤقتة لاختبار نظام التصميم والهيدر والفوتر.">
-    <a slot="actions" class="btn btn--primary btn--lg" href="/request/" data-magnetic>ابدأ طلبك في دقيقة</a>
-    <a slot="actions" class="btn btn--outline btn--lg" href="#x">أرسل ملفك على واتساب</a>
-  </PageHero>
-  <section class="section">
+<BaseLayout
+  title={`${site.nameAr} | تحليل إحصائي وتصميم استبانات وتنسيق رسائل الماجستير والدكتوراه`}
+  fullTitle
+  description="بابل أكاديمي يرافقك في رسالة الماجستير أو الدكتوراه من الفكرة إلى المناقشة: استشارة منهجية، تصميم استبانات وتحكيمها، تحليل إحصائي SPSS مشروح، تحرير وتنسيق وتحقق من المراجع، وتحضير للمناقشة."
+  preloader
+>
+  <HomeHero />
+  <TrustBar />
+  <TowerSection />
+  <Proofs />
+  <ServicesBento />
+  <WorkStrip />
+
+  <section class="section section--cream50" aria-labelledby="how-title">
     <div class="container">
-      <SectionTitle eyebrow="اختبار" title="رسالتك تُبنى طبقةً فوق طبقة. ونحن معك عند كل طبقة." lead="فقرة تجريبية لاختبار الخط والإيقاع والمسافات على الكريمي." />
-      <div class="card" style="padding:2rem" data-reveal="fade"><p>بطاقة</p></div>
-      <div style="height:120vh"></div>
+      <SectionTitle id="how-title" eyebrow="كيف نعمل" title="خمس خطوات واضحة، ولا مفاجآت." align="center" />
+      <ProcessTimeline />
+      <p class="how__more" data-reveal="fade">
+        <a class="link-arrow" href="/process/">التسعير والدفع والتعديلات بالتفصيل <Icon name="arrow-left" size={18} /></a>
+      </p>
     </div>
   </section>
+
+  <Testimonials />
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="container container--narrow">
+      <SectionTitle id="faq-title" eyebrow="أسئلة شائعة" title="قبل أن تسأل." />
+      <FAQ items={homeFaq} />
+      <p class="how__more" data-reveal="fade">
+        <a class="link-arrow" href="/faq/">كل الأسئلة <Icon name="arrow-left" size={18} /></a>
+      </p>
+    </div>
+  </section>
+
+  <FinalCTA />
 </BaseLayout>
+
+<style>
+  .how__more { display: flex; justify-content: center; margin-top: 2.5rem; }
+</style>

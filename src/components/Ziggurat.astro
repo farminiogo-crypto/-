@@ -7,8 +7,9 @@ interface Props {
   numbered?: boolean;
   class?: string;
   label?: string;
+  done?: boolean;
 }
-const { variant = 'hero', tiers = 7, numbered = false, class: cls = '', label } = Astro.props;
+const { variant = 'hero', tiers = 7, numbered = false, class: cls = '', label, done = false } = Astro.props;
 const g = ziggurat(tiers);
 const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 ---
@@ -29,7 +30,7 @@ const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   </defs>
   <ellipse class="zig__shadow" cx={g.shadow.cx} cy={g.shadow.cy} rx={g.shadow.rx} ry={g.shadow.ry} />
   {g.tiers.map((t) => (
-    <g class="zt" data-tier={t.index} style={`--i:${t.index}`}>
+    <g class={`zt${done ? ' is-done' : ''}`} data-tier={t.index} style={`--i:${t.index}`}>
       <polygon class="zt__left" points={t.left} />
       <polygon class="zt__right" points={t.right} />
       <polygon class="zt__top" points={t.top} />

@@ -1,0 +1,266 @@
+---
+// مجسمات المخرجات (بدل الصور حاليًا) — نصوص تجريبية عامة فقط، لا شيء من ملفات العملاء.
+interface Props {
+  type: 'doc' | 'stats' | 'deck' | 'bilingual' | 'cv' | 'questionnaire' | 'app';
+  tilt?: boolean;
+  class?: string;
+}
+const { type, tilt = true, class: cls = '' } = Astro.props;
+const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ length: n }, (_, i) => widths[i % widths.length]);
+---
+<div class={`mock mock--${type} ${tilt ? 'mock--tilt' : ''} ${cls}`} aria-hidden="true">
+  {type === 'doc' && (
+    <div class="paper">
+      <p class="m-chapter">الفصل الثالث</p>
+      <p class="m-h">منهجية الدراسة وإجراءاتها</p>
+      <p class="m-sub">٣-١ منهج الدراسة</p>
+      <div class="m-lines">{lines(5).map((w) => <span style={`width:${w}%`} />)}</div>
+      <p class="m-sub">٣-٢ مجتمع الدراسة وعينتها</p>
+      <div class="m-lines">{lines(3, [100, 92, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+      <table class="m-table">
+        <caption>جدول (٣-١) توزيع أفراد العينة</caption>
+        <tr><th>المتغير</th><th>الفئة</th><th>العدد</th><th>النسبة</th></tr>
+        <tr><td>النوع</td><td>ذكر</td><td>١١٢</td><td>٤٦٫٧٪</td></tr>
+        <tr><td></td><td>أنثى</td><td>١٢٨</td><td>٥٣٫٣٪</td></tr>
+      </table>
+      <p class="m-folio">٤٧</p>
+    </div>
+  )}
+
+  {type === 'stats' && (
+    <div class="paper paper--wide">
+      <p class="m-sub">جدول (٤-٣) معاملات ارتباط بيرسون بين متغيرات الدراسة</p>
+      <table class="m-table m-table--num">
+        <tr><th>المتغير</th><th>١</th><th>٢</th><th>٣</th></tr>
+        <tr><td>التحول الرقمي</td><td>١</td><td></td><td></td></tr>
+        <tr><td>الأداء المؤسسي</td><td>**٠٫٦٨</td><td>١</td><td></td></tr>
+        <tr><td>رضا العاملين</td><td>**٠٫٥٢</td><td>**٠٫٦١</td><td>١</td></tr>
+      </table>
+      <p class="m-note">** دالة عند مستوى ٠٫٠١</p>
+      <svg class="m-chart" viewBox="0 0 200 70" preserveAspectRatio="none">
+        <line x1="0" y1="68" x2="200" y2="68" />
+        <rect x="18" y="22" width="22" height="46" />
+        <rect x="58" y="34" width="22" height="34" />
+        <rect x="98" y="12" width="22" height="56" class="hi" />
+        <rect x="138" y="28" width="22" height="40" />
+      </svg>
+      <div class="m-lines m-lines--tight">{lines(2, [100, 70]).map((w) => <span style={`width:${w}%`} />)}</div>
+    </div>
+  )}
+
+  {type === 'deck' && (
+    <div class="slide">
+      <div class="slide__art">
+        <span /><span /><span /><span />
+      </div>
+      <div class="slide__text">
+        <p class="slide__kicker">عرض مناقشة رسالة الماجستير</p>
+        <p class="slide__title">أثر التحول الرقمي في الأداء المؤسسي</p>
+        <div class="slide__rule" />
+        <p class="slide__meta">المنهج · النتائج · التوصيات</p>
+      </div>
+      <p class="slide__num">٠٣</p>
+    </div>
+  )}
+
+  {type === 'bilingual' && (
+    <div class="paper paper--wide bi">
+      <div class="bi__col">
+        <p class="m-sub">١. الهدف من الإجراء</p>
+        <div class="m-lines m-lines--tight">{lines(3, [100, 94, 70]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <p class="m-sub">٢. الخطوات</p>
+        <div class="m-lines m-lines--tight">{lines(4, [96, 100, 88, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+      </div>
+      <div class="bi__col bi__col--en" dir="ltr">
+        <p class="m-sub latin">1. Purpose</p>
+        <div class="m-lines m-lines--tight">{lines(3, [100, 90, 64]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <p class="m-sub latin">2. Procedure</p>
+        <div class="m-lines m-lines--tight">{lines(4, [94, 100, 84, 56]).map((w) => <span style={`width:${w}%`} />)}</div>
+      </div>
+    </div>
+  )}
+
+  {type === 'cv' && (
+    <div class="paper cv">
+      <div class="cv__side">
+        <span class="cv__avatar" />
+        <p class="cv__label">التواصل</p>
+        <div class="m-lines m-lines--tight m-lines--light">{lines(3, [90, 70, 80]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <p class="cv__label">المهارات</p>
+        <div class="cv__bars"><span style="width:90%" /><span style="width:75%" /><span style="width:82%" /></div>
+      </div>
+      <div class="cv__main">
+        <p class="m-h">الاسم الكامل</p>
+        <p class="m-chapter">محلل مالي</p>
+        <p class="m-sub">الخبرات</p>
+        <div class="m-lines m-lines--tight">{lines(4, [100, 88, 94, 66]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <p class="m-sub">التعليم</p>
+        <div class="m-lines m-lines--tight">{lines(2, [92, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+      </div>
+    </div>
+  )}
+
+  {type === 'questionnaire' && (
+    <div class="paper">
+      <p class="m-chapter">المحور الثاني</p>
+      <p class="m-h m-h--sm">إدراك الواقع الاجتماعي</p>
+      <table class="m-table m-likert">
+        <tr><th>العبارة</th><th>موافق بشدة</th><th>موافق</th><th>محايد</th><th>غير موافق</th><th>غير موافق بشدة</th></tr>
+        {[1, 2, 3, 4, 5].map((r) => (
+          <tr>
+            <td><span class="m-line" style={`width:${[92, 80, 96, 70, 86][r - 1]}%`} /></td>
+            {[1, 2, 3, 4, 5].map((c) => <td><i class={c === [2, 1, 2, 3, 1][r - 1] ? 'on' : ''} /></td>)}
+          </tr>
+        ))}
+      </table>
+      <p class="m-note">ألفا كرونباخ للمحور = ٠٫٨٧</p>
+    </div>
+  )}
+
+  {type === 'app' && (
+    <div class="app">
+      <div class="app__side">
+        <span class="app__logo" />
+        <span class="app__nav on" /><span class="app__nav" /><span class="app__nav" /><span class="app__nav" />
+      </div>
+      <div class="app__main">
+        <div class="app__kpis">
+          <div><b>٢٤</b><small>طلب جديد</small></div>
+          <div><b>١٣</b><small>قيد التنفيذ</small></div>
+          <div><b>٨</b><small>للمراجعة</small></div>
+        </div>
+        <div class="app__rows">
+          {[['تحليل إحصائي', 'قيد التنفيذ', 70], ['تنسيق رسالة', 'للمراجعة', 90], ['ترجمة ملخص', 'جديد', 20], ['تصميم استبانة', 'قيد التنفيذ', 45]].map(([t, s, p]) => (
+            <div class="app__row"><span>{t}</span><em>{s}</em><i><b style={`width:${p}%`} /></i></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
+<style>
+  .mock {
+    container-type: inline-size;
+    width: 100%;
+    display: grid;
+    place-items: center;
+    perspective: 1200px;
+    font-family: var(--font-body);
+    color: var(--ink);
+  }
+  .mock > * {
+    box-shadow: 0 30px 60px -28px rgba(26, 15, 43, 0.55), 0 2px 6px rgba(26, 15, 43, 0.12);
+    transition: transform 0.8s var(--ease-expo), box-shadow 0.8s var(--ease-expo);
+  }
+  .mock--tilt > * { transform: rotateX(8deg) rotateY(-14deg) rotateZ(1.5deg); }
+  :global([data-mock-host]:hover) .mock--tilt > *,
+  :global([data-mock-host]:focus-visible) .mock--tilt > *,
+  .mock--tilt:hover > * { transform: none; box-shadow: 0 40px 70px -30px rgba(26, 15, 43, 0.6); }
+
+  .paper {
+    width: 62%;
+    aspect-ratio: 1 / 1.414;
+    background: #fffdf8;
+    border-radius: 3px;
+    padding: 7cqw 6cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6cqw;
+    overflow: hidden;
+  }
+  .paper--wide { width: 86%; aspect-ratio: 1.414 / 1; padding: 5cqw; }
+  .m-chapter { font-size: 2.2cqw; color: var(--brick-600); font-weight: 600; line-height: 1.2; }
+  .m-h { font-family: var(--font-display); font-weight: 700; font-size: 4cqw; color: var(--indigo-900); line-height: 1.3; }
+  .m-h--sm { font-size: 3.2cqw; }
+  .m-sub { font-size: 2.3cqw; font-weight: 600; color: var(--indigo-900); line-height: 1.3; margin-top: 0.8cqw; }
+  .m-note { font-size: 1.8cqw; color: var(--ink-muted); line-height: 1.2; }
+  .m-lines { display: grid; gap: 1.3cqw; }
+  .m-lines--tight { gap: 1cqw; }
+  .m-lines span, .m-line { display: block; height: 0.9cqw; border-radius: 1cqw; background: rgba(30, 21, 48, 0.16); }
+  .m-lines--light span { background: rgba(244, 239, 228, 0.35); }
+  .m-folio { margin-top: auto; text-align: center; font-size: 1.8cqw; color: var(--ink-muted); }
+  .m-table { width: 100%; border-collapse: collapse; font-size: 1.8cqw; line-height: 1.3; }
+  .m-table caption { font-size: 1.9cqw; font-weight: 600; color: var(--indigo-900); text-align: start; padding-bottom: 0.8cqw; }
+  .m-table th { background: var(--indigo-900); color: var(--cream-50); font-weight: 600; padding: 0.8cqw; }
+  .m-table td { padding: 0.8cqw; border-bottom: 1px solid rgba(30, 21, 48, 0.12); text-align: center; }
+  .m-table td:first-child { text-align: start; }
+  .m-table--num td:not(:first-child) { font-feature-settings: 'tnum'; color: var(--indigo-900); font-weight: 600; }
+  .m-chart { width: 100%; height: 14cqw; }
+  .m-chart line { stroke: rgba(30, 21, 48, 0.25); stroke-width: 1; }
+  .m-chart rect { fill: var(--indigo-700); opacity: 0.8; }
+  .m-chart rect.hi { fill: var(--brick-600); opacity: 1; }
+  .m-likert th { font-size: 1.4cqw; padding: 0.6cqw 0.3cqw; }
+  .m-likert td { padding: 1.1cqw 0.4cqw; }
+  .m-likert td:first-child { width: 42%; }
+  .m-likert i { display: inline-block; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; border: 1px solid rgba(30, 21, 48, 0.35); }
+  .m-likert i.on { background: var(--brick-600); border-color: var(--brick-600); }
+
+  .slide {
+    width: 90%;
+    aspect-ratio: 16 / 9;
+    background: radial-gradient(ellipse at 20% 100%, var(--indigo-700), var(--indigo-950));
+    color: var(--on-dark);
+    border-radius: 6px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    align-items: center;
+    padding: 5cqw;
+    position: relative;
+    overflow: hidden;
+  }
+  .slide__text { display: grid; gap: 1.6cqw; }
+  .slide__kicker { font-size: 2cqw; color: var(--on-dark-muted); }
+  .slide__title { font-family: var(--font-display); font-weight: 700; font-size: 4.6cqw; line-height: 1.35; }
+  .slide__rule { width: 12cqw; height: 0.6cqw; background: var(--brick-400); border-radius: 1cqw; }
+  .slide__meta { font-size: 1.9cqw; color: var(--on-dark-muted); }
+  .slide__num { position: absolute; bottom: 3cqw; left: 4cqw; font-family: var(--font-latin); font-size: 1.8cqw; opacity: 0.6; }
+  .slide__art { display: grid; justify-items: center; align-content: end; gap: 0.7cqw; height: 100%; }
+  .slide__art span { height: 3.6cqw; background: rgba(244, 239, 228, 0.85); border-radius: 0.4cqw; }
+  .slide__art span:nth-child(1) { width: 8cqw; }
+  .slide__art span:nth-child(2) { width: 14cqw; }
+  .slide__art span:nth-child(3) { width: 20cqw; }
+  .slide__art span:nth-child(4) { width: 26cqw; background: var(--brick-400); }
+
+  .bi { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
+  .bi__col { display: flex; flex-direction: column; gap: 1.4cqw; }
+  .bi__col--en { border-inline-start: 1px solid rgba(30, 21, 48, 0.15); padding-inline-start: 4cqw; }
+  .bi__col--en .m-sub { font-family: var(--font-latin); text-align: left; }
+
+  .cv { display: grid; grid-template-columns: 34% 1fr; padding: 0; gap: 0; }
+  .cv__side { background: var(--indigo-900); padding: 5cqw 3.5cqw; display: flex; flex-direction: column; gap: 1.6cqw; }
+  .cv__avatar { width: 12cqw; height: 12cqw; border-radius: 50%; background: rgba(244, 239, 228, 0.25); margin-bottom: 1cqw; }
+  .cv__label { font-size: 1.9cqw; font-weight: 600; color: var(--cream-100); margin-top: 1cqw; }
+  .cv__bars { display: grid; gap: 1cqw; }
+  .cv__bars span { height: 0.9cqw; border-radius: 1cqw; background: var(--brick-400); }
+  .cv__main { padding: 5cqw 4cqw; display: flex; flex-direction: column; gap: 1.5cqw; }
+
+  .app {
+    width: 92%;
+    aspect-ratio: 16 / 10;
+    background: var(--cream-50);
+    border-radius: 8px;
+    display: grid;
+    grid-template-columns: 17% 1fr;
+    overflow: hidden;
+    border: 1px solid var(--line-light);
+  }
+  .app__side { background: var(--indigo-900); padding: 3cqw 2cqw; display: flex; flex-direction: column; gap: 1.6cqw; }
+  .app__logo { width: 6cqw; height: 6cqw; border-radius: 1.2cqw; background: var(--brick-600); margin-bottom: 2cqw; }
+  .app__nav { height: 1.2cqw; border-radius: 1cqw; background: rgba(244, 239, 228, 0.3); }
+  .app__nav.on { background: var(--cream-100); }
+  .app__main { padding: 3.5cqw; display: flex; flex-direction: column; gap: 2.5cqw; }
+  .app__kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; }
+  .app__kpis div { background: #fff; border: 1px solid var(--line-light); border-radius: 1.4cqw; padding: 2cqw; display: grid; }
+  .app__kpis b { font-size: 4.2cqw; color: var(--indigo-900); line-height: 1.1; }
+  .app__kpis small { font-size: 1.7cqw; color: var(--ink-muted); }
+  .app__rows { display: grid; gap: 1.2cqw; }
+  .app__row { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr; align-items: center; gap: 2cqw; background: #fff; border-radius: 1cqw; padding: 1.4cqw 2cqw; font-size: 1.8cqw; }
+  .app__row em { font-style: normal; color: var(--brick-600); font-size: 1.6cqw; }
+  .app__row i { height: 1cqw; border-radius: 1cqw; background: var(--indigo-tint); overflow: hidden; }
+  .app__row i b { display: block; height: 100%; background: var(--indigo-700); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mock--tilt > * { transform: none; }
+  }
+</style>

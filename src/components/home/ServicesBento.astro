@@ -1,0 +1,110 @@
+---
+import { getCollection } from 'astro:content';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+const all = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+// الأهم أولًا بكروت أكبر
+const featuredOrder = ['statistical-analysis', 'questionnaire', 'formatting-references', 'presentations-defense'];
+const featured = featuredOrder.map((id) => all.find((s) => s.id === id)!).filter(Boolean);
+const rest = all.filter((s) => !featuredOrder.includes(s.id));
+const spans = ['7', '5', '5', '7'];
+---
+<section class="section section--cream50 bento-sec" aria-labelledby="services-title">
+  <div class="container">
+    <SectionTitle id="services-title" eyebrow="الخدمات" title="كل ما تحتاجه رسالتك، في مكان واحد." />
+    <ul role="list" class="bento" data-reveal="stagger">
+      {featured.map((s, i) => (
+        <li class={`bento__item bento__item--big span-${spans[i]}`}>
+          <a class="bento__card" href={`/services/${s.id}/`} data-spot>
+            <span class="bento__icon"><Icon name={s.data.icon} size={28} /></span>
+            <h3 class="bento__title">{s.data.title}</h3>
+            <p class="bento__short">{s.data.short}</p>
+            <span class="bento__arrow"><Icon name="arrow-left" size={22} /></span>
+          </a>
+        </li>
+      ))}
+      {rest.map((s) => (
+        <li class="bento__item span-4">
+          <a class="bento__card" href={`/services/${s.id}/`} data-spot>
+            <span class="bento__icon"><Icon name={s.data.icon} size={24} /></span>
+            <h3 class="bento__title">{s.data.title}</h3>
+            <p class="bento__short">{s.data.short}</p>
+            <span class="bento__arrow"><Icon name="arrow-left" size={20} /></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .bento { display: grid; gap: 1rem; }
+  .bento__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    height: 100%;
+    padding: 1.5rem;
+    border-radius: var(--radius-card);
+    background: var(--cream-100);
+    border: 1px solid var(--line-light);
+    text-decoration: none;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.5s var(--ease-expo), box-shadow 0.5s var(--ease-expo), border-color 0.4s;
+  }
+  /* إضاءة ناعمة تتبع المؤشر */
+  .bento__card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(166, 61, 64, 0.12), transparent 45%);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .bento__card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); border-color: rgba(166, 61, 64, 0.3); }
+  .bento__card:hover::before { opacity: 1; }
+  .bento__icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: var(--indigo-900); color: var(--cream-100); margin-bottom: 0.5rem; transition: background-color 0.4s; }
+  .bento__card:hover .bento__icon { background: var(--brick-600); }
+  .bento__title { font-size: var(--fs-h3); }
+  .bento__short { color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.8; max-width: 52ch; }
+  .bento__arrow { margin-top: auto; padding-top: 0.75rem; color: var(--brick-600); transition: transform 0.4s var(--ease-expo); }
+  .bento__card:hover .bento__arrow { transform: translateX(-8px); }
+
+  .bento__item--big .bento__card {
+    background: radial-gradient(ellipse at 90% 0%, var(--indigo-700), var(--indigo-900) 70%);
+    color: var(--on-dark);
+    border-color: var(--line-dark);
+    min-height: 250px;
+    padding: 1.75rem;
+  }
+  .bento__item--big .bento__card::before { background: radial-gradient(460px circle at var(--mx, 50%) var(--my, 50%), rgba(196, 89, 91, 0.28), transparent 45%); }
+  .bento__item--big .bento__title { color: var(--on-dark); font-size: clamp(1.45rem, 1.2rem + 1vw, 2rem); }
+  .bento__item--big .bento__short { color: var(--on-dark-muted); font-size: 1rem; }
+  .bento__item--big .bento__icon { background: rgba(244, 239, 228, 0.1); border: 1px solid var(--line-dark); width: 60px; height: 60px; }
+  .bento__item--big .bento__arrow { color: var(--brick-400); }
+
+  @media (min-width: 720px) {
+    .bento { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .bento { grid-template-columns: repeat(12, 1fr); gap: 1.25rem; }
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+    .span-4 { grid-column: span 4; }
+    .bento__item--big .bento__card { min-height: 290px; padding: 2.25rem; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-spot]').forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+</script>

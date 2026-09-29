@@ -1,0 +1,106 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+---
+<div class="ct" data-ct>
+  <button class="ct__card" type="button" aria-pressed="false" aria-label="اقلب البطاقة لرؤية ملخص العرض" data-ct-btn>
+    <span class="ct__face ct__face--front">
+      <span class="ct__lock"><Icon name="lock" size={34} strokeWidth={1.5} /></span>
+      <span class="ct__front-title">ملفاتك لا تخرج من عندنا</span>
+      <span class="ct__front-sub">لا نشارك ملفاتك أو بياناتك مع أي جهة، وكل ما نتفق عليه مكتوب قبل أن تدفع.</span>
+      <span class="ct__hint"><Icon name="repeat" size={16} /> اقلب البطاقة</span>
+    </span>
+    <span class="ct__face ct__face--back">
+      <span class="ct__back-head">
+        <span class="ct__back-title">ملخص العرض</span>
+        <span class="ct__example">مثال توضيحي</span>
+      </span>
+      <span class="ct__rows">
+        <span class="ct__row"><span>نطاق العمل</span><b>تحليل إحصائي لفصل النتائج مع التفسير</b></span>
+        <span class="ct__row"><span>المراحل</span><b>٣ مراحل، لكل منها تسليم</b></span>
+        <span class="ct__row"><span>التعديلات</span><b>٢ ضمن النطاق</b></span>
+        <span class="ct__row"><span>موعد التسليم</span><b>مكتوب ومحدد باليوم</b></span>
+      </span>
+      <span class="ct__stamp">السعر مكتوب قبل البدء</span>
+    </span>
+  </button>
+</div>
+
+<style>
+  .ct { perspective: 1400px; }
+  .ct__card {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.25 / 1;
+    border: 0;
+    padding: 0;
+    background: none;
+    text-align: start;
+    transform-style: preserve-3d;
+    transition: transform 0.9s var(--ease-expo);
+    color: inherit;
+    border-radius: 18px;
+  }
+  .ct__card[aria-pressed='true'] { transform: rotateY(180deg); }
+  @media (hover: hover) and (pointer: fine) {
+    .ct:hover .ct__card { transform: rotateY(180deg); }
+  }
+  .ct__face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 1.4rem;
+  }
+  .ct__face--front {
+    background: radial-gradient(ellipse at 30% 0%, var(--indigo-700), var(--indigo-950));
+    color: var(--on-dark);
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.6rem;
+    box-shadow: 0 20px 40px -24px rgba(26, 15, 43, 0.7);
+  }
+  .ct__lock { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 18px; background: rgba(166, 61, 64, 0.25); color: var(--cream-100); border: 1px solid rgba(196, 89, 91, 0.5); }
+  .ct__front-title { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.4; margin-top: 0.4rem; }
+  .ct__front-sub { font-size: 0.9rem; color: var(--on-dark-muted); line-height: 1.7; }
+  .ct__hint { margin-top: auto; display: inline-flex; align-items: center; gap: 0.4rem; font-size: var(--fs-xs); color: var(--on-dark-muted); }
+  .ct__face--back {
+    transform: rotateY(180deg);
+    background: #fffdf8;
+    color: var(--ink);
+    gap: 0.75rem;
+    border: 1px solid var(--line-light);
+    box-shadow: 0 20px 40px -24px rgba(26, 15, 43, 0.5);
+  }
+  .ct__back-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .ct__back-title { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--indigo-900); }
+  .ct__example { font-size: var(--fs-xs); font-weight: 600; color: var(--brick-600); background: var(--brick-tint); border-radius: var(--radius-pill); padding: 0.15rem 0.6rem; }
+  .ct__rows { display: grid; }
+  .ct__row { display: grid; grid-template-columns: 7.5em 1fr; gap: 0.5rem; padding: 0.45rem 0; border-bottom: 1px dashed var(--line-light); font-size: 0.85rem; line-height: 1.55; }
+  .ct__row span { color: var(--ink-muted); }
+  .ct__row b { font-weight: 600; color: var(--indigo-900); }
+  .ct__stamp {
+    margin-top: auto;
+    align-self: flex-end;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--brick-600);
+    border: 1.5px solid var(--brick-600);
+    border-radius: 8px;
+    padding: 0.25rem 0.6rem;
+    transform: rotate(-4deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ct__card { transition: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-ct]').forEach((root) => {
+    const btn = root.querySelector<HTMLButtonElement>('[data-ct-btn]')!;
+    btn.addEventListener('click', () => btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true')));
+  });
+</script>

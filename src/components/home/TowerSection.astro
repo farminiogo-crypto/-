@@ -1,0 +1,185 @@
+---
+import Ziggurat from '@/components/Ziggurat.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { layers } from '@/data/home';
+const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
+---
+<section id="tower" class="tower section--dark" data-tower aria-labelledby="tower-title">
+  <div class="container tower__head">
+    <p class="eyebrow" data-reveal="fade">رحلة الرسالة في سبع طبقات</p>
+    <h2 id="tower-title" data-reveal="heading">رسالتك تُبنى طبقةً فوق طبقة. ونحن معك عند كل طبقة.</h2>
+  </div>
+
+  <div class="tower__track" data-tower-track>
+    <div class="tower__sticky">
+      <div class="container tower__grid">
+        <ol class="tower__cards" role="list" data-tower-cards>
+          {layers.map((l, i) => (
+            <li class="tower-card" data-tower-card={i}>
+              <p class="tower-card__num"><span>الطبقة</span> <b>{arabicDigits[i]}</b> <span class="tower-card__of">من ٧</span></p>
+              <h3 class="tower-card__title">{l.title}</h3>
+              <p class="tower-card__text">{l.text}</p>
+              <a class="link-arrow" href={`/services/${l.service}/`}>
+                تفاصيل الخدمة <Icon name="arrow-left" size={18} />
+              </a>
+            </li>
+          ))}
+        </ol>
+        <div class="tower__art">
+          <div class="tower__progress" aria-hidden="true">
+            {layers.map((_, i) => <span data-tower-dot={i} />)}
+          </div>
+          <Ziggurat variant="scroll" numbered done class="tower__zig" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tower { padding-block: var(--space-section) 0; }
+  .tower__head { display: grid; gap: 0.9rem; max-width: 820px; margin-bottom: 2.5rem; }
+  .tower__head h2 { color: var(--on-dark); }
+
+  /* الوضع الافتراضي (بدون JS أو مع تقليل الحركة): قائمة عمودية والبرج مكتمل */
+  .tower__grid { display: grid; gap: 2.5rem; padding-bottom: var(--space-section); }
+  .tower__art { position: relative; order: -1; width: min(100%, 360px); margin-inline: auto; }
+  .tower__cards { display: grid; gap: 1rem; counter-reset: layer; }
+  .tower-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--line-dark);
+    background: linear-gradient(160deg, rgba(61, 40, 96, 0.55), rgba(26, 15, 43, 0.35));
+    display: grid;
+    gap: 0.5rem;
+    transition: border-color 0.5s var(--ease-out), background-color 0.5s var(--ease-out), opacity 0.5s var(--ease-out);
+  }
+  .tower-card__num { display: flex; align-items: baseline; gap: 0.4rem; font-size: var(--fs-small); color: var(--on-dark-muted); }
+  .tower-card__num b { font-family: var(--font-display); font-size: 1.6rem; color: var(--brick-400); line-height: 1; }
+  .tower-card__of { opacity: 0.7; }
+  .tower-card__title { font-size: var(--fs-h3); color: var(--on-dark); }
+  .tower-card__text { color: var(--on-dark-muted); max-width: 46ch; }
+  .tower__progress { display: none; }
+
+  /* الجوال مع JS: البرج صغير ثابت في الأعلى يمتلئ تدريجيًا والبطاقات تتتابع تحته */
+  :global(.js:not(.rm)) .tower__art {
+    position: sticky;
+    top: calc(var(--header-h) - 8px);
+    z-index: 2;
+    width: 100%;
+    padding: 0.75rem 0 1rem;
+    background: linear-gradient(var(--indigo-900) 78%, transparent);
+  }
+  :global(.js:not(.rm)) .tower__art :global(.zig) { width: min(52vw, 220px); margin-inline: auto; }
+  :global(.js:not(.rm)) .tower-card { opacity: 0.45; }
+  :global(.js:not(.rm)) .tower-card.is-active { opacity: 1; border-color: rgba(196, 89, 91, 0.6); background: linear-gradient(160deg, rgba(166, 61, 64, 0.22), rgba(61, 40, 96, 0.4)); }
+  :global(.js:not(.rm)) .tower-card.is-done { opacity: 0.75; }
+
+  /* الديسكتوب مع JS: قسم مثبّت بارتفاع سبع شاشات تقريبًا */
+  @media (min-width: 1024px) {
+    .tower__grid { grid-template-columns: 1fr 1fr; align-items: center; }
+    .tower__art { order: 0; width: 100%; max-width: 520px; }
+    :global(.js:not(.rm)) .tower__track { height: calc(7 * 85vh); }
+    :global(.js:not(.rm)) .tower__sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: grid;
+      align-items: center;
+      overflow: hidden;
+    }
+    :global(.js:not(.rm)) .tower__grid { padding-bottom: 0; }
+    :global(.js:not(.rm)) .tower__art { position: relative; top: auto; background: none; padding: 0; }
+    :global(.js:not(.rm)) .tower__art :global(.zig) { width: 100%; }
+    :global(.js:not(.rm)) .tower__cards { position: relative; min-height: 340px; display: block; }
+    :global(.js:not(.rm)) .tower-card {
+      position: absolute;
+      inset-inline: 0;
+      top: 50%;
+      padding: 2.25rem;
+      opacity: 0;
+      transform: translateY(calc(-50% + 40px));
+      transition: opacity 0.6s var(--ease-out), transform 0.8s var(--ease-expo), border-color 0.5s;
+      pointer-events: none;
+    }
+    :global(.js:not(.rm)) .tower-card.is-done { opacity: 0; transform: translateY(calc(-50% - 40px)); }
+    :global(.js:not(.rm)) .tower-card.is-active { opacity: 1; transform: translateY(-50%); pointer-events: auto; }
+    :global(.js:not(.rm)) .tower-card__title { font-size: clamp(1.8rem, 1.2rem + 1.6vw, 2.6rem); }
+    :global(.js:not(.rm)) .tower-card__text { font-size: var(--fs-lead); }
+    :global(.js:not(.rm)) .tower__progress {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.6rem;
+      position: absolute;
+      left: -1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .tower__progress span { width: 3px; height: 28px; border-radius: 3px; background: rgba(244, 239, 228, 0.2); transition: background-color 0.4s; }
+    .tower__progress span.is-done { background: var(--cream-100); }
+    .tower__progress span.is-active { background: var(--brick-400); }
+  }
+</style>
+
+<script>
+  import { gsap, ScrollTrigger, reducedMotion } from '@/scripts/motion-core';
+
+  const section = document.querySelector<HTMLElement>('[data-tower]');
+  if (section) {
+    const tiers = [...section.querySelectorAll<SVGGElement>('.zt')];
+    const cards = [...section.querySelectorAll<HTMLElement>('[data-tower-card]')];
+    const dots = [...section.querySelectorAll<HTMLElement>('[data-tower-dot]')];
+    const zig = section.querySelector<SVGElement>('.zig');
+    const n = cards.length;
+    let current = -2;
+
+    const setActive = (idx: number, progress: number) => {
+      zig?.style.setProperty('--progress', String(progress));
+      if (idx === current) return;
+      current = idx;
+      const all = (el: Element[], i: number) => el.forEach((e, k) => {
+        e.classList.toggle('is-done', k < i);
+        e.classList.toggle('is-active', k === i);
+      });
+      all(tiers, idx);
+      all(cards, idx);
+      all(dots, idx);
+    };
+
+    if (reducedMotion()) {
+      setActive(n, 1); // الحالة النهائية مباشرة
+    } else {
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 1024px)', () => {
+        const track = section.querySelector<HTMLElement>('[data-tower-track]')!;
+        const st = ScrollTrigger.create({
+          trigger: track,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: true,
+          onUpdate: (self) => {
+            const p = self.progress;
+            setActive(Math.min(n - 1, Math.floor(p * n)), p);
+          },
+        });
+        setActive(0, 0);
+        // الطبقات القادمة ترتفع بخفة عند اقترابها
+        const tl = gsap.timeline({ scrollTrigger: { trigger: track, start: 'top top', end: 'bottom bottom', scrub: 0.6 } });
+        tiers.forEach((t, i) => tl.fromTo(t, { y: 26 }, { y: 0, duration: 1, ease: 'power2.out' }, i));
+        return () => { st.kill(); tl.kill(); gsap.set(tiers, { y: 0 }); };
+      });
+      mm.add('(max-width: 1023px)', () => {
+        const triggers = cards.map((card, i) =>
+          ScrollTrigger.create({
+            trigger: card,
+            start: 'top 62%',
+            end: 'bottom 62%',
+            onToggle: (self) => { if (self.isActive) setActive(i, (i + 1) / n); },
+          }),
+        );
+        setActive(-1, 0);
+        return () => triggers.forEach((t) => t.kill());
+      });
+    }
+  }
+</script>

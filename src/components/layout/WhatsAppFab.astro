@@ -110,15 +110,20 @@ const href = wa(waMessages.general);
   close.addEventListener('click', () => { bubble.hidden = true; btn.focus(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !bubble.hidden) { bubble.hidden = true; btn.focus(); } });
 
-  // في الجوال: يختفي حين تظهر أزرار الصفحة الأساسية حتى لا يغطيها
+  // يختفي فوق الفوتر دائمًا، وفي الجوال أيضًا حين تظهر أزرار الصفحة الأساسية حتى لا يغطيها
   const mobile = window.matchMedia('(max-width: 767px)');
-  const blockers = document.querySelectorAll('[data-fab-hide], .site-footer');
+  const blockers = document.querySelectorAll<HTMLElement>('[data-fab-hide], .site-footer');
   if (blockers.length && 'IntersectionObserver' in window) {
     const visible = new Set<Element>();
+    const update = () => {
+      const hide = [...visible].some((el) => el.classList.contains('site-footer') || mobile.matches);
+      fab.classList.toggle('is-tucked', hide);
+    };
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => (en.isIntersecting ? visible.add(en.target) : visible.delete(en.target)));
-      fab.classList.toggle('is-tucked', mobile.matches && visible.size > 0);
+      update();
     }, { rootMargin: '0px 0px -40px 0px' });
     blockers.forEach((b) => io.observe(b));
+    mobile.addEventListener('change', update);
   }
 </script>

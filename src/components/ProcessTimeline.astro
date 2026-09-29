@@ -1,0 +1,85 @@
+---
+import { processSteps } from '@/data/home';
+const digits = ['١', '٢', '٣', '٤', '٥'];
+interface Props { dark?: boolean }
+const { dark = false } = Astro.props;
+---
+<div class={`tl ${dark ? 'tl--dark' : ''}`} data-tl>
+  <div class="tl__rail" aria-hidden="true"><span class="tl__fill" data-tl-fill></span></div>
+  <ol role="list" class="tl__list" data-reveal="stagger">
+    {processSteps.map((s, i) => (
+      <li class="tl__step">
+        <span class="tl__dot" aria-hidden="true">{digits[i]}</span>
+        <h3 class="tl__title">{s.title}</h3>
+        <p class="tl__text">{s.text}</p>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .tl { position: relative; --dot: 52px; }
+  .tl__rail {
+    position: absolute;
+    top: calc(var(--dot) / 2);
+    bottom: calc(var(--dot) / 2);
+    inset-inline-start: calc(var(--dot) / 2 - 1px);
+    width: 2px;
+    background: var(--line-light);
+  }
+  .tl__fill { position: absolute; inset: 0; background: var(--brick-600); transform-origin: top; transform: scaleY(var(--p, 1)); }
+  :global(.js:not(.rm)) .tl__fill { --p: 0; }
+  .tl__list { display: grid; gap: 2rem; position: relative; }
+  .tl__step { display: grid; grid-template-columns: var(--dot) 1fr; column-gap: 1.1rem; row-gap: 0.3rem; align-items: start; }
+  .tl__dot {
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: var(--dot);
+    height: var(--dot);
+    border-radius: 50%;
+    background: var(--cream-50);
+    border: 2px solid var(--brick-600);
+    color: var(--brick-600);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    position: relative;
+    z-index: 1;
+  }
+  .tl__title { font-size: 1.25rem; padding-top: 0.55rem; }
+  .tl__text { color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.8; }
+  .tl--dark .tl__rail { background: var(--line-dark); }
+  .tl--dark .tl__dot { background: var(--indigo-900); border-color: var(--brick-400); color: var(--cream-100); }
+  .tl--dark .tl__fill { background: var(--brick-400); }
+  .tl--dark .tl__text { color: var(--on-dark-muted); }
+
+  @media (min-width: 1024px) {
+    .tl__rail {
+      top: calc(var(--dot) / 2 - 1px);
+      bottom: auto;
+      inset-inline: 10%;
+      width: auto;
+      height: 2px;
+    }
+    .tl__fill { transform-origin: right; transform: scaleX(var(--p, 1)); }
+    .tl__list { grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
+    .tl__step { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .tl__dot { grid-row: auto; margin-bottom: 0.75rem; }
+    .tl__title { padding-top: 0; }
+  }
+</style>
+
+<script>
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  // الخط الطوبي يرسم نفسه أثناء التمرير
+  document.querySelectorAll<HTMLElement>('[data-tl]').forEach((tl) => {
+    if (reducedMotion()) return;
+    const fill = tl.querySelector<HTMLElement>('[data-tl-fill]')!;
+    gsap.fromTo(fill, { '--p': 0 }, {
+      '--p': 1,
+      ease: 'none',
+      scrollTrigger: { trigger: tl, start: 'top 75%', end: 'bottom 55%', scrub: 0.6 },
+    });
+  });
+</script>
