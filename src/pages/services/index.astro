@@ -72,7 +72,7 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
 
   <section class="section" id="fields" aria-labelledby="fields-title">
     <div class="container">
-      <SectionTitle id="fields-title" eyebrow="المجالات الأكاديمية" title="نعرف لغة تخصصك." lead="لكل مجال أدواته وأسئلة لجانه المعتادة. هذه المجالات التي نعمل فيها باستمرار." />
+      <SectionTitle id="fields-title" eyebrow="مجالات التخصص" title="نعرف لغة تخصصك." lead="لكل مجال أدواته وأسئلة لجانه المعتادة. هذه المجالات التي نعمل فيها باستمرار." />
       <ul role="list" class="fields-grid" data-reveal="stagger">
         {fields.map((f) => (
           <li>
@@ -132,8 +132,8 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
     transition: background-color 0.3s, color 0.3s;
   }
   .journey__svc:hover { background: var(--brick-600); color: var(--cream-50); }
-  .journey__arrow { transition: transform 0.3s var(--ease-out); }
-  .journey__svc:hover .journey__arrow { transform: translateX(-4px); }
+  .journey__svc :global(.journey__arrow) { transition: transform 0.3s var(--ease-out); }
+  .journey__svc:hover :global(.journey__arrow) { transform: translateX(-4px); }
   @media (min-width: 900px) {
     .journey { gap: 0.6rem; }
     .journey__row { grid-template-columns: auto 1fr auto; padding-inline-end: calc(1.4rem + (6 - var(--i)) * 2.5rem); }

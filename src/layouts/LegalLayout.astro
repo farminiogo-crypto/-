@@ -1,0 +1,20 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import { site } from '@/config/site';
+interface Props { title: string; description: string; path: string }
+const { title, description, path } = Astro.props;
+const fmt = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<BaseLayout title={title} description={description} motion={false} preloadHeading={false}>
+  <PageHero compact tower={false} crumbs={[{ href: path, label: title }]} title={title} lead={`آخر تحديث: ${fmt.format(new Date(site.policy.lastUpdated))}`} />
+  <section class="section">
+    <div class="container container--narrow">
+      <article class="prose legal"><slot /></article>
+    </div>
+  </section>
+</BaseLayout>
+<style>
+  .legal { max-width: 72ch; }
+  .legal :global(h2) { font-size: clamp(1.4rem, 1.2rem + 0.8vw, 1.8rem); }
+</style>

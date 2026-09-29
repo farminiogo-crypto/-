@@ -1,0 +1,81 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import RequestWizard from '@/components/RequestWizard.astro';
+import Icon from '@/components/ui/Icon.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import { wa, waMessages } from '@/config/site';
+
+const after = [
+  { icon: 'message-circle', t: 'تصلنا رسالتك على واتساب', d: 'نقرأ التفاصيل والملفات التي ترفقها في المحادثة.' },
+  { icon: 'receipt-text', t: 'نرسل لك عرضًا مكتوبًا', d: 'ما ستستلمه بالضبط، والموعد، وعدد التعديلات، والتكلفة.' },
+  { icon: 'wallet', t: 'تبدأ بدفعة أولى فقط', d: 'والباقي على مراحل مرتبطة بتسليمات تراجعها بنفسك.' },
+];
+---
+<BaseLayout
+  title="ابدأ طلبك: دعم أكاديمي لرسالتك في دقيقة"
+  description="أرسل طلبك إلى بابل أكاديمي في أربع خطوات: مرحلتك، والخدمة التي تحتاجها، وتفاصيل عملك، وطريقة التواصل. نرد بعرض مكتوب قبل أي دفع."
+  motion={false}
+>
+  <PageHero
+    compact
+    tower={false}
+    crumbs={[{ href: '/request/', label: 'ابدأ طلبك' }]}
+    eyebrow="أربع خطوات، دقيقة واحدة"
+    title="ابدأ طلبك"
+    lead="أخبرنا أين وصلت، وما الذي تحتاجه. نجهز لك رسالة واتساب منسقة ترسلها بضغطة، ونرد عليك بعرض مكتوب قبل أي التزام."
+  />
+
+  <section class="section rq">
+    <div class="container rq__grid">
+      <div class="rq__main card">
+        <noscript>
+          <p class="rq__nojs">
+            المتصفح لا يشغل JavaScript، لذلك لن تُبنى رسالة منسقة تلقائيًا. يمكنك إرسال طلبك مباشرة
+            <a href={wa(waMessages.general)} target="_blank" rel="noopener">عبر واتساب</a> وكتابة التفاصيل في المحادثة.
+          </p>
+        </noscript>
+        <RequestWizard />
+      </div>
+      <aside class="rq__side" aria-labelledby="after-title">
+        <h2 id="after-title" class="rq__side-title">ماذا يحدث بعد الإرسال؟</h2>
+        <ol role="list" class="rq__after">
+          {after.map((a) => (
+            <li>
+              <span class="rq__after-icon"><Icon name={a.icon} size={22} /></span>
+              <div>
+                <p class="rq__after-t">{a.t}</p>
+                <p class="muted">{a.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div class="rq__direct">
+          <p>تفضل الكتابة مباشرة؟</p>
+          <a class="btn btn--wa btn--block" href={wa(waMessages.file)} target="_blank" rel="noopener"><BrandIcon name="whatsapp" /> أرسل ملفك على واتساب</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .rq { padding-top: 3rem; }
+  .rq__grid { display: grid; gap: 2rem; align-items: start; }
+  .rq__main { padding: clamp(1.25rem, 0.8rem + 2vw, 2.5rem); }
+  .rq__nojs { padding: 1rem; margin-bottom: 1.5rem; border-radius: var(--radius-s); background: var(--brick-tint); line-height: 1.9; }
+  .rq__nojs a { color: var(--brick-600); font-weight: 600; }
+  .rq__side { display: grid; gap: 1.5rem; }
+  .rq__side-title { font-size: var(--fs-h3); }
+  .rq__after { display: grid; gap: 1.1rem; }
+  .rq__after li { display: flex; gap: 0.9rem; align-items: flex-start; }
+  .rq__after-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; background: var(--indigo-900); color: var(--cream-100); }
+  .rq__after-t { font-weight: 600; color: var(--indigo-900); }
+  .rq__after .muted { font-size: var(--fs-small); line-height: 1.75; }
+  .rq__direct { padding: 1.25rem; border-radius: var(--radius-m); border: 1px dashed rgba(44, 26, 69, 0.25); display: grid; gap: 0.75rem; }
+  .rq__direct p { font-weight: 600; color: var(--indigo-900); }
+  @media (min-width: 1024px) {
+    .rq__grid { grid-template-columns: 1fr 320px; gap: 3rem; }
+    .rq__side { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+  }
+</style>

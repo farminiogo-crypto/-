@@ -1,0 +1,105 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import FAQ from '@/components/FAQ.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { homeFaq } from '@/data/home';
+
+const groups = [
+  {
+    id: 'general',
+    t: 'أسئلة عامة',
+    items: [
+      { q: 'من تخدمون؟', a: 'طلاب الماجستير والدكتوراه والباحثين في المملكة وخارجها بالدرجة الأولى، وطلاب البكالوريوس في مشاريع التخرج والعروض، والأفراد والمؤسسات في الترجمة والسير الذاتية والحلول التقنية.' },
+      homeFaq[5],
+      { q: 'هل التواصل الأولي مجاني؟', a: 'نعم. ترسل التفاصيل، ونراجعها ونرسل لك عرضًا مكتوبًا، دون أي التزام منك.' },
+    ],
+  },
+  {
+    id: 'services',
+    t: 'عن الخدمات',
+    items: [
+      homeFaq[4],
+      { q: 'هل أستطيع طلب أكثر من خدمة معًا؟', a: 'نعم، وهذا شائع: تحليل إحصائي ثم تحرير وتنسيق، أو تصميم استبانة ثم تحليلها. نجمعها في عرض واحد بمراحل واضحة.' },
+      { q: 'هل تلتزمون بدليل جامعتي؟', a: 'دائمًا. أرسل لنا الدليل أو رابطه مع طلبك، ونطابق العمل معه بندًا بندًا.' },
+      { q: 'هل تتحققون من المراجع؟', a: 'نعم، في خدمة التنسيق والتوثيق نتحقق من كل مرجع: هل هو موجود فعلًا، وهل بياناته صحيحة، وهل الـDOI يفتح على المقال نفسه. وما لا يصمد نحذفه ونقترح بديلًا موثقًا.' },
+    ],
+  },
+  {
+    id: 'privacy',
+    t: 'السرية والملفات',
+    items: [
+      homeFaq[0],
+      { q: 'كيف أرسل ملفاتي؟', a: 'في محادثة واتساب نفسها. يمكنك إرسال دليل الجامعة وملاحظات المشرف ومسودتك وملفات البيانات.' },
+    ],
+  },
+  {
+    id: 'payment',
+    t: 'التسعير والدفع والتعديلات',
+    items: [homeFaq[1], homeFaq[2], homeFaq[3]],
+  },
+  {
+    id: 'integrity',
+    t: 'النزاهة العلمية',
+    items: [
+      { q: 'هل عملكم يتعارض مع سياسات الجامعات؟', a: 'خدماتنا استشارة وإرشاد ومراجعة وتحليل وتحرير وتنسيق وترجمة وتدريب، وهي خدمات يستعين بها الباحثون في كل مكان. نلتزم بتعليمات جامعتك ومشرفك، ونشرح لك كل ما نعمل عليه حتى تفهمه وتدافع عنه.' },
+      { q: 'هل تقدمون فحص الأصالة؟', a: 'نعم، نقدم فحص أصالة بتقرير مفصل، ونساعدك في تحسين الصياغة والتوثيق في المواضع التي يشير إليها التقرير.' },
+    ],
+  },
+];
+const all = groups.flatMap((g) => g.items);
+---
+<BaseLayout
+  title="الأسئلة الشائعة"
+  description="إجابات عن أسئلة طلاب الماجستير والدكتوراه حول خدمات بابل أكاديمي: السرية، التسعير، الدفع على مراحل، التعديلات، التحقق من المراجع، والنزاهة العلمية."
+  jsonLd={{
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: all.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })),
+  }}
+>
+  <PageHero
+    compact
+    crumbs={[{ href: '/faq/', label: 'الأسئلة الشائعة' }]}
+    eyebrow="الأسئلة الشائعة"
+    title="قبل أن تسأل."
+    lead="جمعنا هنا أكثر ما يسأل عنه الطلاب قبل أن يبدؤوا معنا. وإن لم تجد سؤالك، راسلنا مباشرة."
+  />
+
+  <section class="section">
+    <div class="container fq">
+      <nav class="fq__nav" aria-label="أقسام الأسئلة">
+        <ul role="list">
+          {groups.map((g) => <li><a href={`#${g.id}`}>{g.t}</a></li>)}
+        </ul>
+      </nav>
+      <div class="fq__main">
+        {groups.map((g) => (
+          <section id={g.id} class="fq__group" aria-labelledby={`fq-${g.id}`}>
+            <h2 id={`fq-${g.id}`}>{g.t}</h2>
+            <FAQ items={g.items} schema={false} />
+          </section>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <FinalCTA title="لم تجد سؤالك؟" text="اكتب لنا سؤالك على واتساب، ونجيبك بوضوح." />
+</BaseLayout>
+
+<style>
+  .fq { display: grid; gap: 2rem; }
+  .fq__nav ul { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .fq__nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0.4rem 1rem; border-radius: var(--radius-pill); border: 1px solid var(--line-light); background: var(--cream-50); text-decoration: none; color: var(--indigo-900); font-weight: 500; }
+  .fq__nav a:hover { background: var(--indigo-900); color: var(--cream-100); }
+  .fq__main { display: grid; gap: 3rem; }
+  .fq__group { display: grid; gap: 1.25rem; scroll-margin-top: calc(var(--header-h) + 1rem); }
+  .fq__group h2 { font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem); }
+  @media (min-width: 1024px) {
+    .fq { grid-template-columns: 240px 1fr; gap: 4rem; align-items: start; }
+    .fq__nav { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+    .fq__nav ul { flex-direction: column; }
+    .fq__nav a { border: 0; background: none; padding-inline: 0; border-radius: 0; }
+    .fq__nav a:hover { background: none; color: var(--brick-600); }
+  }
+</style>

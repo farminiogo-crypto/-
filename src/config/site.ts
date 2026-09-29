@@ -27,6 +27,14 @@ export const site = {
   } as Record<SocialKey, string | null>,
   stats: null as null | Stat[], // يظهر شريط الأرقام فقط إن لم يكن null
   testimonials: [] as Testimonial[], // بإذن العميل فقط وبدون أسماء
+  // بنود السياسات الرقمية — تبقى null حتى يعتمدها محمود، وتُصاغ النصوص بدونها تلقائيًا
+  policy: {
+    revisionRounds: null as number | null, // عدد جولات التعديل المشمولة افتراضيًا
+    revisionWindowDays: null as number | null, // مدة طلب التعديلات بعد التسليم
+    firstPaymentPercent: null as number | null, // نسبة الدفعة الأولى
+    refundBeforeStartPercent: null as number | null, // نسبة الاسترداد إن أُلغي الطلب قبل البدء
+    lastUpdated: '2026-09-29',
+  },
   team: [
     // { name: 'د. محمد ماجد', role: 'مستشار رسائل الماجستير والدكتوراه', photo: null } ← بعد موافقته
   ] as TeamMember[],

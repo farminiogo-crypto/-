@@ -1,0 +1,26 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Ziggurat from '@/components/Ziggurat.astro';
+---
+<BaseLayout title="الصفحة غير موجودة" noindex motion={false}>
+  <section class="nf section--dark">
+    <div class="container nf__in">
+      <div class="nf__art" aria-hidden="true"><Ziggurat variant="scroll" active={3} numbered /></div>
+      <p class="eyebrow">خطأ ٤٠٤</p>
+      <h1>هذه الطبقة غير موجودة.</h1>
+      <p class="lead">ربما تغير الرابط أو انتقلت الصفحة. ابدأ من الرئيسية، أو أخبرنا بما تبحث عنه.</p>
+      <div class="nf__actions">
+        <a class="btn btn--primary btn--lg" href="/">الصفحة الرئيسية</a>
+        <a class="btn btn--outline btn--lg" href="/services/">الخدمات</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+<style>
+  .nf { min-height: 100svh; display: grid; align-items: center; padding-top: var(--header-h); padding-bottom: 3rem; }
+  .nf__in { display: grid; gap: 1rem; justify-items: center; text-align: center; }
+  .nf__art { width: min(70vw, 280px); margin-bottom: 1rem; }
+  .nf h1 { font-size: var(--fs-h1); }
+  .nf .lead { color: var(--on-dark-muted); max-width: 50ch; }
+  .nf__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 0.5rem; }
+</style>

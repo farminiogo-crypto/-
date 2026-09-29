@@ -1,0 +1,148 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import Icon from '@/components/ui/Icon.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { site, siteUrl } from '@/config/site';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((p) => ({ params: { slug: p.id }, props: { post: p } }));
+}
+const { post } = Astro.props;
+const d = post.data;
+const { Content, headings } = await render(post);
+const toc = headings.filter((h) => h.depth === 2);
+const services = await getCollection('services', (s) => d.services.includes(s.id));
+const others = (await getCollection('blog')).filter((p) => p.id !== post.id);
+const fmt = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' });
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.description,
+  inLanguage: 'ar',
+  datePublished: d.date.toISOString(),
+  dateModified: (d.updated ?? d.date).toISOString(),
+  author: { '@type': 'Organization', name: site.nameAr },
+  publisher: { '@type': 'Organization', name: site.nameAr, ...(siteUrl ? { logo: { '@type': 'ImageObject', url: `${siteUrl}/brand/logo.png` } } : {}) },
+  ...(siteUrl ? { mainEntityOfPage: new URL(`/blog/${post.id}/`, siteUrl).href, image: new URL(`/og/blog-${post.id}.png`, siteUrl).href } : {}),
+};
+---
+<BaseLayout title={d.seoTitle} description={d.description} jsonLd={ld} motion={false} ogImage={`/og/blog-${post.id}.png`}>
+  <header class="art-hero section--dark">
+    <div class="container container--narrow art-hero__in">
+      <Breadcrumbs items={[{ href: '/blog/', label: 'المدونة' }, { href: `/blog/${post.id}/`, label: d.title }]} />
+      <p class="art-hero__cat">{d.category}</p>
+      <h1>{d.title}</h1>
+      <p class="art-hero__desc">{d.description}</p>
+      <p class="art-hero__meta">
+        <span><Icon name="calendar" size={16} /> <time datetime={d.date.toISOString()}>{fmt.format(d.date)}</time></span>
+        <span><Icon name="clock" size={16} /> {d.readingMinutes} دقائق قراءة</span>
+      </p>
+    </div>
+  </header>
+
+  <div class="art-progress" aria-hidden="true"><span data-progress></span></div>
+
+  <div class="container art">
+    {toc.length > 2 && (
+      <nav class="art__toc" aria-label="محتويات المقال">
+        <p class="art__toc-title">في هذا المقال</p>
+        <ol role="list">
+          {toc.map((h) => <li><a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a></li>)}
+        </ol>
+      </nav>
+    )}
+    <article class="prose art__body" data-article>
+      <Content />
+    </article>
+  </div>
+
+  {services.length > 0 && (
+    <section class="section section--tight section--cream50" aria-labelledby="art-svc">
+      <div class="container container--narrow">
+        <h2 id="art-svc" class="art__side-h">خدمات مرتبطة</h2>
+        <ul role="list" class="art__svcs">
+          {services.map((s) => (
+            <li><a href={`/services/${s.id}/`}><Icon name={s.data.icon} size={20} /><span><b>{s.data.title}</b><small>{s.data.short}</small></span></a></li>
+          ))}
+        </ul>
+        {others.length > 0 && (
+          <>
+            <h2 class="art__side-h art__side-h--gap">مقالات أخرى</h2>
+            <ul role="list" class="art__others">
+              {others.map((p) => <li><a href={`/blog/${p.id}/`}>{p.data.title} <Icon name="arrow-left" size={16} /></a></li>)}
+            </ul>
+          </>
+        )}
+      </div>
+    </section>
+  )}
+  <FinalCTA />
+</BaseLayout>
+
+<style>
+  .art-hero { padding-top: calc(var(--header-h) + 2.5rem); padding-bottom: 3rem; }
+  .art-hero__in { display: grid; gap: 0.9rem; justify-items: start; }
+  .art-hero h1 { font-size: clamp(2rem, 1.4rem + 2.8vw, 3.3rem); line-height: 1.4; }
+  .art-hero__cat { font-size: var(--fs-small); font-weight: 600; color: var(--on-dark); background: rgba(166, 61, 64, 0.4); padding: 0.2rem 0.8rem; border-radius: var(--radius-pill); }
+  .art-hero__desc { font-size: var(--fs-lead); color: var(--on-dark-muted); line-height: 1.85; max-width: 62ch; }
+  .art-hero__meta { display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: var(--fs-small); color: var(--on-dark-muted); }
+  .art-hero__meta span { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+  .art-progress { position: sticky; top: 0; z-index: 50; height: 3px; }
+  .art-progress span { display: block; height: 100%; width: 100%; background: var(--brick-600); transform-origin: right; transform: scaleX(var(--p, 0)); }
+
+  .art { display: grid; gap: 2rem; padding-block: 3rem 4.5rem; }
+  .art__body { font-size: 1.125rem; line-height: 2; max-width: 70ch; margin-inline: auto; width: 100%; }
+  .art__body :global(h2) { scroll-margin-top: calc(var(--header-h) + 1.5rem); }
+  .art__body :global(table) { display: block; overflow-x: auto; }
+  .art__toc { display: none; }
+  @media (min-width: 1100px) {
+    .art { grid-template-columns: 250px minmax(0, 70ch); justify-content: center; gap: 4.5rem; align-items: start; }
+    .art__body { margin: 0; }
+    .art__toc { display: block; position: sticky; top: calc(var(--header-h) + 2rem); }
+    .art__toc-title { font-size: var(--fs-small); font-weight: 600; color: var(--ink-muted); margin-bottom: 0.75rem; }
+    .art__toc ol { display: grid; gap: 0.15rem; border-inline-start: 2px solid var(--line-light); }
+    .art__toc a { display: block; padding: 0.4rem 1rem; margin-inline-start: -2px; border-inline-start: 2px solid transparent; font-size: var(--fs-small); line-height: 1.6; color: var(--ink-muted); text-decoration: none; }
+    .art__toc a:hover { color: var(--indigo-900); }
+    .art__toc a.is-active { color: var(--brick-600); border-inline-start-color: var(--brick-600); font-weight: 600; }
+  }
+  .art__side-h { font-size: var(--fs-h3); margin-bottom: 1rem; }
+  .art__side-h--gap { margin-top: 2.5rem; }
+  .art__svcs { display: grid; gap: 0.75rem; }
+  .art__svcs a { display: flex; gap: 0.9rem; align-items: flex-start; padding: 1.1rem 1.25rem; border-radius: var(--radius-m); background: var(--cream-100); border: 1px solid var(--line-light); text-decoration: none; }
+  .art__svcs a:hover { border-color: var(--brick-600); }
+  .art__svcs :global(svg) { color: var(--brick-600); margin-top: 0.25rem; flex-shrink: 0; }
+  .art__svcs b { display: block; color: var(--indigo-900); font-weight: 600; }
+  .art__svcs small { display: block; color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.7; }
+  .art__others { display: grid; gap: 0.25rem; }
+  .art__others a { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; color: var(--indigo-900); font-weight: 500; text-decoration: none; }
+  .art__others a:hover { color: var(--brick-600); }
+</style>
+
+<script>
+  // شريط تقدم القراءة وتمييز القسم الحالي في جدول المحتويات (بلا GSAP)
+  const article = document.querySelector<HTMLElement>('[data-article]');
+  const bar = document.querySelector<HTMLElement>('[data-progress]');
+  if (article && bar) {
+    const update = () => {
+      const r = article.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
+      bar.style.setProperty('--p', p.toFixed(3));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  if (links.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) links.forEach((l) => l.classList.toggle('is-active', l.dataset.toc === en.target.id));
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    links.forEach((l) => { const h = document.getElementById(l.dataset.toc!); if (h) io.observe(h); });
+  }
+</script>

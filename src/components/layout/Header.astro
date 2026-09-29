@@ -59,7 +59,7 @@ const mobileLinks = [
               <div class="mega__side">
                 {fields.length > 0 && (
                   <>
-                    <p class="mega__label">المجالات الأكاديمية</p>
+                    <p class="mega__label">مجالات التخصص</p>
                     <ul role="list" class="mega__fields">
                       {fields.map((f) => (
                         <li><a href={`/fields/${f.id}/`}>{f.data.title}</a></li>
@@ -177,8 +177,8 @@ const mobileLinks = [
   .nojs-link { display: none; }
   :global(html:not(.js)) .nojs-link { display: inline-flex; }
   :global(html:not(.js)) .mega-toggle { display: none; }
-  .mega-toggle__chev { transition: transform var(--dur-s) var(--ease-out); }
-  .mega-toggle[aria-expanded='true'] .mega-toggle__chev { transform: rotate(180deg); }
+  .mega-toggle :global(.mega-toggle__chev) { transition: transform var(--dur-s) var(--ease-out); }
+  .mega-toggle[aria-expanded='true'] :global(.mega-toggle__chev) { transform: rotate(180deg); }
 
   .site-header__actions { display: flex; align-items: center; gap: 0.6rem; }
   .hdr-wa {

@@ -1,0 +1,223 @@
+---
+import { getCollection } from 'astro:content';
+import Icon from '@/components/ui/Icon.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import { site, wa, waMessages } from '@/config/site';
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const stages = [
+  { v: 'بكالوريوس', icon: 'book-open-text' },
+  { v: 'ماجستير', icon: 'graduation-cap' },
+  { v: 'دكتوراه', icon: 'landmark' },
+  { v: 'باحث', icon: 'file-search' },
+  { v: 'أخرى', icon: 'sparkles' },
+];
+const steps = ['المرحلة', 'الخدمة', 'التفاصيل', 'التواصل'];
+const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد.');
+---
+<div class="wz" data-wz data-phone={site.whatsapp}>
+  <div class="wz__progress" aria-hidden="true">
+    <svg class="wz__tiers" viewBox="0 0 40 40" width="56" height="56">
+      <rect data-wz-tier="0" x="2" y="30" width="36" height="7" rx="1" />
+      <rect data-wz-tier="1" x="7" y="22.5" width="26" height="7" rx="1" />
+      <rect data-wz-tier="2" x="11.5" y="15" width="17" height="7" rx="1" />
+      <rect data-wz-tier="3" x="15.5" y="7.5" width="9" height="7" rx="1" />
+    </svg>
+    <ol role="list" class="wz__labels">
+      {steps.map((s, i) => <li data-wz-label={i}><span class="wz__dot">{['١', '٢', '٣', '٤'][i]}</span>{s}</li>)}
+    </ol>
+  </div>
+  <p class="sr-only" aria-live="polite" data-wz-live></p>
+
+  <!-- بدون JS يرسل النموذج رسالة عامة إلى واتساب؛ مع JS تُبنى رسالة منسقة كاملة -->
+  <form class="wz__form" action={`https://wa.me/${site.whatsapp}`} method="get" target="_blank" novalidate data-wz-form>
+    <input type="hidden" name="text" value="مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد." data-wz-nojs />
+
+    <fieldset class="wz__step" data-wz-step="0">
+      <legend class="wz__q"><span class="wz__qn">١</span> في أي مرحلة أنت؟</legend>
+      <div class="wz__cards wz__cards--stage">
+        {stages.map((s) => (
+          <label class="wz__card">
+            <input type="radio" name="stage" value={s.v} />
+            <span class="wz__card-in"><Icon name={s.icon} size={26} /><span>{s.v}</span></span>
+          </label>
+        ))}
+      </div>
+      <p class="wz__err" data-wz-err="stage" hidden>اختر مرحلتك حتى نوجه طلبك للمختص المناسب.</p>
+    </fieldset>
+
+    <fieldset class="wz__step" data-wz-step="1">
+      <legend class="wz__q"><span class="wz__qn">٢</span> ما الذي تحتاجه؟ <span class="wz__hint">يمكنك اختيار أكثر من خدمة</span></legend>
+      <div class="wz__cards wz__cards--svc">
+        {services.map((s) => (
+          <label class="wz__card wz__card--svc">
+            <input type="checkbox" name="service" value={s.id} data-title={s.data.title} />
+            <span class="wz__card-in">
+              <Icon name={s.data.icon} size={22} />
+              <span class="wz__svc-title">{s.data.title}</span>
+              <Icon name="check" size={18} class="wz__tick" />
+            </span>
+          </label>
+        ))}
+      </div>
+      <p class="wz__err" data-wz-err="service" hidden>اختر خدمة واحدة على الأقل، ويمكنك توضيح التفاصيل في الخطوة التالية.</p>
+    </fieldset>
+
+    <fieldset class="wz__step" data-wz-step="2">
+      <legend class="wz__q"><span class="wz__qn">٣</span> حدثنا عن عملك</legend>
+      <div class="wz__fields">
+        <div class="wz__field">
+          <label for="wz-major">التخصص</label>
+          <input id="wz-major" name="major" type="text" autocomplete="off" placeholder="مثال: إدارة تربوية، تسويق، تمريض" aria-describedby="wz-e-major" />
+          <p class="wz__err" id="wz-e-major" data-wz-err="major" hidden>اكتب تخصصك باختصار.</p>
+        </div>
+        <div class="wz__field">
+          <label for="wz-date">الموعد المطلوب</label>
+          <input id="wz-date" name="date" type="date" aria-describedby="wz-e-date" />
+          <p class="wz__err" id="wz-e-date" data-wz-err="date" hidden>اختر تاريخًا قادمًا تقريبيًا، ويمكن تعديله لاحقًا.</p>
+        </div>
+        <div class="wz__field wz__field--full">
+          <label for="wz-desc">وصف مختصر</label>
+          <textarea id="wz-desc" name="desc" rows="4" placeholder="أين وصلت في عملك، وما المطلوب بالضبط، وأي ملاحظات من مشرفك" aria-describedby="wz-e-desc"></textarea>
+          <p class="wz__err" id="wz-e-desc" data-wz-err="desc" hidden>اكتب سطرين على الأقل عن المطلوب حتى نفهمه بدقة.</p>
+        </div>
+        <div class="wz__field wz__field--full">
+          <label for="wz-size">عدد الصفحات أو حجم العينة <span class="wz__opt">(اختياري)</span></label>
+          <input id="wz-size" name="size" type="text" placeholder="مثال: 80 صفحة، أو 240 مستجيبًا" />
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="wz__step" data-wz-step="3">
+      <legend class="wz__q"><span class="wz__qn">٤</span> كيف نتواصل معك؟</legend>
+      <div class="wz__fields">
+        <div class="wz__field">
+          <label for="wz-name">الاسم</label>
+          <input id="wz-name" name="name" type="text" autocomplete="name" aria-describedby="wz-e-name" />
+          <p class="wz__err" id="wz-e-name" data-wz-err="name" hidden>اكتب اسمك كما تحب أن نناديك.</p>
+        </div>
+        <div class="wz__field">
+          <label for="wz-phone">رقم الجوال</label>
+          <input id="wz-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05XXXXXXXX" aria-describedby="wz-e-phone" />
+          <p class="wz__err" id="wz-e-phone" data-wz-err="phone" hidden>اكتب رقم جوال صحيحًا، مثل 05XXXXXXXX أو ‎+9665XXXXXXXX.</p>
+        </div>
+      </div>
+      <p class="wz__privacy"><Icon name="lock" size={16} /> بياناتك تذهب إلى محادثة واتساب فقط، ولا تُحفظ على أي خادم.</p>
+    </fieldset>
+
+    <div class="wz__nav">
+      <button type="button" class="btn btn--outline" data-wz-prev hidden><Icon name="arrow-left" size={18} class="flip" /> السابق</button>
+      <button type="button" class="btn btn--primary" data-wz-next>التالي <Icon name="arrow-left" size={18} /></button>
+      <button type="submit" class="btn btn--wa btn--lg wz__submit" data-wz-submit>
+        <BrandIcon name="whatsapp" /> أرسل الطلب على واتساب
+      </button>
+    </div>
+  </form>
+
+  <div class="wz__done" data-wz-done hidden tabindex="-1">
+    <span class="wz__done-icon"><Icon name="circle-check" size={40} /></span>
+    <h2>تم تجهيز طلبك</h2>
+    <p>فتحنا لك محادثة واتساب والرسالة جاهزة فيها. اضغط إرسال، ثم أرفق ملفاتك في المحادثة نفسها: دليل الجامعة، ملاحظات المشرف، أو ما أنجزته حتى الآن.</p>
+    <div class="wz__done-actions">
+      <a class="btn btn--wa btn--lg" href={fallback} target="_blank" rel="noopener" data-wz-reopen><BrandIcon name="whatsapp" /> افتح المحادثة مرة أخرى</a>
+      <button type="button" class="btn btn--outline" data-wz-reset>طلب جديد</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .wz { display: grid; gap: 2rem; }
+  .wz__progress { display: flex; align-items: center; gap: 1.25rem; }
+  .wz__tiers rect { fill: rgba(44, 26, 69, 0.12); transition: fill 0.4s var(--ease-out), transform 0.5s var(--ease-expo); transform-box: fill-box; transform-origin: 50% 100%; }
+  .wz__tiers rect.is-done { fill: var(--indigo-900); }
+  .wz__tiers rect.is-active { fill: var(--brick-600); }
+  .wz__labels { display: none; gap: 0.5rem; flex-wrap: wrap; }
+  :global(.js) .wz__labels { display: flex; }
+  .wz__labels li { display: inline-flex; align-items: center; gap: 0.4rem; font-size: var(--fs-small); color: var(--ink-muted); }
+  .wz__labels li + li::before { content: ''; width: 18px; height: 1px; background: var(--line-light); margin-inline-end: 0.3rem; }
+  .wz__dot { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line-light); font-size: 0.8rem; font-weight: 600; }
+  .wz__labels li.is-active { color: var(--indigo-900); font-weight: 600; }
+  .wz__labels li.is-active .wz__dot { background: var(--brick-600); border-color: var(--brick-600); color: var(--cream-50); }
+  .wz__labels li.is-done .wz__dot { background: var(--indigo-900); border-color: var(--indigo-900); color: var(--cream-50); }
+  :global(.js) .wz__tiers { display: block; }
+  .wz__tiers { display: none; flex-shrink: 0; }
+
+  .wz__form { display: grid; gap: 2rem; }
+  .wz__step { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 1.25rem; }
+  :global(.js) .wz__step:not(.is-current) { display: none; }
+  :global(.js) .wz__step.is-current { animation: wz-in 0.5s var(--ease-expo); }
+  @keyframes wz-in { from { opacity: 0; transform: translateX(-24px); } }
+  .wz__q { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.1rem); color: var(--indigo-900); line-height: 1.5; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.6rem; padding: 0; }
+  .wz__qn { color: var(--brick-600); }
+  .wz__hint { font-family: var(--font-body); font-size: var(--fs-small); font-weight: 400; color: var(--ink-muted); }
+
+  .wz__cards { display: grid; gap: 0.75rem; }
+  .wz__cards--stage { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
+  .wz__cards--svc { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+  .wz__card { position: relative; cursor: pointer; }
+  .wz__card input { position: absolute; opacity: 0; inset: 0; pointer-events: none; }
+  .wz__card-in {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    height: 100%;
+    min-height: 110px;
+    padding: 1.1rem 1.2rem;
+    border-radius: var(--radius-m);
+    border: 1.5px solid var(--line-light);
+    background: var(--cream-50);
+    font-weight: 600;
+    color: var(--indigo-900);
+    transition: border-color 0.25s, background-color 0.25s, transform 0.3s var(--ease-expo), box-shadow 0.25s;
+  }
+  .wz__card-in :global(svg) { color: var(--brick-600); }
+  .wz__card:hover .wz__card-in { border-color: rgba(44, 26, 69, 0.4); transform: translateY(-2px); }
+  .wz__card input:focus-visible + .wz__card-in { outline: 2px solid var(--brick-600); outline-offset: 3px; }
+  .wz__card input:checked + .wz__card-in { border-color: var(--brick-600); background: var(--brick-tint); box-shadow: 0 0 0 1px var(--brick-600) inset; }
+  .wz__card--svc .wz__card-in { flex-direction: row; align-items: center; min-height: 64px; }
+  .wz__svc-title { flex: 1; line-height: 1.5; font-size: 0.97rem; }
+  .wz__card :global(.wz__tick) { opacity: 0; transform: scale(0.5); transition: opacity 0.2s, transform 0.3s var(--ease-expo); }
+  .wz__card input:checked + .wz__card-in :global(.wz__tick) { opacity: 1; transform: none; }
+
+  .wz__fields { display: grid; gap: 1.1rem; }
+  @media (min-width: 720px) { .wz__fields { grid-template-columns: 1fr 1fr; } .wz__field--full { grid-column: 1 / -1; } }
+  .wz__field { display: grid; gap: 0.4rem; }
+  .wz__field label { font-weight: 600; color: var(--indigo-900); }
+  .wz__opt { font-weight: 400; color: var(--ink-muted); font-size: var(--fs-small); }
+  .wz__field input, .wz__field textarea {
+    width: 100%;
+    min-height: 52px;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radius-s);
+    border: 1.5px solid rgba(44, 26, 69, 0.2);
+    background: var(--cream-50);
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .wz__field textarea { resize: vertical; line-height: 1.8; }
+  .wz__field input:focus, .wz__field textarea:focus { outline: none; border-color: var(--brick-600); box-shadow: 0 0 0 3px rgba(166, 61, 64, 0.15); }
+  .wz__field input[aria-invalid='true'], .wz__field textarea[aria-invalid='true'] { border-color: var(--brick-600); }
+  #wz-phone { text-align: right; }
+  .wz__err { color: var(--brick-600); font-size: var(--fs-small); font-weight: 500; }
+  .wz__privacy { display: flex; align-items: center; gap: 0.5rem; font-size: var(--fs-small); color: var(--ink-muted); }
+
+  .wz__nav { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-start; }
+  :global(.js) .wz__submit { display: none; }
+  :global(.js) .wz[data-last] .wz__submit { display: inline-flex; }
+  :global(.js) .wz[data-last] [data-wz-next] { display: none; }
+  :global(html:not(.js)) [data-wz-next], :global(html:not(.js)) [data-wz-prev] { display: none; }
+  .wz__nav :global(.flip) { transform: scaleX(-1); }
+  @media (max-width: 480px) { .wz__nav .btn { flex: 1; } }
+
+  .wz__done { display: grid; justify-items: start; gap: 1rem; padding: 2rem; border-radius: var(--radius-card); background: var(--cream-50); border: 1px solid var(--line-light); outline: none; }
+  .wz__done[hidden] { display: none; }
+  .wz__done-icon { color: #1d8a47; }
+  .wz__done p { max-width: 60ch; line-height: 1.9; color: var(--ink-muted); }
+  .wz__done-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+</style>
+
+<script>
+  import { initWizard } from '@/scripts/wizard';
+  initWizard();
+</script>

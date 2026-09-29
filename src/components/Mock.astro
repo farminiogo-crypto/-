@@ -16,9 +16,9 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
       <p class="m-chapter">الفصل الثالث</p>
       <p class="m-h">{title ?? 'منهجية الدراسة وإجراءاتها'}</p>
       <p class="m-sub">٣-١ منهج الدراسة</p>
-      <div class="m-lines">{lines(5).map((w) => <span style={`width:${w}%`} />)}</div>
+      <div class="m-lines">{lines(5).map((w) => <span style={`--w:${w}%`} />)}</div>
       <p class="m-sub">٣-٢ مجتمع الدراسة وعينتها</p>
-      <div class="m-lines">{lines(3, [100, 92, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+      <div class="m-lines">{lines(3, [100, 92, 60]).map((w) => <span style={`--w:${w}%`} />)}</div>
       <table class="m-table">
         <caption>جدول (٣-١) توزيع أفراد العينة</caption>
         <tr><th>المتغير</th><th>الفئة</th><th>العدد</th><th>النسبة</th></tr>
@@ -46,7 +46,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
         <rect x="98" y="12" width="22" height="56" class="hi" />
         <rect x="138" y="28" width="22" height="40" />
       </svg>
-      <div class="m-lines m-lines--tight">{lines(2, [100, 70]).map((w) => <span style={`width:${w}%`} />)}</div>
+      <div class="m-lines m-lines--tight">{lines(2, [100, 70]).map((w) => <span style={`--w:${w}%`} />)}</div>
     </div>
   )}
 
@@ -69,15 +69,15 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
     <div class="paper paper--wide bi">
       <div class="bi__col">
         <p class="m-sub">١. الهدف من الإجراء</p>
-        <div class="m-lines m-lines--tight">{lines(3, [100, 94, 70]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(3, [100, 94, 70]).map((w) => <span style={`--w:${w}%`} />)}</div>
         <p class="m-sub">٢. الخطوات</p>
-        <div class="m-lines m-lines--tight">{lines(4, [96, 100, 88, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(4, [96, 100, 88, 60]).map((w) => <span style={`--w:${w}%`} />)}</div>
       </div>
       <div class="bi__col bi__col--en" dir="ltr">
         <p class="m-sub latin">1. Purpose</p>
-        <div class="m-lines m-lines--tight">{lines(3, [100, 90, 64]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(3, [100, 90, 64]).map((w) => <span style={`--w:${w}%`} />)}</div>
         <p class="m-sub latin">2. Procedure</p>
-        <div class="m-lines m-lines--tight">{lines(4, [94, 100, 84, 56]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(4, [94, 100, 84, 56]).map((w) => <span style={`--w:${w}%`} />)}</div>
       </div>
     </div>
   )}
@@ -87,17 +87,17 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
       <div class="cv__side">
         <span class="cv__avatar" />
         <p class="cv__label">التواصل</p>
-        <div class="m-lines m-lines--tight m-lines--light">{lines(3, [90, 70, 80]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight m-lines--light">{lines(3, [90, 70, 80]).map((w) => <span style={`--w:${w}%`} />)}</div>
         <p class="cv__label">المهارات</p>
-        <div class="cv__bars"><span style="width:90%" /><span style="width:75%" /><span style="width:82%" /></div>
+        <div class="cv__bars"><span /><span /><span /></div>
       </div>
       <div class="cv__main">
         <p class="m-h">الاسم الكامل</p>
         <p class="m-chapter">محلل مالي</p>
         <p class="m-sub">الخبرات</p>
-        <div class="m-lines m-lines--tight">{lines(4, [100, 88, 94, 66]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(4, [100, 88, 94, 66]).map((w) => <span style={`--w:${w}%`} />)}</div>
         <p class="m-sub">التعليم</p>
-        <div class="m-lines m-lines--tight">{lines(2, [92, 60]).map((w) => <span style={`width:${w}%`} />)}</div>
+        <div class="m-lines m-lines--tight">{lines(2, [92, 60]).map((w) => <span style={`--w:${w}%`} />)}</div>
       </div>
     </div>
   )}
@@ -110,7 +110,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
         <tr><th>العبارة</th><th>موافق بشدة</th><th>موافق</th><th>محايد</th><th>غير موافق</th><th>غير موافق بشدة</th></tr>
         {[1, 2, 3, 4, 5].map((r) => (
           <tr>
-            <td><span class="m-line" style={`width:${[92, 80, 96, 70, 86][r - 1]}%`} /></td>
+            <td><span class="m-line" style={`--w:${[92, 80, 96, 70, 86][r - 1]}%`} /></td>
             {[1, 2, 3, 4, 5].map((c) => <td><i class={c === [2, 1, 2, 3, 1][r - 1] ? 'on' : ''} /></td>)}
           </tr>
         ))}
@@ -133,7 +133,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
         </div>
         <div class="app__rows">
           {[['تحليل إحصائي', 'قيد التنفيذ', 70], ['تنسيق رسالة', 'للمراجعة', 90], ['ترجمة ملخص', 'جديد', 20], ['تصميم استبانة', 'قيد التنفيذ', 45]].map(([t, s, p]) => (
-            <div class="app__row"><span>{t}</span><em>{s}</em><i><b style={`width:${p}%`} /></i></div>
+            <div class="app__row"><span>{t}</span><em>{s}</em><i><b style={`--w:${p}%`} /></i></div>
           ))}
         </div>
       </div>
@@ -179,7 +179,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
   .m-note { font-size: 1.8cqw; color: var(--ink-muted); line-height: 1.2; }
   .m-lines { display: grid; gap: 1.3cqw; }
   .m-lines--tight { gap: 1cqw; }
-  .m-lines span, .m-line { display: block; height: 0.9cqw; border-radius: 1cqw; background: rgba(30, 21, 48, 0.16); }
+  .m-lines span, .m-line { display: block; width: var(--w, 100%); height: 0.9cqw; border-radius: 1cqw; background: rgba(30, 21, 48, 0.16); }
   .m-lines--light span { background: rgba(244, 239, 228, 0.35); }
   .m-folio { margin-top: auto; text-align: center; font-size: 1.8cqw; color: var(--ink-muted); }
   .m-table { width: 100%; border-collapse: collapse; font-size: 1.8cqw; line-height: 1.3; }
@@ -234,6 +234,9 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
   .cv__avatar { width: 12cqw; height: 12cqw; border-radius: 50%; background: rgba(244, 239, 228, 0.25); margin-bottom: 1cqw; }
   .cv__label { font-size: 1.9cqw; font-weight: 600; color: var(--cream-100); margin-top: 1cqw; }
   .cv__bars { display: grid; gap: 1cqw; }
+  .cv__bars span:nth-child(1) { width: 90%; }
+  .cv__bars span:nth-child(2) { width: 75%; }
+  .cv__bars span:nth-child(3) { width: 82%; }
   .cv__bars span { height: 0.9cqw; border-radius: 1cqw; background: var(--brick-400); }
   .cv__main { padding: 5cqw 4cqw; display: flex; flex-direction: column; gap: 1.5cqw; }
 
@@ -260,7 +263,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
   .app__row { display: grid; grid-template-columns: 1.4fr 1fr 1.2fr; align-items: center; gap: 2cqw; background: #fff; border-radius: 1cqw; padding: 1.4cqw 2cqw; font-size: 1.8cqw; }
   .app__row em { font-style: normal; color: var(--brick-600); font-size: 1.6cqw; }
   .app__row i { height: 1cqw; border-radius: 1cqw; background: var(--indigo-tint); overflow: hidden; }
-  .app__row i b { display: block; height: 100%; background: var(--indigo-700); }
+  .app__row i b { display: block; width: var(--w); height: 100%; background: var(--indigo-700); }
 
   @media (prefers-reduced-motion: reduce) {
     .mock--tilt > * { transform: none; }
