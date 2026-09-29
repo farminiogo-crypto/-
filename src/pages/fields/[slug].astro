@@ -1,0 +1,130 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+import Icon from '@/components/ui/Icon.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import FAQ from '@/components/FAQ.astro';
+import FinalCTA from '@/components/FinalCTA.astro';
+import { wa, waMessages } from '@/config/site';
+
+export async function getStaticPaths() {
+  const fields = await getCollection('fields');
+  return fields.map((f) => ({ params: { slug: f.id }, props: { field: f } }));
+}
+const { field } = Astro.props;
+const d = field.data;
+const { Content } = await render(field);
+const services = (await getCollection('services', (s) => d.services.includes(s.id))).sort((a, b) => d.services.indexOf(a.id) - d.services.indexOf(b.id));
+const others = (await getCollection('fields')).filter((f) => f.id !== field.id).sort((a, b) => a.data.order - b.data.order);
+const msg = waMessages.field(d.title);
+---
+<BaseLayout title={d.seoTitle} description={d.seoDescription}>
+  <PageHero
+    crumbs={[{ href: '/services/#fields', label: 'المجالات' }, { href: `/fields/${field.id}/`, label: d.title }]}
+    eyebrow="مجال أكاديمي"
+    title={d.title}
+    lead={d.short}
+  >
+    <a slot="actions" class="btn btn--wa btn--lg" href={wa(msg)} target="_blank" rel="noopener" data-fab-hide>
+      <BrandIcon name="whatsapp" /> أخبرنا عن بحثك
+    </a>
+    <a slot="actions" class="btn btn--outline btn--lg" href="/request/">ابدأ طلبك</a>
+  </PageHero>
+
+  <section class="section">
+    <div class="container fd-intro">
+      <div class="prose" data-reveal="fade"><Content /></div>
+      <div class="fd-topics card" data-reveal="fade" data-delay="0.1">
+        <h2 class="fd-h">الموضوعات التي نعمل عليها</h2>
+        <ul role="list" class="fd-tags">
+          {d.topics.map((t) => <li class="chip">{t}</li>)}
+        </ul>
+        <h2 class="fd-h fd-h--gap">أعمال شائعة في هذا المجال</h2>
+        <ul role="list" class="fd-typical">
+          {d.typical.map((t) => <li><Icon name="check" size={18} /><span>{t}</span></li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--cream50" aria-labelledby="fs-title">
+    <div class="container">
+      <SectionTitle id="fs-title" eyebrow="الخدمات" title={`كيف ندعم بحثك في ${d.title}`} />
+      <ul role="list" class="fd-svcs" data-reveal="stagger">
+        {services.map((s) => (
+          <li>
+            <a class="fd-svc" href={`/services/${s.id}/`}>
+              <span class="fd-svc__icon"><Icon name={s.data.icon} size={22} /></span>
+              <span>
+                <span class="fd-svc__title">{s.data.title}</span>
+                <span class="fd-svc__short">{s.data.short}</span>
+              </span>
+              <Icon name="arrow-left" size={18} class="fd-svc__arrow" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  {d.faq.length > 0 && (
+    <section class="section" aria-labelledby="ffaq-title">
+      <div class="container container--narrow">
+        <SectionTitle id="ffaq-title" eyebrow="أسئلة شائعة" title="أسئلة من طلاب هذا المجال" />
+        <FAQ items={d.faq} />
+      </div>
+    </section>
+  )}
+
+  <section class="section section--tight section--cream50" aria-labelledby="of-title">
+    <div class="container">
+      <h2 id="of-title" class="fd-h">مجالات أخرى</h2>
+      <ul role="list" class="fd-others">
+        {others.map((f) => <li><a href={`/fields/${f.id}/`}><Icon name={f.data.icon} size={18} /> {f.data.title}</a></li>)}
+      </ul>
+    </div>
+  </section>
+
+  <FinalCTA waMessage={msg} />
+</BaseLayout>
+
+<style>
+  .fd-intro { display: grid; gap: 2.5rem; align-items: start; }
+  @media (min-width: 1024px) { .fd-intro { grid-template-columns: 1.2fr 1fr; gap: 4rem; } }
+  .fd-topics { padding: 1.75rem; }
+  .fd-h { font-size: var(--fs-h3); margin-bottom: 1rem; }
+  .fd-h--gap { margin-top: 2rem; }
+  .fd-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .fd-tags .chip { font-size: var(--fs-small); padding: 0.4rem 0.9rem; }
+  .fd-typical { display: grid; gap: 0.75rem; }
+  .fd-typical li { display: flex; gap: 0.6rem; line-height: 1.8; }
+  .fd-typical :global(svg) { color: var(--brick-600); margin-top: 0.35rem; }
+  .fd-svcs { display: grid; gap: 0.75rem; }
+  @media (min-width: 900px) { .fd-svcs { grid-template-columns: 1fr 1fr; } }
+  .fd-svc {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+    padding: 1.25rem;
+    border-radius: var(--radius-card);
+    background: var(--cream-100);
+    border: 1px solid var(--line-light);
+    text-decoration: none;
+    transition: border-color 0.3s, transform 0.4s var(--ease-expo);
+  }
+  .fd-svc:hover { border-color: var(--brick-600); transform: translateY(-2px); }
+  .fd-svc__icon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; border-radius: 12px; background: var(--indigo-900); color: var(--cream-100); }
+  .fd-svc__title { display: block; font-weight: 600; color: var(--indigo-900); }
+  .fd-svc__short { display: block; font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.7; }
+  .fd-svc__arrow { margin-inline-start: auto; color: var(--brick-600); flex-shrink: 0; }
+  .fd-others { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .fd-others a {
+    display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem 1rem;
+    border-radius: var(--radius-pill); border: 1px solid var(--line-light); background: var(--cream-100);
+    text-decoration: none; color: var(--indigo-900); font-weight: 500;
+  }
+  .fd-others a:hover { background: var(--indigo-900); color: var(--cream-100); }
+</style>

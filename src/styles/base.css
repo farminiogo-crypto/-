@@ -26,16 +26,7 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
 }
-/* الملمس بشفافية 3–4% فوق الكريمي */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: var(--cream-100);
-  opacity: 0.965;
-  pointer-events: none;
-}
+/* الملمس: ضجيج SVG بشفافية تقارب 3–4% (مضمنة في المتغير --noise) */
 
 img, svg, video, canvas { display: block; max-width: 100%; }
 img { height: auto; }
@@ -117,7 +108,7 @@ p { text-wrap: pretty; }
   z-index: -1;
   background-image: var(--noise);
   background-size: 220px;
-  opacity: 0.05;
+  opacity: 0.6;
   mix-blend-mode: screen;
   pointer-events: none;
 }
