@@ -8,7 +8,7 @@ const ld = siteUrl
   ? {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: all.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.label, item: new URL(c.href, siteUrl).href })),
+      itemListElement: all.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.label, item: new URL(c.href, siteUrl as string).href })),
     }
   : null;
 ---

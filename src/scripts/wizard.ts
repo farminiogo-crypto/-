@@ -1,4 +1,5 @@
 // معالج الطلب: أربع خطوات، مسودة محفوظة محليًا، ورسالة واتساب منسقة في النهاية. لا أسعار.
+import { wa } from '@/config/site';
 const KEY = 'babel-request-draft';
 
 type Draft = { step: number; stage: string; services: string[]; major: string; date: string; desc: string; size: string; name: string; phone: string };
@@ -27,7 +28,6 @@ export function initWizard() {
   const live = root.querySelector<HTMLElement>('[data-wz-live]')!;
   const done = root.querySelector<HTMLElement>('[data-wz-done]')!;
   const reopen = root.querySelector<HTMLAnchorElement>('[data-wz-reopen]')!;
-  const phoneTarget = root.dataset.phone!;
   root.querySelector('[data-wz-nojs]')?.remove();
   form.removeAttribute('target');
 
@@ -145,7 +145,7 @@ export function initWizard() {
       `الاسم: ${d.name}`,
       `الجوال: ${d.phone}`,
     ];
-    const url = `https://wa.me/${phoneTarget}?text=${encodeURIComponent(lines.join('\n'))}`;
+    const url = wa(lines.join('\n'));
     reopen.href = url;
     window.open(url, '_blank', 'noopener');
     store.clear();

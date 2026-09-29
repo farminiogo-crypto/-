@@ -10,7 +10,7 @@ export default defineConfig({
   output: 'static',
   site: siteUrl,
   trailingSlash: 'always',
-  build: { format: 'directory', inlineStylesheets: 'auto' },
+  build: { format: 'directory', inlineStylesheets: 'always' },
   // خريطة الموقع تحتاج النطاق؛ تُفعّل تلقائيًا بمجرد ضبط site.domain
   integrations: siteUrl ? [sitemap({ filter: (p) => !p.includes('/404') })] : [],
   markdown: { rehypePlugins: [rehypeBidi] },

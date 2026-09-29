@@ -1,0 +1,31 @@
+# تحويل 301 من مسارات موقع «الأكاديمية» القديم (alacadmeya.com) إلى المسارات الجديدة
+# Netlify: هذا الملف يُنسخ إلى dist/_redirects تلقائيًا
+
+/index.html                                   /                                             301
+/about.html                                   /about/                                       301
+/process.html                                 /process/                                     301
+/faq.html                                     /faq/                                         301
+/contact.html                                 /contact/                                     301
+/request-service.html                         /request/                                     301
+/blog.html                                    /blog/                                        301
+/privacy.html                                 /privacy/                                     301
+/terms.html                                   /terms/                                       301
+/careers.html                                 /                                             301
+/services/research-proposal.html              /services/research-consulting/                301
+/services/statistical-analysis.html           /services/statistical-analysis/               301
+/services/proofreading.html                   /services/editing/                            301
+/services/formatting.html                     /services/formatting-references/              301
+/services/education.html                      /fields/education/                            301
+/services/management.html                     /fields/management/                           301
+/services/hr.html                             /fields/hr/                                   301
+/services/accounting.html                     /fields/accounting/                           301
+/services/it.html                             /fields/computing/                            301
+/blog/apa-citation-guide.html                 /blog/apa-citation-guide/                     301
+/blog/choose-research-topic.html              /blog/choose-research-topic/                  301
+/blog/statistical-analysis-basics.html        /blog/statistical-analysis-basics/            301
+/images/hero.webp                             /og/default.png                               301
+/images/why-us.webp                           /og/default.png                               301
+
+# إن تغيّر النطاق: أضف السطر التالي بعد ضبط النطاق الجديد (واحذف علامة #)
+# https://alacadmeya.com/*  https://NEW-DOMAIN/:splat  301!
+# https://www.alacadmeya.com/*  https://NEW-DOMAIN/:splat  301!

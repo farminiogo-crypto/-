@@ -3,7 +3,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/PageHero.astro';
 import Icon from '@/components/ui/Icon.astro';
 import BrandIcon from '@/components/ui/BrandIcon.astro';
-import { site, wa, waMessages } from '@/config/site';
+import { site, wa, waBase, waMessages } from '@/config/site';
 
 const phoneDisplay = `+${site.whatsapp.slice(0, 3)} ${site.whatsapp.slice(3, 5)} ${site.whatsapp.slice(5, 8)} ${site.whatsapp.slice(8)}`;
 const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة طلب قائم', 'تعاون أو شراكة'];
@@ -54,7 +54,7 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
         </div>
       </div>
 
-      <form class="ct-form card" data-ct-form action={`https://wa.me/${site.whatsapp}`} method="get" target="_blank">
+      <form class="ct-form card" data-ct-form action={waBase} method="get" target="_blank">
         <h2>رسالة سريعة</h2>
         <p class="muted">اكتب رسالتك هنا، ونفتحها لك جاهزة في واتساب.</p>
         <fieldset class="ct-topics">
@@ -116,7 +116,7 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
 </style>
 
 <script>
-  import { site } from '@/config/site';
+  import { wa } from '@/config/site';
   const form = document.querySelector<HTMLFormElement>('[data-ct-form]');
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -127,6 +127,6 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
     err.hidden = true;
     const name = String(fd.get('name') || '').trim();
     const lines = ['مرحبًا بابل أكاديمي 👋', `الموضوع: ${fd.get('topic')}`, ...(name ? [`الاسم: ${name}`] : []), msg];
-    window.open(`https://wa.me/${site.whatsapp}?text=${encodeURIComponent(lines.join('\n'))}`, '_blank', 'noopener');
+    window.open(wa(lines.join('\n')), '_blank', 'noopener');
   });
 </script>

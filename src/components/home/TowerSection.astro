@@ -123,63 +123,66 @@ const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
 
 <script>
   import { gsap, ScrollTrigger, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
 
-  const section = document.querySelector<HTMLElement>('[data-tower]');
-  if (section) {
-    const tiers = [...section.querySelectorAll<SVGGElement>('.zt')];
-    const cards = [...section.querySelectorAll<HTMLElement>('[data-tower-card]')];
-    const dots = [...section.querySelectorAll<HTMLElement>('[data-tower-dot]')];
-    const zig = section.querySelector<SVGElement>('.zig');
-    const n = cards.length;
-    let current = -2;
+  whenIdle(() => {
+    const section = document.querySelector<HTMLElement>('[data-tower]');
+    if (section) {
+      const tiers = [...section.querySelectorAll<SVGGElement>('.zt')];
+      const cards = [...section.querySelectorAll<HTMLElement>('[data-tower-card]')];
+      const dots = [...section.querySelectorAll<HTMLElement>('[data-tower-dot]')];
+      const zig = section.querySelector<SVGElement>('.zig');
+      const n = cards.length;
+      let current = -2;
 
-    const setActive = (idx: number, progress: number) => {
-      zig?.style.setProperty('--progress', String(progress));
-      if (idx === current) return;
-      current = idx;
-      const all = (el: Element[], i: number) => el.forEach((e, k) => {
-        e.classList.toggle('is-done', k < i);
-        e.classList.toggle('is-active', k === i);
-      });
-      all(tiers, idx);
-      all(cards, idx);
-      all(dots, idx);
-    };
-
-    if (reducedMotion()) {
-      setActive(n, 1); // الحالة النهائية مباشرة
-    } else {
-      const mm = gsap.matchMedia();
-      mm.add('(min-width: 1024px)', () => {
-        const track = section.querySelector<HTMLElement>('[data-tower-track]')!;
-        const st = ScrollTrigger.create({
-          trigger: track,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: true,
-          onUpdate: (self) => {
-            const p = self.progress;
-            setActive(Math.min(n - 1, Math.floor(p * n)), p);
-          },
+      const setActive = (idx: number, progress: number) => {
+        zig?.style.setProperty('--progress', String(progress));
+        if (idx === current) return;
+        current = idx;
+        const all = (el: Element[], i: number) => el.forEach((e, k) => {
+          e.classList.toggle('is-done', k < i);
+          e.classList.toggle('is-active', k === i);
         });
-        setActive(0, 0);
-        // الطبقات القادمة ترتفع بخفة عند اقترابها
-        const tl = gsap.timeline({ scrollTrigger: { trigger: track, start: 'top top', end: 'bottom bottom', scrub: 0.6 } });
-        tiers.forEach((t, i) => tl.fromTo(t, { y: 26 }, { y: 0, duration: 1, ease: 'power2.out' }, i));
-        return () => { st.kill(); tl.kill(); gsap.set(tiers, { y: 0 }); };
-      });
-      mm.add('(max-width: 1023px)', () => {
-        const triggers = cards.map((card, i) =>
-          ScrollTrigger.create({
-            trigger: card,
-            start: 'top 62%',
-            end: 'bottom 62%',
-            onToggle: (self) => { if (self.isActive) setActive(i, (i + 1) / n); },
-          }),
-        );
-        setActive(-1, 0);
-        return () => triggers.forEach((t) => t.kill());
-      });
+        all(tiers, idx);
+        all(cards, idx);
+        all(dots, idx);
+      };
+
+      if (reducedMotion()) {
+        setActive(n, 1); // الحالة النهائية مباشرة
+      } else {
+        const mm = gsap.matchMedia();
+        mm.add('(min-width: 1024px)', () => {
+          const track = section.querySelector<HTMLElement>('[data-tower-track]')!;
+          const st = ScrollTrigger.create({
+            trigger: track,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+            onUpdate: (self) => {
+              const p = self.progress;
+              setActive(Math.min(n - 1, Math.floor(p * n)), p);
+            },
+          });
+          setActive(0, 0);
+          // الطبقات القادمة ترتفع بخفة عند اقترابها
+          const tl = gsap.timeline({ scrollTrigger: { trigger: track, start: 'top top', end: 'bottom bottom', scrub: 0.6 } });
+          tiers.forEach((t, i) => tl.fromTo(t, { y: 26 }, { y: 0, duration: 1, ease: 'power2.out' }, i));
+          return () => { st.kill(); tl.kill(); gsap.set(tiers, { y: 0 }); };
+        });
+        mm.add('(max-width: 1023px)', () => {
+          const triggers = cards.map((card, i) =>
+            ScrollTrigger.create({
+              trigger: card,
+              start: 'top 62%',
+              end: 'bottom 62%',
+              onToggle: (self) => { if (self.isActive) setActive(i, (i + 1) / n); },
+            }),
+          );
+          setActive(-1, 0);
+          return () => triggers.forEach((t) => t.kill());
+        });
+      }
     }
-  }
+  });
 </script>

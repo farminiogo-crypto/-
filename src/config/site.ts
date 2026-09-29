@@ -41,8 +41,8 @@ export const site = {
 };
 
 // كل روابط واتساب تُبنى من هنا فقط
-export const wa = (msg: string) =>
-  `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(msg)}`;
+export const waBase = `https://wa.me/${site.whatsapp}`; // لنماذج GET التي تعمل بدون JS (الحقل text يضاف تلقائيًا)
+export const wa = (msg: string) => `${waBase}?text=${encodeURIComponent(msg)}`;
 
 // رسائل واتساب المعدة مسبقًا
 export const waMessages = {

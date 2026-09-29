@@ -69,28 +69,31 @@ const interpretation =
 
 <script>
   import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
 
-  document.querySelectorAll<HTMLElement>('[data-sd]').forEach((root) => {
-    if (reducedMotion()) { root.classList.add('is-done'); return; }
-    const vals = [...root.querySelectorAll<HTMLElement>('[data-sd-val]')];
-    const text = root.querySelector<HTMLElement>('[data-sd-text]')!;
-    // تقسيم التفسير إلى كلمات (لا حروف)
-    const words = (text.textContent || '').trim().split(/\s+/);
-    text.innerHTML = words.map((w) => `<span class="tw">${w}</span>`).join(' ');
-    const spans = [...text.querySelectorAll<HTMLElement>('.tw')];
-    vals.forEach((v) => (v.textContent = '0.00'));
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-sd]').forEach((root) => {
+      if (reducedMotion()) { root.classList.add('is-done'); return; }
+      const vals = [...root.querySelectorAll<HTMLElement>('[data-sd-val]')];
+      const text = root.querySelector<HTMLElement>('[data-sd-text]')!;
+      // تقسيم التفسير إلى كلمات (لا حروف)
+      const words = (text.textContent || '').trim().split(/\s+/);
+      text.innerHTML = words.map((w) => `<span class="tw">${w}</span>`).join(' ');
+      const spans = [...text.querySelectorAll<HTMLElement>('.tw')];
+      vals.forEach((v) => (v.textContent = '0.00'));
 
-    const io = new IntersectionObserver(([en]) => {
-      if (!en.isIntersecting) return;
-      io.disconnect();
-      const tl = gsap.timeline({ delay: 0.2 });
-      vals.forEach((v, i) => {
-        const o = { n: 0 };
-        tl.to(o, { n: Number(v.dataset.sdVal), duration: 0.9, ease: 'power2.out', onUpdate: () => (v.textContent = o.n.toFixed(2)) }, i * 0.35);
-      });
-      tl.add(() => root.classList.add('is-done'), '+=0.1');
-      spans.forEach((s, i) => tl.add(() => s.classList.add('on'), `+=${i === 0 ? 0.35 : 0.075}`));
-    }, { threshold: 0.45 });
-    io.observe(root);
+      const io = new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        const tl = gsap.timeline({ delay: 0.2 });
+        vals.forEach((v, i) => {
+          const o = { n: 0 };
+          tl.to(o, { n: Number(v.dataset.sdVal), duration: 0.9, ease: 'power2.out', onUpdate: () => (v.textContent = o.n.toFixed(2)) }, i * 0.35);
+        });
+        tl.add(() => root.classList.add('is-done'), '+=0.1');
+        spans.forEach((s, i) => tl.add(() => s.classList.add('on'), `+=${i === 0 ? 0.35 : 0.075}`));
+      }, { threshold: 0.45 });
+      io.observe(root);
+    });
   });
 </script>

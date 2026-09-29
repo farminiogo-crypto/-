@@ -135,49 +135,52 @@
 
 <script>
   import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
 
-  document.querySelectorAll<HTMLElement>('[data-ba]').forEach((root) => {
-    const stage = root.querySelector<HTMLElement>('.ba__stage')!;
-    const handle = root.querySelector<HTMLElement>('[data-ba-handle]')!;
-    const state = { pos: 50 };
-    const set = (v: number) => {
-      state.pos = Math.max(0, Math.min(100, v));
-      root.style.setProperty('--pos', state.pos.toFixed(2));
-      const r = Math.round(100 - state.pos);
-      handle.setAttribute('aria-valuenow', String(r));
-      handle.setAttribute('aria-valuetext', `${r}٪ من الصفحة بعد التنسيق`);
-    };
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-ba]').forEach((root) => {
+      const stage = root.querySelector<HTMLElement>('.ba__stage')!;
+      const handle = root.querySelector<HTMLElement>('[data-ba-handle]')!;
+      const state = { pos: 50 };
+      const set = (v: number) => {
+        state.pos = Math.max(0, Math.min(100, v));
+        root.style.setProperty('--pos', state.pos.toFixed(2));
+        const r = Math.round(100 - state.pos);
+        handle.setAttribute('aria-valuenow', String(r));
+        handle.setAttribute('aria-valuetext', `${r}٪ من الصفحة بعد التنسيق`);
+      };
 
-    // السحب باللمس وبالماوس
-    let dragging = false;
-    const fromEvent = (e: PointerEvent) => {
-      const b = stage.getBoundingClientRect();
-      set(((e.clientX - b.left) / b.width) * 100);
-    };
-    handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); gsap.killTweensOf(state); });
-    handle.addEventListener('pointermove', (e) => { if (dragging) fromEvent(e); });
-    handle.addEventListener('pointerup', () => { dragging = false; });
-    stage.addEventListener('click', (e) => { if (e.target === stage || (e.target as HTMLElement).closest('.ba__page')) fromEvent(e as PointerEvent); });
+      // السحب باللمس وبالماوس
+      let dragging = false;
+      const fromEvent = (e: PointerEvent) => {
+        const b = stage.getBoundingClientRect();
+        set(((e.clientX - b.left) / b.width) * 100);
+      };
+      handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); gsap.killTweensOf(state); });
+      handle.addEventListener('pointermove', (e) => { if (dragging) fromEvent(e); });
+      handle.addEventListener('pointerup', () => { dragging = false; });
+      stage.addEventListener('click', (e) => { if (e.target === stage || (e.target as HTMLElement).closest('.ba__page')) fromEvent(e as PointerEvent); });
 
-    // الكيبورد: القيمة = نسبة «بعد»، والسهم الأيمن يزيدها (اتجاه القراءة العربية)
-    handle.addEventListener('keydown', (e) => {
-      const stepSize = e.shiftKey ? 20 : 5;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { set(state.pos - stepSize); e.preventDefault(); }
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { set(state.pos + stepSize); e.preventDefault(); }
-      else if (e.key === 'Home') { set(100); e.preventDefault(); }
-      else if (e.key === 'End') { set(0); e.preventDefault(); }
+      // الكيبورد: القيمة = نسبة «بعد»، والسهم الأيمن يزيدها (اتجاه القراءة العربية)
+      handle.addEventListener('keydown', (e) => {
+        const stepSize = e.shiftKey ? 20 : 5;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { set(state.pos - stepSize); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { set(state.pos + stepSize); e.preventDefault(); }
+        else if (e.key === 'Home') { set(100); e.preventDefault(); }
+        else if (e.key === 'End') { set(0); e.preventDefault(); }
+      });
+
+      // حركة افتتاحية مرة واحدة: من 80% إلى 30% ثم المنتصف
+      if (!reducedMotion()) {
+        const io = new IntersectionObserver(([en]) => {
+          if (!en.isIntersecting) return;
+          io.disconnect();
+          const tl = gsap.timeline({ delay: 0.3, onUpdate: () => set(state.pos) });
+          tl.fromTo(state, { pos: 80 }, { pos: 30, duration: 1.1, ease: 'power2.inOut' })
+            .to(state, { pos: 50, duration: 0.8, ease: 'power3.out' });
+        }, { threshold: 0.5 });
+        io.observe(root);
+      }
     });
-
-    // حركة افتتاحية مرة واحدة: من 80% إلى 30% ثم المنتصف
-    if (!reducedMotion()) {
-      const io = new IntersectionObserver(([en]) => {
-        if (!en.isIntersecting) return;
-        io.disconnect();
-        const tl = gsap.timeline({ delay: 0.3, onUpdate: () => set(state.pos) });
-        tl.fromTo(state, { pos: 80 }, { pos: 30, duration: 1.1, ease: 'power2.inOut' })
-          .to(state, { pos: 50, duration: 0.8, ease: 'power3.out' });
-      }, { threshold: 0.5 });
-      io.observe(root);
-    }
   });
 </script>

@@ -30,7 +30,7 @@ const {
   motion = true,
   headerTone = 'dark',
   preloader = false,
-  preloadHeading = true,
+  preloadHeading = false,
 } = Astro.props;
 
 const pageTitle = fullTitle ? title : `${title} | ${site.nameAr}`;
@@ -65,6 +65,7 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
     <meta name="color-scheme" content="light" />
     <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="ar_SA" />
@@ -77,8 +78,8 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
     {canonical && <meta property="og:url" content={canonical} />}
     <meta name="twitter:card" content="summary_large_image" />
 
-    {preloadHeading && <link rel="preload" href="/fonts/amiri-arabic-700-normal.woff2" as="font" type="font/woff2" crossorigin />}
-    <link rel="preload" href="/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    {preloadHeading && <link rel="preload" href="/fonts/amiri-700.woff2" as="font" type="font/woff2" crossorigin />}
+    <link rel="preload" href="/fonts/plex-400.woff2" as="font" type="font/woff2" crossorigin />
 
     <script is:inline>
       (function () {
@@ -94,7 +95,13 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
             if (document.documentElement.classList.contains('rm')) return;
             if (sessionStorage.getItem('babel-intro')) return;
             sessionStorage.setItem('babel-intro', '1');
-            document.documentElement.classList.add('intro');
+            var d = document.documentElement;
+            d.classList.add('intro');
+            // إن جهز الموقع بسرعة (قبل ظهور الشاشة) نتخطاها كليًا
+            window.addEventListener('DOMContentLoaded', function () {
+              if (performance.now() < 280) d.classList.remove('intro');
+            });
+            setTimeout(function () { d.classList.remove('intro'); }, 1300);
           } catch (e) {}
         })();
       </script>
@@ -137,8 +144,9 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
     z-index: 300;
     background: var(--indigo-950);
     color: var(--on-dark);
-    animation: intro-out 0.35s var(--ease-in-out) 0.85s forwards;
+    animation: intro-in 0.2s linear both, intro-out 0.35s var(--ease-in-out) 0.85s forwards;
   }
+  @keyframes intro-in { from { opacity: 0; } }
   .intro .intro-screen svg { animation: intro-rise 0.35s var(--ease-in-out) 0.8s forwards; }
   .intro-screen .it {
     fill: var(--cream-100);

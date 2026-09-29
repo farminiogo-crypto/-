@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Icon from '@/components/ui/Icon.astro';
 import BrandIcon from '@/components/ui/BrandIcon.astro';
-import { site, wa, waMessages } from '@/config/site';
+import { wa, waBase } from '@/config/site';
 
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
 const stages = [
@@ -15,7 +15,7 @@ const stages = [
 const steps = ['المرحلة', 'الخدمة', 'التفاصيل', 'التواصل'];
 const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد.');
 ---
-<div class="wz" data-wz data-phone={site.whatsapp}>
+<div class="wz" data-wz>
   <div class="wz__progress" aria-hidden="true">
     <svg class="wz__tiers" viewBox="0 0 40 40" width="56" height="56">
       <rect data-wz-tier="0" x="2" y="30" width="36" height="7" rx="1" />
@@ -30,7 +30,7 @@ const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء ط�
   <p class="sr-only" aria-live="polite" data-wz-live></p>
 
   <!-- بدون JS يرسل النموذج رسالة عامة إلى واتساب؛ مع JS تُبنى رسالة منسقة كاملة -->
-  <form class="wz__form" action={`https://wa.me/${site.whatsapp}`} method="get" target="_blank" novalidate data-wz-form>
+  <form class="wz__form" action={waBase} method="get" target="_blank" novalidate data-wz-form>
     <input type="hidden" name="text" value="مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد." data-wz-nojs />
 
     <fieldset class="wz__step" data-wz-step="0">

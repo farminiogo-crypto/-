@@ -79,25 +79,28 @@ const refs = [
 
 <script>
   import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
 
-  document.querySelectorAll<HTMLElement>('[data-cc]').forEach((root) => {
-    if (reducedMotion()) { root.classList.add('is-checked'); return; }
-    const scan = root.querySelector<HTMLElement>('[data-cc-scan]')!;
-    const list = root.querySelector<HTMLElement>('.cc__list')!;
-    const refs = [...root.querySelectorAll<HTMLElement>('[data-cc-ref]')];
-    const io = new IntersectionObserver(([en]) => {
-      if (!en.isIntersecting) return;
-      io.disconnect();
-      const tl = gsap.timeline({ delay: 0.2 });
-      tl.set(scan, { opacity: 1, y: -46 });
-      refs.forEach((ref) => {
-        const bottom = ref.offsetTop + ref.offsetHeight - 30;
-        tl.to(scan, { y: bottom, duration: 0.55, ease: 'power1.inOut' });
-        tl.add(() => ref.classList.add('is-seen'));
-        if (ref.classList.contains('is-bad')) tl.add(() => root.classList.add('is-checked')).to({}, { duration: 0.6 });
-      });
-      tl.to(scan, { y: list.offsetHeight, opacity: 0, duration: 0.4 });
-    }, { threshold: 0.4 });
-    io.observe(root);
+  whenIdle(() => {
+    document.querySelectorAll<HTMLElement>('[data-cc]').forEach((root) => {
+      if (reducedMotion()) { root.classList.add('is-checked'); return; }
+      const scan = root.querySelector<HTMLElement>('[data-cc-scan]')!;
+      const list = root.querySelector<HTMLElement>('.cc__list')!;
+      const refs = [...root.querySelectorAll<HTMLElement>('[data-cc-ref]')];
+      const io = new IntersectionObserver(([en]) => {
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        const tl = gsap.timeline({ delay: 0.2 });
+        tl.set(scan, { opacity: 1, y: -46 });
+        refs.forEach((ref) => {
+          const bottom = ref.offsetTop + ref.offsetHeight - 30;
+          tl.to(scan, { y: bottom, duration: 0.55, ease: 'power1.inOut' });
+          tl.add(() => ref.classList.add('is-seen'));
+          if (ref.classList.contains('is-bad')) tl.add(() => root.classList.add('is-checked')).to({}, { duration: 0.6 });
+        });
+        tl.to(scan, { y: list.offsetHeight, opacity: 0, duration: 0.4 });
+      }, { threshold: 0.4 });
+      io.observe(root);
+    });
   });
 </script>

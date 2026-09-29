@@ -72,14 +72,18 @@ const { dark = false } = Astro.props;
 
 <script>
   import { gsap, reducedMotion } from '@/scripts/motion-core';
-  // الخط الطوبي يرسم نفسه أثناء التمرير
-  document.querySelectorAll<HTMLElement>('[data-tl]').forEach((tl) => {
-    if (reducedMotion()) return;
-    const fill = tl.querySelector<HTMLElement>('[data-tl-fill]')!;
-    gsap.fromTo(fill, { '--p': 0 }, {
-      '--p': 1,
-      ease: 'none',
-      scrollTrigger: { trigger: tl, start: 'top 75%', end: 'bottom 55%', scrub: 0.6 },
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    // الخط الطوبي يرسم نفسه أثناء التمرير
+    document.querySelectorAll<HTMLElement>('[data-tl]').forEach((tl) => {
+      if (reducedMotion()) return;
+      const fill = tl.querySelector<HTMLElement>('[data-tl-fill]')!;
+      gsap.fromTo(fill, { '--p': 0 }, {
+        '--p': 1,
+        ease: 'none',
+        scrollTrigger: { trigger: tl, start: 'top 75%', end: 'bottom 55%', scrub: 0.6 },
+      });
     });
   });
 </script>

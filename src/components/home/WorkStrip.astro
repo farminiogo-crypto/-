@@ -77,28 +77,32 @@ const works = (await getCollection('portfolio', (w) => w.data.published && w.dat
 </style>
 
 <script>
-  import { gsap, ScrollTrigger, reducedMotion } from '@/scripts/motion-core';
-  const pin = document.querySelector<HTMLElement>('[data-strip-pin]');
-  const row = document.querySelector<HTMLElement>('[data-strip-row]');
-  const viewport = document.querySelector<HTMLElement>('[data-strip-viewport]');
-  if (pin && row && viewport && !reducedMotion()) {
-    const mm = gsap.matchMedia();
-    mm.add('(min-width: 1024px)', () => {
-      // في RTL يبدأ الصف من اليمين؛ نحركه نحو اليمين ليكشف ما على اليسار
-      const distance = () => Math.max(0, row.scrollWidth - viewport.clientWidth + parseFloat(getComputedStyle(viewport).paddingInlineStart) * 2);
-      const tween = gsap.to(row, {
-        x: () => distance(),
-        ease: 'none',
-        scrollTrigger: {
-          trigger: pin,
-          start: 'top top',
-          end: () => `+=${distance()}`,
-          pin: true,
-          scrub: 0.8,
-          invalidateOnRefresh: true,
-        },
+  import { gsap, reducedMotion } from '@/scripts/motion-core';
+  import { whenIdle } from '@/scripts/idle';
+
+  whenIdle(() => {
+    const pin = document.querySelector<HTMLElement>('[data-strip-pin]');
+    const row = document.querySelector<HTMLElement>('[data-strip-row]');
+    const viewport = document.querySelector<HTMLElement>('[data-strip-viewport]');
+    if (pin && row && viewport && !reducedMotion()) {
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 1024px)', () => {
+        // في RTL يبدأ الصف من اليمين؛ نحركه نحو اليمين ليكشف ما على اليسار
+        const distance = () => Math.max(0, row.scrollWidth - viewport.clientWidth + parseFloat(getComputedStyle(viewport).paddingInlineStart) * 2);
+        const tween = gsap.to(row, {
+          x: () => distance(),
+          ease: 'none',
+          scrollTrigger: {
+            trigger: pin,
+            start: 'top top',
+            end: () => `+=${distance()}`,
+            pin: true,
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          },
+        });
+        return () => tween.scrollTrigger?.kill();
       });
-      return () => tween.scrollTrigger?.kill();
-    });
-  }
+    }
+  });
 </script>

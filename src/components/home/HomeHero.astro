@@ -173,5 +173,6 @@ const split = lines.map((l) => l.split(' ').map((w) => ({ w, d: d++ })));
 
 <script>
   import { initTongues } from '@/scripts/tongues';
-  initTongues();
+  import { whenIdle } from '@/scripts/idle';
+  whenIdle(initTongues, 400);
 </script>

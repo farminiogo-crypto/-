@@ -115,7 +115,7 @@ export function initTongues() {
       if (p.state === 'gone' || p.alpha <= 0.01) continue;
       ctx.globalAlpha = p.alpha;
       ctx.fillStyle = p.brick ? '#C4595B' : '#F4EFE4';
-      ctx.font = p.latin ? `italic 400 ${p.size}px Lora, Georgia, serif` : `700 ${p.size}px Amiri, serif`;
+      ctx.font = p.latin ? `400 ${p.size}px Lora, Georgia, serif` : `700 ${p.size}px Amiri, serif`;
       ctx.direction = p.latin ? 'ltr' : 'rtl';
       ctx.fillText(p.word, p.x, p.y);
     }

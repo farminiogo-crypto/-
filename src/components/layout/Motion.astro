@@ -3,5 +3,7 @@
 ---
 <script>
   import { initMotion } from '@/scripts/motion-core';
-  initMotion();
+  import { whenIdle } from '@/scripts/idle';
+  // الهيرو يتحرك بـ CSS، فنؤجل تهيئة GSAP حتى يهدأ المتصفح بعد التحميل حتى لا تنافس الرسم الأول
+  whenIdle(initMotion);
 </script>
