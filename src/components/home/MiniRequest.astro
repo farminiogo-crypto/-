@@ -5,9 +5,9 @@ import Icon from '@/components/ui/Icon.astro';
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
 const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'باحث', 'أخرى'];
 ---
-<section class="section section--cream50 mini" aria-labelledby="mini-title">
+<section class="section section--cream50 mini" aria-labelledby="mini-title" data-fab-hide>
   <div class="container">
-    <form class="mini__card" action="/request/" method="get">
+    <form class="mini__card" action="/request/" method="get" data-mini>
       <div class="mini__head">
         <p class="eyebrow">ابدأ من هنا</p>
         <h2 id="mini-title" data-reveal="heading">أين وصلت في رسالتك؟</h2>
@@ -73,3 +73,11 @@ const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'با�
   .mini__go { justify-self: start; }
   @media (max-width: 480px) { .mini__go { width: 100%; } }
 </style>
+
+<script>
+  import { track } from '@/scripts/track';
+  document.querySelector<HTMLFormElement>('[data-mini]')?.addEventListener('submit', (e) => {
+    const f = new FormData(e.currentTarget as HTMLFormElement);
+    track('mini_wizard_submit', { stage: String(f.get('stage') || ''), service: f.getAll('service').join(',') });
+  });
+</script>

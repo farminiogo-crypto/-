@@ -37,6 +37,9 @@ const fields = defineCollection({
     topics: z.array(z.string()),
     typical: z.array(z.string()), // أعمال شائعة في المجال
     services: z.array(z.string()), // slugs من الخدمات
+    tests: z.array(z.object({ name: z.string(), use: z.string() })).default([]), // اختبارات إحصائية شائعة
+    mistakes: z.array(z.string()).default([]), // أخطاء شائعة نراها
+    exampleTitles: z.array(z.string()).default([]), // عناوين افتراضية للتوضيح
     faq: z.array(qa).default([]),
   }),
 });
@@ -51,6 +54,7 @@ const portfolio = defineCollection({
     field: z.string(), // المجال
     categories: z.array(z.enum(Object.keys(workCategories) as [keyof typeof workCategories, ...(keyof typeof workCategories)[]])),
     mock: z.enum(['doc', 'stats', 'deck', 'bilingual', 'cv', 'questionnaire', 'app']),
+    mockVariant: z.enum(['figure', 'tracked', 'checklist', 'light', 'timeline']).optional(),
     mockTitle: z.string().optional(), // عنوان عام للمجسم (ليس من ملف العميل)
     summary: z.string(), // ما نفذناه باختصار
     challenge: z.string(),
@@ -60,6 +64,7 @@ const portfolio = defineCollection({
     services: z.array(z.string()).default([]),
     image: z.string().nullable().default(null),
     published: z.boolean().default(false),
+    consent: z.boolean().default(false), // موافقة صاحب العمل الكتابية مسجلة
     featured: z.boolean().default(false),
     order: z.number(),
   }),

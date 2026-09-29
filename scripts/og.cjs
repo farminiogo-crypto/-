@@ -10,13 +10,21 @@ const BASE = process.env.BASE || 'http://localhost:4321';
 const fm = (file) => {
   const src = fs.readFileSync(file, 'utf8').split('---')[1];
   const get = (k) => { const m = src.match(new RegExp(`^${k}:\\s*(.+)$`, 'm')); return m ? m[1].replace(/^"|"$/g, '').trim() : ''; };
-  return { title: get('title'), short: get('short') || get('description'), category: get('category') };
+  return { title: get('title'), short: get('short') || get('description') || get('summary'), category: get('category'), level: get('level'), field: get('field') };
 };
 
 const items = [{ out: 'default', eyebrow: 'بابل أكاديمي', title: 'من الفكرة إلى المناقشة… نصعد معك درجةً درجة.', sub: 'نرافقك من الفكرة إلى المناقشة — بدقة، وسرية، وفي الموعد.' }];
 for (const f of fs.readdirSync(path.join(ROOT, 'src/content/services'))) {
   const d = fm(path.join(ROOT, 'src/content/services', f));
   items.push({ out: `services-${f.replace('.md', '')}`, eyebrow: 'خدمة من بابل أكاديمي', title: d.title, sub: d.short });
+}
+for (const f of fs.readdirSync(path.join(ROOT, 'src/content/fields'))) {
+  const d = fm(path.join(ROOT, 'src/content/fields', f));
+  items.push({ out: `fields-${f.replace('.md', '')}`, eyebrow: 'مجال أكاديمي · بابل أكاديمي', title: d.title, sub: d.short });
+}
+for (const f of fs.readdirSync(path.join(ROOT, 'src/content/portfolio'))) {
+  const d = fm(path.join(ROOT, 'src/content/portfolio', f));
+  items.push({ out: `work-${f.replace('.md', '')}`, eyebrow: `من أعمالنا · ${d.level} · ${d.field}`, title: d.title, sub: d.short });
 }
 for (const f of fs.readdirSync(path.join(ROOT, 'src/content/blog'))) {
   const d = fm(path.join(ROOT, 'src/content/blog', f));
@@ -37,13 +45,13 @@ body:after{content:'';position:absolute;left:0;right:0;bottom:0;height:10px;back
 .brand{display:flex;align-items:center;gap:14px;font-family:Amiri;font-weight:700;font-size:34px}
 .brand small{display:block;font-family:Lora;font-size:15px;letter-spacing:.08em;opacity:.7;direction:ltr;text-align:right}
 .e{font-size:24px;font-weight:600;color:#C4595B}
-h1{font-family:Amiri;font-weight:700;font-size:${it.title.length > 38 ? 54 : 64}px;line-height:1.35}
-p{font-size:25px;line-height:1.7;color:rgba(244,239,228,.78);max-width:640px}
+h1{font-family:Amiri;font-weight:700;font-size:${it.title.length > 60 ? 46 : it.title.length > 38 ? 54 : 64}px;line-height:1.35}
+p{font-size:25px;line-height:1.7;color:rgba(244,239,228,.78);max-width:640px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .z svg{width:100%;height:auto;overflow:visible}
 .z .zt__top{fill:rgba(244,239,228,.2);stroke:rgba(244,239,228,.5)}.z .zt__left{fill:rgba(244,239,228,.1);stroke:rgba(244,239,228,.3)}
 .z .zt__right{fill:rgba(26,15,43,.55);stroke:rgba(244,239,228,.22)}.z .zt__stair{fill:rgba(166,61,64,.75)}
 .z .zt__steps{stroke:rgba(244,239,228,.4);fill:none}.z .zig__line{fill:none;stroke:#C4595B;stroke-width:4;filter:drop-shadow(0 0 6px rgba(196,89,91,.9))}
-.z .zig__shadow{fill:rgba(10,5,20,.5);filter:blur(18px)}.z .zt__num{display:none}
+.z .zig__shadow{fill:rgba(10,5,20,.5);filter:blur(18px)}.z .zt__num,.z .zig__run{display:none}
 .z polygon{stroke-width:1.2}
 </style></head><body><div class="t">
 <div class="brand">${LOGO}<span>بابل أكاديمي<small>Babel Academic</small></span></div>

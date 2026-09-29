@@ -8,7 +8,7 @@ const d = item.data;
 ---
 <a class={`work-card ${cls}`} href={`/work/${item.id}/`} data-cursor="افتح" data-mock-host>
   <div class="work-card__visual">
-    {d.image ? <img src={d.image} alt={`لقطة مموهة من عمل: ${d.title}`} loading="lazy" /> : <Mock type={d.mock} title={d.mockTitle} />}
+    {d.image ? <img src={d.image} alt={`لقطة مموهة من عمل: ${d.title}`} loading="lazy" /> : <Mock type={d.mock} title={d.mockTitle} variant={d.mockVariant} />}
   </div>
   <div class="work-card__body">
     <p class="work-card__meta">

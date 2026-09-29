@@ -1,8 +1,9 @@
+import { track } from '@/scripts/track';
 // معالج الطلب: أربع خطوات، مسودة محفوظة محليًا، ورسالة واتساب منسقة في النهاية. لا أسعار.
 import { wa } from '@/config/site';
 const KEY = 'babel-request-draft';
 
-type Draft = { step: number; stage: string; services: string[]; major: string; date: string; desc: string; size: string; name: string; phone: string };
+type Draft = { step: number; stage: string; services: string[]; major: string; when: string; date: string; desc: string; size: string; name: string; phone: string };
 
 const store = {
   get(): Partial<Draft> | null {
@@ -28,7 +29,7 @@ export function initWizard() {
   const live = root.querySelector<HTMLElement>('[data-wz-live]')!;
   const done = root.querySelector<HTMLElement>('[data-wz-done]')!;
   const reopen = root.querySelector<HTMLAnchorElement>('[data-wz-reopen]')!;
-  root.querySelector('[data-wz-nojs]')?.remove();
+  root.querySelectorAll('[data-wz-nojs]').forEach((n) => n.remove());
   form.removeAttribute('target');
 
   const el = <T extends HTMLElement>(name: string) => form.elements.namedItem(name) as unknown as T;
@@ -44,18 +45,20 @@ export function initWizard() {
     stage: (form.querySelector<HTMLInputElement>('input[name="stage"]:checked')?.value) || '',
     services: [...form.querySelectorAll<HTMLInputElement>('input[name="service"]:checked')].map((i) => i.value),
     major: el<HTMLInputElement>('major').value.trim(),
+    when: (form.querySelector<HTMLInputElement>('input[name="when"]:checked')?.value) || '',
     date: date.value,
     desc: el<HTMLTextAreaElement>('desc').value.trim(),
     size: el<HTMLInputElement>('size').value.trim(),
     name: el<HTMLInputElement>('name').value.trim(),
-    phone: el<HTMLInputElement>('phone').value.trim(),
+    phone: el<HTMLInputElement>('mobile').value.trim(),
   });
 
   const write = (d: Partial<Draft>) => {
     if (d.stage) form.querySelectorAll<HTMLInputElement>('input[name="stage"]').forEach((i) => (i.checked = i.value === d.stage));
+    if (d.when) form.querySelectorAll<HTMLInputElement>('input[name="when"]').forEach((i) => (i.checked = i.value === d.when));
     if (d.services) form.querySelectorAll<HTMLInputElement>('input[name="service"]').forEach((i) => (i.checked = d.services!.includes(i.value)));
     (['major', 'date', 'desc', 'size', 'name', 'phone'] as const).forEach((k) => {
-      if (d[k]) (el<HTMLInputElement>(k)).value = d[k] as string;
+      if (d[k]) (el<HTMLInputElement>(k === 'phone' ? 'mobile' : k)).value = d[k] as string;
     });
   };
 
@@ -85,8 +88,8 @@ export function initWizard() {
     const checks: Record<number, [string, boolean][]> = {
       0: [['stage', !!d.stage]],
       1: [['service', d.services.length > 0]],
-      2: [['major', d.major.length >= 2], ['date', !d.date || d.date >= date.min], ['desc', d.desc.length >= 10]],
-      3: [['name', d.name.length >= 2], ['phone', /^(\+?9665\d{8}|05\d{8}|\+?\d{9,15})$/.test(d.phone.replace(/[\s-]/g, ''))]],
+      2: [['major', d.major.length >= 2], ['date', d.when !== 'date' || (!!d.date && d.date >= date.min)], ['desc', d.desc.length >= 10]],
+      3: [['name', d.name.length >= 2], ['mobile', /^(\+?9665\d{8}|05\d{8}|\+?\d{9,15})$/.test(d.phone.replace(/[\s-]/g, ''))]],
     };
     let ok = true;
     let firstBad: string | null = null;
@@ -102,7 +105,9 @@ export function initWizard() {
     return ok;
   };
 
-  next.addEventListener('click', () => { if (validate(step)) show(step + 1); });
+  next.addEventListener('click', () => {
+    if (validate(step)) { show(step + 1); track('wizard_step', { step: step + 1, name: names[step] }); }
+  });
   prev.addEventListener('click', () => show(step - 1));
   // اختيار المرحلة ينقل تلقائيًا للخطوة التالية
   form.querySelectorAll<HTMLInputElement>('input[name="stage"]').forEach((i) =>
@@ -121,11 +126,30 @@ export function initWizard() {
     }
   });
 
+  // اختيار الموعد: أزرار جاهزة، ومنتقي التاريخ يظهر فقط مع «تاريخ محدد» مع عرض التاريخ بالعربية
+  const dateBox = root.querySelector<HTMLElement>('[data-wz-date]')!;
+  const dateAr = root.querySelector<HTMLElement>('[data-wz-date-ar]')!;
+  const syncWhen = () => {
+    const w = read().when;
+    dateBox.hidden = w !== 'date';
+    dateAr.textContent = w === 'date' && date.value ? fmtDate(date.value) : '';
+  };
+  form.querySelectorAll<HTMLInputElement>('input[name="when"]').forEach((i) =>
+    i.addEventListener('change', () => { syncWhen(); if (i.value === 'date') date.focus(); setErr('date', false); }),
+  );
+  date.addEventListener('input', syncWhen);
+
   const fmtDate = (v: string) => {
     if (!v) return 'مرن';
     try {
       return new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(v + 'T12:00:00'));
     } catch { return v; }
+  };
+
+  const whenText = (d: Draft) => {
+    if (d.when === 'date') return fmtDate(d.date);
+    const l = form.querySelector<HTMLInputElement>(`input[name="when"][value="${d.when}"]`)?.dataset.label;
+    return l || 'مرن';
   };
 
   form.addEventListener('submit', (e) => {
@@ -136,16 +160,17 @@ export function initWizard() {
     const d = read();
     const titles = [...form.querySelectorAll<HTMLInputElement>('input[name="service"]:checked')].map((i) => i.dataset.title);
     const lines = [
-      'مرحبًا بابل أكاديمي 👋',
+      'مرحبًا بابل أكاديمي،',
       `أرغب في: ${titles.join('، ')}`,
       `المرحلة: ${d.stage} — التخصص: ${d.major}`,
-      `الموعد المطلوب: ${fmtDate(d.date)}`,
+      `الموعد المطلوب: ${whenText(d)}`,
       `التفاصيل: ${d.desc}`,
       ...(d.size ? [`الحجم التقريبي: ${d.size}`] : []),
       `الاسم: ${d.name}`,
       `الجوال: ${d.phone}`,
     ];
     const url = wa(lines.join('\n'));
+    track('wizard_submit', { stage: d.stage, services: (d.services || []).join(','), when: d.when || '' });
     reopen.href = url;
     window.open(url, '_blank', 'noopener');
     store.clear();
@@ -172,6 +197,7 @@ export function initWizard() {
   const draft = store.get();
   const initial = { ...(draft || {}), ...fromUrl };
   write(initial);
+  syncWhen();
   let start = 0;
   if (fromUrl.stage || fromUrl.services) start = fromUrl.stage && fromUrl.services ? 2 : fromUrl.stage ? 1 : 0;
   else if (draft && typeof draft.step === 'number') start = draft.step;

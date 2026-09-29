@@ -1,13 +1,15 @@
 ---
+import { isPublic } from '@/lib/work';
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/PageHero.astro';
+import Mock from '@/components/Mock.astro';
 import WorkCard from '@/components/WorkCard.astro';
 import FinalCTA from '@/components/FinalCTA.astro';
 import Icon from '@/components/ui/Icon.astro';
 import { workCategories, type WorkCategory } from '@/data/work';
 
-const works = (await getCollection('portfolio', (w) => w.data.published)).sort((a, b) => a.data.order - b.data.order);
+const works = (await getCollection('portfolio', isPublic)).sort((a, b) => a.data.order - b.data.order);
 const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works.some((w) => w.data.categories.includes(c)));
 ---
 <BaseLayout
@@ -19,10 +21,19 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
     eyebrow="المعرض"
     title="عيّنات من شغلنا — بلا أسماء، وبكل التفاصيل."
     lead="لا نذكر اسم عميل ولا جامعة ولا جهة، ولا ننقل أي نص من ملف عميل. نعرض المرحلة والمجال وما نفذناه بالضبط."
-  />
+  >
+    <div slot="art" class="wh-fan">
+      <Mock type="deck" tilt={false} class="wh-fan__c wh-fan__c--1" />
+      <Mock type="stats" tilt={false} class="wh-fan__c wh-fan__c--2" />
+      <Mock type="doc" tilt={false} class="wh-fan__c wh-fan__c--3" />
+    </div>
+  </PageHero>
 
   <section class="section work-sec">
     <div class="container">
+      {works.length === 0 && (
+        <p class="work-empty">نجهز نماذج من أعمالنا بعد موافقة أصحابها. إلى ذلك الحين، أخبرنا بما تعمل عليه ونريك أمثلة مشابهة في المحادثة.</p>
+      )}
       <div class="filters" role="group" aria-label="تصفية الأعمال حسب النوع" data-filters>
         <button type="button" class="filter" aria-pressed="true" data-filter="all">الكل <span class="filter__n">{works.length}</span></button>
         {cats.map((c) => (
@@ -69,6 +80,11 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
   .filter:hover { border-color: var(--indigo-900); }
   .filter[aria-pressed='true'] { background: var(--indigo-900); color: var(--cream-100); border-color: var(--indigo-900); }
   .filter__n { font-size: var(--fs-xs); opacity: 0.65; }
+  .wh-fan { position: relative; height: 300px; }
+  .wh-fan :global(.wh-fan__c) { position: absolute; width: 250px; border-radius: 10px; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7); }
+  .wh-fan :global(.wh-fan__c--1) { top: 20px; left: 0; transform: rotate(-8deg); }
+  .wh-fan :global(.wh-fan__c--2) { top: 50px; left: 80px; transform: rotate(3deg); }
+  .wh-fan :global(.wh-fan__c--3) { top: 0; right: 0; transform: rotate(9deg); width: 190px; }
   .masonry { columns: 1; column-gap: 1.25rem; }
   .masonry__item { break-inside: avoid; margin-bottom: 1.25rem; }
   .masonry__item[hidden] { display: none; }
@@ -77,14 +93,22 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
   /* تنويع ارتفاعات المجسمات لإحساس masonry */
   .masonry__item:nth-child(3n + 2) :global(.work-card__visual) { aspect-ratio: 1 / 1; }
   .masonry__item:nth-child(4n) :global(.work-card__visual) { aspect-ratio: 5 / 4; }
+  .work-empty { padding: 2rem; border-radius: var(--radius-card); background: var(--cream-50); border: 1px dashed var(--line-light); line-height: 1.9; margin-bottom: 2rem; }
   .work-note { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 2rem; font-size: var(--fs-small); color: var(--ink-muted); max-width: 70ch; }
   .work-note :global(svg) { color: var(--brick-600); margin-top: 0.25rem; }
 </style>
 
 <script>
-  import { gsap } from '@/scripts/motion-core';
-  import { Flip } from 'gsap/Flip';
-  gsap.registerPlugin(Flip);
+  import { whenIdle } from '@/scripts/idle';
+
+  // الفلترة تعمل فورًا، وحركة FLIP تُحمَّل بعد الرسم الأول
+  type Fx = { gsap: typeof import('gsap').gsap; Flip: typeof import('gsap/Flip').Flip };
+  let fx: Fx | null = null;
+  whenIdle(async () => {
+    const [{ gsap }, { Flip }] = await Promise.all([import('@/scripts/motion-core'), import('gsap/Flip')]);
+    gsap.registerPlugin(Flip);
+    fx = { gsap, Flip };
+  });
 
   const bar = document.querySelector<HTMLElement>('[data-filters]');
   const items = [...document.querySelectorAll<HTMLElement>('[data-cats]')];
@@ -94,7 +118,8 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
     const buttons = [...bar.querySelectorAll<HTMLButtonElement>('[data-filter]')];
     const apply = (cat: string, animate = true) => {
       buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === cat)));
-      const state = Flip.getState(items);
+      const anim = animate && !reduce ? fx : null;
+      const state = anim?.Flip.getState(items);
       let shown = 0;
       items.forEach((it) => {
         const show = cat === 'all' || it.dataset.cats!.split(' ').includes(cat);
@@ -102,7 +127,8 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
         if (show) shown++;
       });
       if (status) status.textContent = `يُعرض ${shown} من الأعمال`;
-      if (animate && !reduce) {
+      if (anim && state) {
+        const { gsap, Flip } = anim;
         Flip.from(state, {
           duration: 0.7,
           ease: 'power2.inOut',

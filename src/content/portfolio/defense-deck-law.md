@@ -1,7 +1,7 @@
 ---
-title: عرض تقديمي جماعي بتصميم غير تقليدي
+title: عرض تقديمي جماعي لمشروع تخرج
 level: بكالوريوس
-field: القانون
+field: العلوم الإنسانية
 categories: [decks]
 mockTitle: عرض مشروع التخرج
 mock: deck

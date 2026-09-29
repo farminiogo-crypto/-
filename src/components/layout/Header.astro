@@ -98,7 +98,19 @@ const mobileLinks = [
   <div class="mobile-menu__inner container">
     <nav aria-label="قائمة الجوال">
       <ul role="list" class="mobile-menu__list">
-        {mobileLinks.map((l, i) => (
+        {mobileLinks.map((l, i) => l.href === '/services/' ? (
+          <li style={`--i:${i}`}>
+            <details class="msub">
+              <summary aria-current={isActive('/services/') ? 'page' : undefined}>الخدمات <Icon name="chevron-down" size={24} /></summary>
+              <ul role="list" class="msub__list">
+                {services.map((sv) => (
+                  <li><a href={`/services/${sv.id}/`} aria-current={path === `/services/${sv.id}/` ? 'page' : undefined}>{sv.data.title}</a></li>
+                ))}
+                <li class="msub__all"><a href="/services/">كل الخدمات</a></li>
+              </ul>
+            </details>
+          </li>
+        ) : (
           <li style={`--i:${i}`}>
             <a href={l.href} aria-current={isActive(l.href) && l.href !== '/' ? 'page' : path === '/' && l.href === '/' ? 'page' : undefined}>{l.label}</a>
           </li>
@@ -332,6 +344,20 @@ const mobileLinks = [
     color: var(--on-dark);
   }
   .mobile-menu__list a[aria-current='page'] { color: var(--brick-400); }
+  .msub summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    padding: 0.55rem 0; cursor: pointer; list-style: none;
+    font-family: var(--font-display); font-size: clamp(1.7rem, 7vw, 2.4rem); font-weight: 700; line-height: 1.4;
+  }
+  .msub summary::-webkit-details-marker { display: none; }
+  .msub summary[aria-current='page'] { color: var(--brick-400); }
+  .msub summary :global(svg) { transition: transform 0.3s var(--ease-out); opacity: 0.7; }
+  .msub[open] summary :global(svg) { transform: rotate(180deg); }
+  .mobile-menu__list .msub__list { display: grid; gap: 0; padding: 0.25rem 1rem 0.75rem 0; border-inline-start: 1px solid var(--line-dark); margin-inline-start: 0.25rem; }
+  .mobile-menu__list .msub__list li { opacity: 1; transform: none; transition: none; }
+  .mobile-menu__list .msub__list a { font-family: var(--font-body); font-size: 1.05rem; font-weight: 500; padding: 0.55rem 0; color: var(--on-dark-muted); }
+  .mobile-menu__list .msub__list a[aria-current='page'] { color: var(--brick-400); }
+  .mobile-menu__list .msub__all a { color: var(--cream-100); font-weight: 600; }
   .mobile-menu__list li, .mobile-menu__actions {
     opacity: 0;
     transform: translateY(18px);

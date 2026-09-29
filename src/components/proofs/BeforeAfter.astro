@@ -68,7 +68,7 @@
     display: flex;
     flex-direction: column;
     gap: 2.4cqw;
-    font-size: 3.1cqw;
+    font-size: max(3.1cqw, 13px);
     line-height: 1.75;
     color: #2a2233;
     overflow: hidden;
@@ -76,16 +76,16 @@
   /* بعد يظهر من اليمين حتى موضع المقبض */
   .ba__page--after { clip-path: inset(-1px -1px -1px max(0%, calc((var(--pos) - 7) * 100% / 86))); }
 
-  .bf-h { font-family: Arial, sans-serif; font-weight: 700; font-size: 3.6cqw; text-align: left; color: #1f3b73; }
+  .bf-h { font-family: Arial, sans-serif; font-weight: 700; font-size: max(3.6cqw, 14px); text-align: left; color: #1f3b73; }
   .bf-p { text-align: left; font-family: 'Times New Roman', serif; }
-  .bf-t, .af-t { width: 100%; border-collapse: collapse; font-size: 2.8cqw; }
+  .bf-t, .af-t { width: 100%; border-collapse: collapse; font-size: max(2.8cqw, 12px); }
   .bf-t th, .bf-t td { border: 1px solid #9b9b9b; padding: 0.6cqw 1cqw; text-align: left; font-family: Arial, sans-serif; }
-  .bf-cap { font-size: 2.6cqw; text-align: left; font-family: Arial, sans-serif; color: #555; }
+  .bf-cap { font-size: max(2.6cqw, 12px); text-align: left; font-family: Arial, sans-serif; color: #555; }
 
-  .af-h { font-family: var(--font-display); font-weight: 700; font-size: 4.2cqw; color: var(--indigo-900); line-height: 1.5; }
+  .af-h { font-family: var(--font-display); font-weight: 700; font-size: max(4.2cqw, 16px); color: var(--indigo-900); line-height: 1.5; }
   .af-p { text-align: justify; text-justify: inter-word; }
   .af-p bdi { font-family: var(--font-latin); font-size: 0.9em; }
-  .af-t caption { font-size: 2.7cqw; font-weight: 600; color: var(--indigo-900); text-align: start; padding-bottom: 1cqw; }
+  .af-t caption { font-size: max(2.7cqw, 12px); font-weight: 600; color: var(--indigo-900); text-align: start; padding-bottom: 1cqw; }
   .af-t th { background: var(--indigo-900); color: var(--cream-50); font-weight: 600; padding: 0.8cqw; }
   .af-t td { border-bottom: 1px solid rgba(30, 21, 48, 0.14); padding: 0.8cqw; text-align: center; }
   .af-t td:first-child, .af-t th:first-child { text-align: start; }
@@ -102,6 +102,7 @@
   .ba__tag--before { left: 0.75rem; background: rgba(30, 21, 48, 0.75); color: var(--cream-50); }
   .ba__tag--after { right: 0.75rem; background: var(--brick-600); color: var(--cream-50); }
 
+  @media (max-width: 600px) { .ba__stage { aspect-ratio: 1 / 1.35; } .ba__page { inset: 4% 4%; padding: 5cqw 4.5cqw; } }
   .ba__handle {
     position: absolute;
     top: 0;
@@ -134,10 +135,11 @@
 </style>
 
 <script>
-  import { gsap, reducedMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
 
-  whenIdle(() => {
+  // مكتبة الحركة تُحمَّل بعد الرسم الأول، لا قبله
+  whenIdle(async () => {
+    const { gsap, reducedMotion } = await import('@/scripts/motion-core');
     document.querySelectorAll<HTMLElement>('[data-ba]').forEach((root) => {
       const stage = root.querySelector<HTMLElement>('.ba__stage')!;
       const handle = root.querySelector<HTMLElement>('[data-ba-handle]')!;

@@ -1,4 +1,5 @@
 ---
+import { isPublic } from '@/lib/work';
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/PageHero.astro';
@@ -18,7 +19,7 @@ export async function getStaticPaths() {
 const { service } = Astro.props;
 const d = service.data;
 const { Content } = await render(service);
-const works = (await getCollection('portfolio', (w) => w.data.published && d.related.includes(w.id))).sort((a, b) => a.data.order - b.data.order);
+const works = (await getCollection('portfolio', (w) => isPublic(w) && d.related.includes(w.id))).sort((a, b) => a.data.order - b.data.order);
 const others = (await getCollection('services')).filter((s) => s.id !== service.id).sort((a, b) => a.data.order - b.data.order);
 const msg = waMessages.service(d.title);
 const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];

@@ -4,6 +4,7 @@ level: مؤسسي
 field: القطاع الصحي
 categories: [translation, decks]
 mockTitle: Project Overview
+mockVariant: timeline
 mock: deck
 summary: ترجمة المصطلحات المتخصصة، وعكس الاتجاه بالكامل من اليمين لليسار بما فيه الخط الزمني والأسهم.
 challenge: عرض عربي مصمم من اليمين لليسار، والمطلوب نسخة إنجليزية لا تبدو مترجمة، أي أن كل عنصر اتجاهي يجب أن ينعكس لا النص وحده.

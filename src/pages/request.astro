@@ -16,7 +16,10 @@ const after = [
   title="ابدأ طلبك: دعم أكاديمي لرسالتك في دقيقة"
   description="أرسل طلبك إلى بابل أكاديمي في أربع خطوات: مرحلتك، والخدمة التي تحتاجها، وتفاصيل عملك، وطريقة التواصل. نرد بعرض مكتوب قبل أي دفع."
   motion={false}
+  fab={false}
 >
+  <!-- خط العناوين والخيارات في المعالج يُحمَّل مبكرًا حتى لا تقفز الصفحة عند تبديله -->
+  <link slot="head" rel="preload" href="/fonts/plex-600.woff2" as="font" type="font/woff2" crossorigin />
   <PageHero
     compact
     tower={false}
@@ -26,7 +29,7 @@ const after = [
     lead="أخبرنا أين وصلت، وما الذي تحتاجه. نجهز لك رسالة واتساب منسقة ترسلها بضغطة، ونرد عليك بعرض مكتوب قبل أي التزام."
   />
 
-  <section class="section rq">
+  <section class="section rq" id="rq-form">
     <div class="container rq__grid">
       <div class="rq__main card">
         <noscript>
@@ -60,7 +63,11 @@ const after = [
 </BaseLayout>
 
 <style>
-  .rq { padding-top: 3rem; }
+  .rq { padding-top: 3rem; scroll-margin-top: calc(var(--header-h) - 1rem); }
+  @media (max-width: 767px) {
+    .rq { padding-top: 1.25rem; }
+    :global(.page-hero .page-hero__lead) { display: none; }
+  }
   .rq__grid { display: grid; gap: 2rem; align-items: start; }
   .rq__main { padding: clamp(1.25rem, 0.8rem + 2vw, 2.5rem); }
   .rq__nojs { padding: 1rem; margin-bottom: 1.5rem; border-radius: var(--radius-s); background: var(--brick-tint); line-height: 1.9; }
@@ -79,3 +86,10 @@ const after = [
     .rq__side { position: sticky; top: calc(var(--header-h) + 1.5rem); }
   }
 </style>
+
+<script>
+  // القادم من النسخة المصغرة في الرئيسية (بمعاملات في الرابط) ينزل مباشرة إلى النموذج
+  if (location.search.includes('service=') || location.search.includes('stage=')) {
+    requestAnimationFrame(() => document.getElementById('rq-form')?.scrollIntoView({ block: 'start' }));
+  }
+</script>

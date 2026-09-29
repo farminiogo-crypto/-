@@ -2,8 +2,7 @@
 // يحمّل نظام الحركة (GSAP + ScrollTrigger + SplitText + Lenis) في الصفحات التي تحتاجه فقط
 ---
 <script>
-  import { initMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
   // الهيرو يتحرك بـ CSS، فنؤجل تهيئة GSAP حتى يهدأ المتصفح بعد التحميل حتى لا تنافس الرسم الأول
-  whenIdle(initMotion);
+  whenIdle(() => import('@/scripts/motion-core').then((m) => m.initMotion()));
 </script>

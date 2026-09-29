@@ -5,13 +5,43 @@ interface Props {
   tilt?: boolean;
   class?: string;
   title?: string; // عنوان عام يميز المجسم
+  variant?: 'figure' | 'tracked' | 'checklist' | 'light' | 'timeline';
 }
-const { type, tilt = true, class: cls = '', title } = Astro.props;
+const { type, tilt = true, class: cls = '', title, variant } = Astro.props;
 const isLatin = title ? /^[A-Za-z]/.test(title) : false;
 const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ length: n }, (_, i) => widths[i % widths.length]);
 ---
 <div class={`mock mock--${type} ${tilt ? 'mock--tilt' : ''} ${cls}`} aria-hidden="true">
-  {type === 'doc' && (
+  {type === 'doc' && variant === 'figure' && (
+    <div class="paper">
+      <p class="m-chapter">الفصل الرابع</p>
+      <p class="m-h m-h--sm">{title ?? 'النتائج ومناقشتها'}</p>
+      <div class="m-lines m-lines--tight">{lines(2, [100, 84]).map((w) => <span style={`--w:${w}%`} />)}</div>
+      <div class="m-figs">
+        <figure><span class="m-img m-img--a" /><figcaption>شكل (٤-٣)</figcaption></figure>
+        <figure><span class="m-img m-img--b" /><figcaption>شكل (٤-٤)</figcaption></figure>
+      </div>
+      <div class="m-lines m-lines--tight">{lines(3, [96, 100, 58]).map((w) => <span style={`--w:${w}%`} />)}</div>
+      <p class="m-folio">٥٢</p>
+    </div>
+  )}
+
+  {type === 'doc' && variant === 'tracked' && (
+    <div class="paper paper--wide m-tracked">
+      <div class="m-tracked__text">
+        <p class="m-h m-h--sm">{title ?? 'الإطار النظري'}</p>
+        <p class="m-tc">تناولت الدراسات <del>العديده</del> <ins>العديدة</ins> مفهوم القيادة <del>بشكل</del> <ins>بوصفه</ins> متغيرًا مستقلًا، <ins>في حين</ins> ركزت أخرى على أثره التنظيمي.</p>
+        <div class="m-lines m-lines--tight">{lines(3, [100, 92, 70]).map((w) => <span style={`--w:${w}%`} />)}</div>
+      </div>
+      <div class="m-comments">
+        <span>توحيد المصطلح</span>
+        <span>ملاحظة المشرف ✓</span>
+        <span>توثيق APA</span>
+      </div>
+    </div>
+  )}
+
+  {type === 'doc' && !variant && (
     <div class="paper">
       <p class="m-chapter">الفصل الثالث</p>
       <p class="m-h">{title ?? 'منهجية الدراسة وإجراءاتها'}</p>
@@ -33,12 +63,12 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
     <div class="paper paper--wide">
       <p class="m-sub">جدول (٤-٣) معاملات ارتباط بيرسون بين متغيرات الدراسة</p>
       <table class="m-table m-table--num">
-        <tr><th>المتغير</th><th>١</th><th>٢</th><th>٣</th></tr>
-        <tr><td>التحول الرقمي</td><td>١</td><td></td><td></td></tr>
-        <tr><td>الأداء المؤسسي</td><td>**٠٫٦٨</td><td>١</td><td></td></tr>
-        <tr><td>رضا العاملين</td><td>**٠٫٥٢</td><td>**٠٫٦١</td><td>١</td></tr>
+        <tr><th>المتغير</th><th>1</th><th>2</th><th>3</th></tr>
+        <tr><td>التحول الرقمي</td><td>1</td><td></td><td></td></tr>
+        <tr><td>الأداء المؤسسي</td><td>0.68**</td><td>1</td><td></td></tr>
+        <tr><td>رضا العاملين</td><td>0.52**</td><td>0.61**</td><td>1</td></tr>
       </table>
-      <p class="m-note">** دالة عند مستوى ٠٫٠١</p>
+      <p class="m-note">** دالة عند مستوى 0.01</p>
       <svg class="m-chart" viewBox="0 0 200 70" preserveAspectRatio="none">
         <line x1="0" y1="68" x2="200" y2="68" />
         <rect x="18" y="22" width="22" height="46" />
@@ -50,7 +80,33 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
     </div>
   )}
 
-  {type === 'deck' && (
+  {type === 'deck' && variant === 'light' && (
+    <div class="slide slide--light">
+      <div class="slide__text">
+        <p class="slide__kicker">عرض علمي</p>
+        <p class="slide__title">{title ?? 'عرض علمي'}</p>
+        <div class="slide__rule" />
+      </div>
+      <svg class="slide__chart" viewBox="0 0 120 80" aria-hidden="true">
+        <circle cx="60" cy="40" r="30" fill="none" stroke="var(--indigo-700)" stroke-width="12" stroke-dasharray="120 189" />
+        <circle cx="60" cy="40" r="30" fill="none" stroke="var(--brick-600)" stroke-width="12" stroke-dasharray="60 189" stroke-dashoffset="-120" />
+      </svg>
+      <p class="slide__num">٠٥</p>
+    </div>
+  )}
+
+  {type === 'deck' && variant === 'timeline' && (
+    <div class="slide slide--ltr" dir="ltr">
+      <div class="slide__text">
+        <p class="slide__kicker latin">Roadmap</p>
+        <p class="slide__title latin">{title ?? 'Project Overview'}</p>
+        <div class="slide__tl"><i /><i /><i /><i /></div>
+      </div>
+      <p class="slide__num latin">07</p>
+    </div>
+  )}
+
+  {type === 'deck' && !variant && (
     <div class="slide">
       <div class="slide__art">
         <span /><span /><span /><span />
@@ -65,7 +121,18 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
     </div>
   )}
 
-  {type === 'bilingual' && (
+  {type === 'bilingual' && variant === 'checklist' && (
+    <div class="paper paper--wide m-check">
+      <table class="m-table">
+        <tr><th>البند</th><th class="latin">Item</th><th>✓</th></tr>
+        {[88, 72, 94, 66, 80].map((w, i) => (
+          <tr><td><span class="m-line" style={`--w:${w}%`} /></td><td dir="ltr"><span class="m-line" style={`--w:${[76, 90, 64, 84, 70][i]}%`} /></td><td><i class={i < 3 ? 'on' : ''} /></td></tr>
+        ))}
+      </table>
+    </div>
+  )}
+
+  {type === 'bilingual' && !variant && (
     <div class="paper paper--wide bi">
       <div class="bi__col">
         <p class="m-sub">١. الهدف من الإجراء</p>
@@ -170,6 +237,7 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
     flex-direction: column;
     gap: 1.6cqw;
     overflow: hidden;
+    contain: size; /* الحجم من العرض ونسبة الورقة فقط، لا من النص، فلا تقفز عند تحميل الخط */
   }
   .paper--wide { width: 86%; aspect-ratio: 1.414 / 1; padding: 5cqw; }
   .m-chapter { font-size: 2.2cqw; color: var(--brick-600); font-weight: 600; line-height: 1.2; }
@@ -224,6 +292,30 @@ const lines = (n: number, widths = [100, 96, 100, 88, 94, 72]) => Array.from({ l
   .slide__art span:nth-child(3) { width: 20cqw; }
   .slide__art span:nth-child(4) { width: 26cqw; background: var(--brick-400); }
 
+  .m-figs { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; margin-block: 1cqw; }
+  .m-figs figure { margin: 0; display: grid; gap: 0.8cqw; }
+  .m-figs figcaption { font-size: 1.6cqw; text-align: center; color: var(--ink-muted); }
+  .m-img { display: block; aspect-ratio: 4 / 3; border-radius: 1cqw; }
+  .m-img--a { background: linear-gradient(160deg, #8ea37a, #5f7a57); }
+  .m-img--b { background: linear-gradient(160deg, #c9b58f, #9c8660); }
+  .m-tracked { display: grid; grid-template-columns: 1fr 28%; gap: 3cqw; }
+  .m-tracked__text { display: flex; flex-direction: column; gap: 1.6cqw; }
+  .m-tc { font-size: 2.1cqw; line-height: 1.9; }
+  .m-tc del { color: var(--brick-600); }
+  .m-tc ins { text-decoration: underline; text-decoration-color: var(--indigo-700); color: var(--indigo-700); }
+  .m-comments { display: grid; align-content: start; gap: 1.4cqw; border-inline-start: 1px dashed rgba(30, 21, 48, 0.25); padding-inline-start: 2cqw; }
+  .m-comments span { font-size: 1.6cqw; padding: 1cqw 1.2cqw; border-radius: 1cqw; background: var(--brick-tint); color: var(--brick-600); font-weight: 600; }
+  .m-check i { display: inline-block; width: 2cqw; height: 2cqw; border: 1px solid rgba(30, 21, 48, 0.35); border-radius: 0.4cqw; }
+  .m-check i.on { background: var(--indigo-900); border-color: var(--indigo-900); }
+  .slide--light { background: var(--cream-50); color: var(--ink); border: 1px solid var(--line-light); }
+  .slide--light .slide__title { color: var(--indigo-900); }
+  .slide--light .slide__kicker, .slide--light .slide__num { color: var(--ink-muted); opacity: 1; }
+  .slide__chart { width: 100%; height: auto; }
+  .slide--ltr { grid-template-columns: 1fr; text-align: left; }
+  .slide--ltr .slide__num { left: auto; right: 4cqw; }
+  .slide__tl { display: flex; align-items: center; gap: 0; margin-top: 2cqw; }
+  .slide__tl i { flex: 1; height: 0.5cqw; background: rgba(244, 239, 228, 0.5); position: relative; }
+  .slide__tl i::after { content: ''; position: absolute; right: 0; top: 50%; width: 2.2cqw; height: 2.2cqw; margin-top: -1.1cqw; border-radius: 50%; background: var(--brick-400); }
   .bi { display: grid; grid-template-columns: 1fr 1fr; gap: 4cqw; }
   .bi__col { display: flex; flex-direction: column; gap: 1.4cqw; }
   .bi__col--en { border-inline-start: 1px solid rgba(30, 21, 48, 0.15); padding-inline-start: 4cqw; }

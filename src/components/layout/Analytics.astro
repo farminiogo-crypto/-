@@ -1,0 +1,17 @@
+---
+// أدوات القياس: لا يُخرج شيئًا ما لم يُضبط معرّف واحد على الأقل في site.analytics.
+// السكربتات الخارجية تُحمَّل بعد أول تفاعل (لمس، تمرير، نقر، لوحة مفاتيح) حتى لا تؤثر في سرعة الصفحة.
+import { site } from '@/config/site';
+const a = site.analytics;
+const enabled = Object.values(a).some(Boolean);
+---
+{enabled && (
+  <>
+    <script type="application/json" id="analytics-config" set:html={JSON.stringify(a)} />
+    <script>
+      // السكربت يعمل في كل الصفحات، لكنه لا يحمّل شيئًا ما لم يوجد الإعداد
+      const el = document.getElementById('analytics-config');
+      if (el) import('@/scripts/analytics').then((m) => m.initAnalytics(JSON.parse(el.textContent || '{}')));
+    </script>
+  </>
+)}

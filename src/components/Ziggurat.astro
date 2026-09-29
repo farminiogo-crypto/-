@@ -9,15 +9,16 @@ interface Props {
   label?: string;
   done?: boolean;
   active?: number; // لرسم طبقة نشطة وما تحتها مكتمل
+  deferred?: boolean; // لا يبدأ البناء إلا عند إضافة is-go (متزامن مع مشهد الحروف في الهيرو)
 }
-const { variant = 'hero', tiers = 7, numbered = false, class: cls = '', label, done = false, active } = Astro.props;
+const { variant = 'hero', tiers = 7, numbered = false, class: cls = '', label, done = false, active, deferred = false } = Astro.props;
 const tierClass = (i: number) =>
   active !== undefined ? (i < active ? ' is-done' : i === active ? ' is-active' : '') : done ? ' is-done' : '';
 const g = ziggurat(tiers);
 const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
 ---
 <svg
-  class={`zig zig--${variant} ${cls}`}
+  class={`zig zig--${variant} ${deferred ? 'zig--deferred' : ''} ${cls}`}
   viewBox={g.viewBox}
   xmlns="http://www.w3.org/2000/svg"
   role={label ? 'img' : undefined}
@@ -45,6 +46,7 @@ const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
     </g>
   ))}
   <path class="zig__line" d={g.stairLine} pathLength="1" stroke={`url(#zig-glow-${variant})`} />
+  {variant !== 'mini' && <path class="zig__run" d={g.stairLine} pathLength="1" />}
 </svg>
 
 <style>
@@ -79,17 +81,44 @@ const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
     stroke-dashoffset: 1;
     animation: zig-line 1.3s var(--ease-in-out) 1.35s forwards;
   }
+  /* الهيرو في الرئيسية: البناء ينتظر بداية مشهد الحروف ويمتد نحو 2.4 ثانية */
+  :global(.js:not(.rm)) .zig--deferred:not(.is-go) .zt { opacity: 0; animation: none; }
+  :global(.js:not(.rm)) .zig--deferred:not(.is-go) .zig__line { stroke-dashoffset: 1; animation: none; }
+  :global(.js) .zig--deferred.is-go .zt { animation: zt-rise 1.15s var(--ease-expo) both; animation-delay: calc(0.2s + var(--i) * 0.24s); }
+  :global(.js) .zig--deferred.is-go .zig__line { stroke-dashoffset: 1; animation: zig-line 1.1s var(--ease-in-out) 2.1s forwards; }
   :global(.js) .zig--cta:not(.is-in) .zt { opacity: 0; }
   :global(.js) .zig--cta:not(.is-in) .zig__line { stroke-dashoffset: 1; }
   @keyframes zt-rise { from { opacity: 0; transform: translateY(46px); } }
   @keyframes zig-line { to { stroke-dashoffset: 0; } }
+  /* حياة بعد البناء: ضوء طوبي يصعد الدرج كل 6 ثوانٍ */
+  .zig__run {
+    fill: none;
+    stroke: #f2c4c5;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 0.06 1.2;
+    stroke-dashoffset: 0.06;
+    opacity: 0;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 8px rgba(196, 89, 91, 1));
+  }
+  :global(.js) .zig--hero:not(.zig--deferred) .zig__run,
+  :global(.js) .zig--deferred.is-go .zig__run { animation: zig-run 6s linear 3.4s infinite; }
+  :global(.js) .zig--cta.is-in .zig__run { animation: zig-run 6s linear 3.2s infinite; }
+  @keyframes zig-run {
+    0% { stroke-dashoffset: 0.06; opacity: 0; }
+    4% { opacity: 1; }
+    36% { opacity: 1; }
+    40% { stroke-dashoffset: -1; opacity: 0; }
+    100% { stroke-dashoffset: -1; opacity: 0; }
+  }
   .zig--cta.is-in { animation: zig-breathe 5s var(--ease-in-out) 2.8s infinite alternate; }
   @keyframes zig-breathe { to { filter: drop-shadow(0 0 28px rgba(196, 89, 91, 0.35)); } }
 
   /* القسم المثبّت: قادمة (منقطة) / نشطة (طوبي متوهج) / مكتملة (كريمية) */
   .zig--scroll .zt polygon { transition: fill 0.5s var(--ease-out), stroke 0.5s var(--ease-out); }
   .zig--scroll .zt { transition: opacity 0.5s var(--ease-out), filter 0.5s var(--ease-out); }
-  .zig--scroll .zt:not(.is-done):not(.is-active) polygon { fill: transparent; stroke: rgba(244, 239, 228, 0.32); stroke-dasharray: 4 5; }
+  .zig--scroll .zt:not(.is-done):not(.is-active) polygon { fill: transparent; stroke: rgba(244, 239, 228, 0.5); stroke-dasharray: 4 5; }
   .zig--scroll .zt:not(.is-done):not(.is-active) .zt__stair,
   .zig--scroll .zt:not(.is-done):not(.is-active) .zt__steps { opacity: 0; }
   .zig--scroll .zt.is-done .zt__top { fill: var(--cream-100); stroke: var(--cream-50); }

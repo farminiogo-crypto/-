@@ -5,6 +5,7 @@ import Header from '@/components/layout/Header.astro';
 import Footer from '@/components/layout/Footer.astro';
 import WhatsAppFab from '@/components/layout/WhatsAppFab.astro';
 import Motion from '@/components/layout/Motion.astro';
+import Analytics from '@/components/layout/Analytics.astro';
 import { site, siteUrl } from '@/config/site';
 
 interface Props {
@@ -18,6 +19,7 @@ interface Props {
   headerTone?: 'dark' | 'light'; // لون الخلفية تحت الهيدر في أعلى الصفحة
   preloader?: boolean;
   preloadHeading?: boolean;
+  fab?: boolean; // زر واتساب العائم (يُخفى في صفحات النماذج حتى لا يغطي الحقول)
 }
 
 const {
@@ -31,6 +33,7 @@ const {
   headerTone = 'dark',
   preloader = false,
   preloadHeading = false,
+  fab = true,
 } = Astro.props;
 
 const pageTitle = fullTitle ? title : `${title} | ${site.nameAr}`;
@@ -42,6 +45,7 @@ const orgLd = {
   '@type': 'ProfessionalService',
   name: site.nameAr,
   alternateName: site.nameEn,
+  ...(site.legalEntity ? { legalName: site.legalEntity } : {}),
   description: site.description,
   ...(siteUrl ? { url: siteUrl, logo: `${siteUrl}/brand/logo.svg` } : {}),
   areaServed: { '@type': 'Country', name: 'المملكة العربية السعودية' },
@@ -101,7 +105,7 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
             window.addEventListener('DOMContentLoaded', function () {
               if (performance.now() < 280) d.classList.remove('intro');
             });
-            setTimeout(function () { d.classList.remove('intro'); }, 1300);
+            setTimeout(function () { d.classList.remove('intro'); }, 1000);
           } catch (e) {}
         })();
       </script>
@@ -128,8 +132,9 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
       <slot />
     </main>
     <Footer />
-    <WhatsAppFab />
+    {fab && <WhatsAppFab />}
     {motion && <Motion />}
+    <Analytics />
   </body>
 </html>
 
@@ -144,10 +149,10 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
     z-index: 300;
     background: var(--indigo-950);
     color: var(--on-dark);
-    animation: intro-in 0.2s linear both, intro-out 0.35s var(--ease-in-out) 0.85s forwards;
+    animation: intro-in 0.2s linear both, intro-out 0.32s var(--ease-in-out) 0.62s forwards;
   }
   @keyframes intro-in { from { opacity: 0; } }
-  .intro .intro-screen svg { animation: intro-rise 0.35s var(--ease-in-out) 0.8s forwards; }
+  .intro .intro-screen svg { animation: intro-rise 0.32s var(--ease-in-out) 0.58s forwards; }
   .intro-screen .it {
     fill: var(--cream-100);
     transform-box: fill-box;
@@ -156,15 +161,15 @@ const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) 
     animation: intro-tier 0.28s var(--ease-out) forwards;
   }
   .intro-screen .it1 { animation-delay: 0.05s; }
-  .intro-screen .it2 { animation-delay: 0.2s; }
-  .intro-screen .it3 { animation-delay: 0.35s; }
-  .intro-screen .it4 { animation-delay: 0.5s; }
+  .intro-screen .it2 { animation-delay: 0.14s; }
+  .intro-screen .it3 { animation-delay: 0.23s; }
+  .intro-screen .it4 { animation-delay: 0.32s; }
   .intro-screen .it-stair {
     fill: var(--brick-600);
     transform-box: fill-box;
     transform-origin: 50% 100%;
     transform: scaleY(0);
-    animation: intro-tier 0.3s var(--ease-out) 0.6s forwards;
+    animation: intro-tier 0.26s var(--ease-out) 0.4s forwards;
   }
   @keyframes intro-tier { to { transform: scaleY(1); } }
   @keyframes intro-rise { to { transform: translateY(-38vh) scale(0.45); opacity: 0; } }

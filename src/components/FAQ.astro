@@ -11,7 +11,7 @@ const ld = {
   mainEntity: items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })),
 };
 ---
-<div class={`faq ${dark ? 'faq--dark' : ''}`} data-reveal="stagger">
+<div class={`faq ${dark ? 'faq--dark' : ''}`} data-reveal="stagger" data-fab-hide>
   {items.map((it) => (
     <details class="faq__item" data-faq>
       <summary class="faq__q">
