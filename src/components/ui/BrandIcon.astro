@@ -1,0 +1,6 @@
+---
+import { brandIcons, type BrandIconName } from '@/lib/brand-icons';
+interface Props { name: BrandIconName; size?: number; class?: string }
+const { name, size = 22, class: cls = '' } = Astro.props;
+---
+<svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" class={`icon ${cls}`} aria-hidden="true"><path d={brandIcons[name]} /></svg>

@@ -1,0 +1,164 @@
+---
+import '@/styles/tokens.css';
+import '@/styles/base.css';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import WhatsAppFab from '@/components/layout/WhatsAppFab.astro';
+import Motion from '@/components/layout/Motion.astro';
+import { site, siteUrl } from '@/config/site';
+
+interface Props {
+  title: string; // عنوان الصفحة بدون اسم الموقع
+  description?: string;
+  fullTitle?: boolean; // إن كان العنوان كاملًا لا يضاف اسم الموقع
+  ogImage?: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  motion?: boolean; // تحميل GSAP وLenis
+  headerTone?: 'dark' | 'light'; // لون الخلفية تحت الهيدر في أعلى الصفحة
+  preloader?: boolean;
+  preloadHeading?: boolean;
+}
+
+const {
+  title,
+  description = site.description,
+  fullTitle = false,
+  ogImage = '/og/default.png',
+  noindex = false,
+  jsonLd,
+  motion = true,
+  headerTone = 'dark',
+  preloader = false,
+  preloadHeading = true,
+} = Astro.props;
+
+const pageTitle = fullTitle ? title : `${title} | ${site.nameAr}`;
+const canonical = siteUrl ? new URL(Astro.url.pathname, siteUrl).href : null;
+const ogImageUrl = siteUrl ? new URL(ogImage, siteUrl).href : ogImage;
+
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfessionalService',
+  name: site.nameAr,
+  alternateName: site.nameEn,
+  description: site.description,
+  ...(siteUrl ? { url: siteUrl, logo: `${siteUrl}/brand/logo.svg` } : {}),
+  areaServed: { '@type': 'Country', name: 'المملكة العربية السعودية' },
+  address: { '@type': 'PostalAddress', addressLocality: site.city, addressCountry: 'SA' },
+  telephone: `+${site.whatsapp}`,
+  ...(site.email ? { email: site.email } : {}),
+  sameAs: Object.values(site.social).filter(Boolean),
+};
+const ldList = [orgLd, ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [])];
+---
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <meta name="theme-color" content="#2C1A45" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ar_SA" />
+    <meta property="og:site_name" content={site.nameAr} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {preloadHeading && <link rel="preload" href="/fonts/amiri-arabic-700-normal.woff2" as="font" type="font/woff2" crossorigin />}
+    <link rel="preload" href="/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('rm');
+      })();
+    </script>
+    {preloader && (
+      <script is:inline>
+        (function () {
+          try {
+            if (document.documentElement.classList.contains('rm')) return;
+            if (sessionStorage.getItem('babel-intro')) return;
+            sessionStorage.setItem('babel-intro', '1');
+            document.documentElement.classList.add('intro');
+          } catch (e) {}
+        })();
+      </script>
+    )}
+
+    {ldList.map((ld) => <script type="application/ld+json" set:html={JSON.stringify(ld)} />)}
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">تخطَّ إلى المحتوى</a>
+    {preloader && (
+      <div class="intro-screen" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="84" height="84">
+          <rect class="it it1" x="2" y="30" width="36" height="7" rx="1" />
+          <rect class="it it2" x="7" y="22.5" width="26" height="7" rx="1" />
+          <rect class="it it3" x="11.5" y="15" width="17" height="7" rx="1" />
+          <rect class="it it4" x="15.5" y="7.5" width="9" height="7" rx="1" />
+          <rect class="it-stair" x="18" y="7.5" width="4" height="29.5" />
+        </svg>
+      </div>
+    )}
+    <Header tone={headerTone} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+    <WhatsAppFab />
+    {motion && <Motion />}
+  </body>
+</html>
+
+<style is:global>
+  main:focus { outline: none; }
+  .intro-screen { display: none; }
+  .intro .intro-screen {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--indigo-950);
+    color: var(--on-dark);
+    animation: intro-out 0.35s var(--ease-in-out) 0.85s forwards;
+  }
+  .intro .intro-screen svg { animation: intro-rise 0.35s var(--ease-in-out) 0.8s forwards; }
+  .intro-screen .it {
+    fill: var(--cream-100);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transform: scaleY(0);
+    animation: intro-tier 0.28s var(--ease-out) forwards;
+  }
+  .intro-screen .it1 { animation-delay: 0.05s; }
+  .intro-screen .it2 { animation-delay: 0.2s; }
+  .intro-screen .it3 { animation-delay: 0.35s; }
+  .intro-screen .it4 { animation-delay: 0.5s; }
+  .intro-screen .it-stair {
+    fill: var(--brick-600);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transform: scaleY(0);
+    animation: intro-tier 0.3s var(--ease-out) 0.6s forwards;
+  }
+  @keyframes intro-tier { to { transform: scaleY(1); } }
+  @keyframes intro-rise { to { transform: translateY(-38vh) scale(0.45); opacity: 0; } }
+  @keyframes intro-out { to { opacity: 0; visibility: hidden; } }
+</style>

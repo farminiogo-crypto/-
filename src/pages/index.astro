@@ -1,0 +1,18 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/PageHero.astro';
+import SectionTitle from '@/components/ui/SectionTitle.astro';
+---
+<BaseLayout title="بابل أكاديمي" fullTitle>
+  <PageHero eyebrow="المرحلة الأولى" title="من الفكرة إلى المناقشة… نصعد معك درجةً درجة." lead="صفحة مؤقتة لاختبار نظام التصميم والهيدر والفوتر.">
+    <a slot="actions" class="btn btn--primary btn--lg" href="/request/" data-magnetic>ابدأ طلبك في دقيقة</a>
+    <a slot="actions" class="btn btn--outline btn--lg" href="#x">أرسل ملفك على واتساب</a>
+  </PageHero>
+  <section class="section">
+    <div class="container">
+      <SectionTitle eyebrow="اختبار" title="رسالتك تُبنى طبقةً فوق طبقة. ونحن معك عند كل طبقة." lead="فقرة تجريبية لاختبار الخط والإيقاع والمسافات على الكريمي." />
+      <div class="card" style="padding:2rem" data-reveal="fade"><p>بطاقة</p></div>
+      <div style="height:120vh"></div>
+    </div>
+  </section>
+</BaseLayout>

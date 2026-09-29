@@ -1,0 +1,42 @@
+---
+import LogoMark from './LogoMark.astro';
+import { site } from '@/config/site';
+interface Props { href?: string; class?: string; size?: 'md' | 'lg' }
+const { href = '/', class: cls = '', size = 'md' } = Astro.props;
+---
+<a href={href} class={`logo logo--${size} ${cls}`} aria-label={`${site.nameAr} — الصفحة الرئيسية`}>
+  <LogoMark size={size === 'lg' ? 52 : 40} />
+  <span class="logo__text">
+    <span class="logo__ar">{site.nameAr}</span>
+    <span class="logo__en" lang="en">{site.nameEn}</span>
+  </span>
+</a>
+
+<style>
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--indigo-900);
+    min-height: 44px;
+  }
+  .logo__text { display: flex; flex-direction: column; line-height: 1; }
+  .logo__ar {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.45rem;
+    line-height: 1.2;
+  }
+  .logo__en {
+    font-family: var(--font-latin);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    opacity: 0.75;
+    margin-top: 0.1rem;
+    direction: ltr;
+    text-align: right;
+  }
+  .logo--lg .logo__ar { font-size: 1.8rem; }
+  .logo--lg .logo__en { font-size: 0.82rem; }
+</style>

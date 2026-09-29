@@ -1,0 +1,430 @@
+---
+import { getCollection } from 'astro:content';
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+import BrandIcon from '@/components/ui/BrandIcon.astro';
+import { wa, waMessages } from '@/config/site';
+
+interface Props { tone?: 'dark' | 'light' }
+const { tone = 'dark' } = Astro.props;
+
+const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const fields = (await getCollection('fields')).sort((a, b) => a.data.order - b.data.order);
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+
+const links = [
+  { href: '/work/', label: 'أعمالنا' },
+  { href: '/process/', label: 'كيف نعمل' },
+  { href: '/about/', label: 'من نحن' },
+  { href: '/blog/', label: 'المدونة' },
+];
+const mobileLinks = [
+  { href: '/', label: 'الرئيسية' },
+  { href: '/services/', label: 'الخدمات' },
+  ...links,
+  { href: '/faq/', label: 'الأسئلة الشائعة' },
+  { href: '/contact/', label: 'تواصل معنا' },
+];
+---
+<header class="site-header" data-header data-tone={tone}>
+  <div class="container site-header__inner">
+    <Logo class="site-header__logo" />
+
+    <nav class="site-nav" aria-label="القائمة الرئيسية">
+      <ul role="list" class="site-nav__list">
+        <li class="has-mega">
+          <a class="site-nav__link nojs-link" href="/services/">الخدمات</a>
+          <button class="site-nav__link mega-toggle" type="button" aria-expanded="false" aria-controls="mega-services" data-mega-toggle>
+            الخدمات <Icon name="chevron-down" size={16} class="mega-toggle__chev" />
+          </button>
+          <div class="mega" id="mega-services" data-mega hidden>
+            <div class="mega__inner">
+              <div class="mega__services">
+                <p class="mega__label">الخدمات</p>
+                <ul role="list" class="mega__grid">
+                  {services.map((s) => (
+                    <li>
+                      <a class="mega__item" href={`/services/${s.id}/`}>
+                        <span class="mega__icon"><Icon name={s.data.icon} size={22} /></span>
+                        <span>
+                          <span class="mega__title">{s.data.title}</span>
+                          <span class="mega__short">{s.data.short}</span>
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div class="mega__side">
+                {fields.length > 0 && (
+                  <>
+                    <p class="mega__label">المجالات الأكاديمية</p>
+                    <ul role="list" class="mega__fields">
+                      {fields.map((f) => (
+                        <li><a href={`/fields/${f.id}/`}>{f.data.title}</a></li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <div class="mega__cta">
+                  <p>لا تعرف أي خدمة تحتاج؟ أخبرنا أين وصلت في رسالتك، ونقترح عليك الخطوة التالية.</p>
+                  <a class="btn btn--primary btn--sm" href="/request/">ابدأ طلبك</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+        {links.map((l) => (
+          <li><a class="site-nav__link" href={l.href} aria-current={isActive(l.href) ? 'page' : undefined}>{l.label}</a></li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <a class="hdr-wa" href={wa(waMessages.general)} target="_blank" rel="noopener" aria-label="تواصل معنا عبر واتساب">
+        <BrandIcon name="whatsapp" size={20} />
+      </a>
+      <a class="btn btn--primary btn--sm hdr-cta" href="/request/" data-magnetic>ابدأ طلبك</a>
+      <a class="menu-fallback" href="#footer-nav">القائمة</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="فتح القائمة" data-menu-toggle>
+        <span class="menu-toggle__bars" aria-hidden="true"><span></span><span></span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" data-menu hidden>
+  <div class="mobile-menu__inner container">
+    <nav aria-label="قائمة الجوال">
+      <ul role="list" class="mobile-menu__list">
+        {mobileLinks.map((l, i) => (
+          <li style={`--i:${i}`}>
+            <a href={l.href} aria-current={isActive(l.href) && l.href !== '/' ? 'page' : path === '/' && l.href === '/' ? 'page' : undefined}>{l.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+    <div class="mobile-menu__actions" style={`--i:${mobileLinks.length}`}>
+      <a class="btn btn--primary btn--lg btn--block" href="/request/">ابدأ طلبك في دقيقة</a>
+      <a class="btn btn--wa btn--lg btn--block" href={wa(waMessages.general)} target="_blank" rel="noopener">
+        <BrandIcon name="whatsapp" /> تحدث معنا على واتساب
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .site-header {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 100;
+    height: var(--header-h);
+    color: var(--indigo-900);
+    transition: transform 0.45s var(--ease-out), background-color 0.3s var(--ease-out),
+      box-shadow 0.3s var(--ease-out), color 0.3s var(--ease-out);
+    view-transition-name: site-header;
+  }
+  .site-header[data-tone='dark'] { color: var(--on-dark); }
+  .site-header.is-scrolled,
+  .site-header.is-open-mega {
+    color: var(--indigo-900);
+    background: rgba(250, 247, 240, 0.93);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: 0 1px 0 var(--line-light), 0 10px 30px -18px rgba(44, 26, 69, 0.35);
+  }
+  .site-header.is-hidden:not(.is-open-mega) { transform: translateY(-110%); }
+  .site-header__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+  .site-header :global(.logo) { color: inherit; }
+
+  .site-nav { display: none; }
+  .site-nav__list { display: flex; align-items: center; gap: 0.25rem; }
+  .site-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 44px;
+    padding: 0.5rem 0.9rem;
+    border: 0;
+    background: none;
+    border-radius: var(--radius-pill);
+    color: inherit;
+    font-weight: 500;
+    font-size: 1rem;
+    text-decoration: none;
+    position: relative;
+    transition: background-color var(--dur-s) var(--ease-out);
+  }
+  .site-nav__link:hover { background: rgba(127, 110, 150, 0.14); }
+  .site-nav__link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.9rem;
+    bottom: 6px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--brick-600);
+  }
+  .site-header[data-tone='dark']:not(.is-scrolled):not(.is-open-mega) .site-nav__link[aria-current='page']::after { background: var(--brick-400); }
+  .nojs-link { display: none; }
+  :global(html:not(.js)) .nojs-link { display: inline-flex; }
+  :global(html:not(.js)) .mega-toggle { display: none; }
+  .mega-toggle__chev { transition: transform var(--dur-s) var(--ease-out); }
+  .mega-toggle[aria-expanded='true'] .mega-toggle__chev { transform: rotate(180deg); }
+
+  .site-header__actions { display: flex; align-items: center; gap: 0.6rem; }
+  .hdr-wa {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: inherit;
+    border: 1.5px solid currentColor;
+    opacity: 0.9;
+    transition: background-color var(--dur-s), color var(--dur-s), border-color var(--dur-s);
+  }
+  .hdr-wa:hover { background: var(--whatsapp); border-color: var(--whatsapp); color: #0B2A18; opacity: 1; }
+  .hdr-cta { display: none; }
+
+  .menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    position: relative;
+    z-index: 2;
+  }
+  .menu-toggle__bars { width: 22px; height: 12px; position: relative; }
+  .menu-toggle__bars span {
+    position: absolute;
+    inset-inline: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.4s var(--ease-expo), top 0.4s var(--ease-expo);
+  }
+  .menu-toggle__bars span:first-child { top: 0; }
+  .menu-toggle__bars span:last-child { top: 10px; }
+  .menu-toggle[aria-expanded='true'] .menu-toggle__bars span:first-child { top: 5px; transform: rotate(45deg); }
+  .menu-toggle[aria-expanded='true'] .menu-toggle__bars span:last-child { top: 5px; transform: rotate(-45deg); }
+
+  .menu-fallback { display: none; }
+  :global(html:not(.js)) .menu-toggle { display: none; }
+  :global(html:not(.js)) .menu-fallback {
+    display: inline-flex; align-items: center; min-height: 44px; padding-inline: 0.75rem; color: inherit; font-weight: 600;
+  }
+  @media (min-width: 1024px) {
+    .site-nav { display: block; }
+    :global(html:not(.js)) .menu-fallback { display: none; }
+    .hdr-cta { display: inline-flex; }
+    .menu-toggle { display: none; }
+  }
+
+  /* القائمة الكبيرة */
+  .has-mega { position: static; }
+  .mega {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    padding-top: 10px;
+    color: var(--ink);
+  }
+  .mega[hidden] { display: none; }
+  .mega__inner {
+    width: min(calc(100% - var(--gutter) * 2), var(--container));
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
+    padding: 2rem;
+    background: var(--cream-50);
+    border: 1px solid var(--line-light);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-3);
+    animation: mega-in 0.35s var(--ease-out);
+  }
+  @keyframes mega-in { from { opacity: 0; transform: translateY(-8px); } }
+  .mega__label { font-size: var(--fs-xs); font-weight: 600; color: var(--ink-muted); margin-bottom: 0.75rem; }
+  .mega__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.25rem 1rem; }
+  .mega__item {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 0.75rem;
+    border-radius: var(--radius-m);
+    text-decoration: none;
+    transition: background-color var(--dur-s);
+  }
+  .mega__item:hover, .mega__item:focus-visible { background: var(--indigo-tint); }
+  .mega__icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--indigo-900);
+    color: var(--cream-100);
+  }
+  .mega__item:hover .mega__icon { background: var(--brick-600); }
+  .mega__title { display: block; font-weight: 600; color: var(--indigo-900); line-height: 1.5; }
+  .mega__short {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+    color: var(--ink-muted);
+  }
+  .mega__side { border-inline-start: 1px solid var(--line-light); padding-inline-start: 2rem; display: flex; flex-direction: column; }
+  .mega__fields { display: grid; gap: 0.1rem; margin-bottom: 1.5rem; }
+  .mega__fields a { display: block; padding: 0.35rem 0; text-decoration: none; color: var(--indigo-900); font-size: var(--fs-small); }
+  .mega__fields a:hover { color: var(--brick-600); }
+  .mega__cta {
+    margin-top: auto;
+    padding: 1.25rem;
+    border-radius: var(--radius-m);
+    background: var(--indigo-900);
+    color: var(--on-dark);
+    font-size: var(--fs-small);
+    line-height: 1.7;
+  }
+  .mega__cta p { margin-bottom: 1rem; }
+
+  /* قائمة الجوال */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: radial-gradient(ellipse at 80% 0%, var(--indigo-700), var(--indigo-950) 70%);
+    color: var(--on-dark);
+    overflow-y: auto;
+    padding-top: calc(var(--header-h) + 1rem);
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 0.6s var(--ease-expo);
+  }
+  .mobile-menu[hidden] { display: none; }
+  .mobile-menu.is-open { clip-path: inset(0 0 0 0); }
+  .mobile-menu__list { display: grid; gap: 0.1rem; }
+  .mobile-menu__list a {
+    display: block;
+    padding: 0.55rem 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+    color: var(--on-dark);
+  }
+  .mobile-menu__list a[aria-current='page'] { color: var(--brick-400); }
+  .mobile-menu__list li, .mobile-menu__actions {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+    transition-delay: calc(0.18s + var(--i) * 0.05s);
+  }
+  .mobile-menu.is-open li, .mobile-menu.is-open .mobile-menu__actions { opacity: 1; transform: none; }
+  .mobile-menu__actions { display: grid; gap: 0.75rem; margin-top: 2rem; }
+  .menu-open .site-header { color: var(--on-dark) !important; background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; transform: none !important; }
+  .menu-open { overflow: hidden; }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]')!;
+  const megaToggle = header.querySelector<HTMLButtonElement>('[data-mega-toggle]');
+  const mega = header.querySelector<HTMLElement>('[data-mega]');
+  const menuToggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]')!;
+  const menu = document.querySelector<HTMLElement>('[data-menu]')!;
+
+  // الحالة عند التمرير: شفاف في الأعلى، زجاجي كريمي بعد النزول، يختفي نزولًا ويظهر صعودًا
+  let lastY = window.scrollY;
+  let ticking = false;
+  const onScroll = () => {
+    const y = window.scrollY;
+    header.classList.toggle('is-scrolled', y > 12);
+    if (!document.documentElement.classList.contains('menu-open')) {
+      const goingDown = y > lastY + 4;
+      const goingUp = y < lastY - 4;
+      if (goingDown && y > 160) header.classList.add('is-hidden');
+      else if (goingUp || y < 160) header.classList.remove('is-hidden');
+    }
+    lastY = y;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(onScroll); ticking = true; }
+  }, { passive: true });
+  onScroll();
+
+  // القائمة الكبيرة
+  if (megaToggle && mega) {
+    let closeTimer: number | undefined;
+    const setMega = (open: boolean) => {
+      megaToggle.setAttribute('aria-expanded', String(open));
+      mega.hidden = !open;
+      header.classList.toggle('is-open-mega', open);
+    };
+    megaToggle.addEventListener('click', () => setMega(megaToggle.getAttribute('aria-expanded') !== 'true'));
+    const li = megaToggle.parentElement!;
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (canHover) {
+      li.addEventListener('mouseenter', () => { clearTimeout(closeTimer); setMega(true); });
+      li.addEventListener('mouseleave', () => { closeTimer = window.setTimeout(() => setMega(false), 180); });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && megaToggle.getAttribute('aria-expanded') === 'true') { setMega(false); megaToggle.focus(); }
+    });
+    document.addEventListener('click', (e) => {
+      if (!li.contains(e.target as Node)) setMega(false);
+    });
+    li.addEventListener('focusout', (e) => {
+      if (!li.contains(e.relatedTarget as Node)) setMega(false);
+    });
+  }
+
+  // قائمة الجوال: ستارة من الأعلى
+  const setMenu = (open: boolean) => {
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.setAttribute('aria-label', open ? 'إغلاق القائمة' : 'فتح القائمة');
+    document.documentElement.classList.toggle('menu-open', open);
+    if (open) {
+      menu.hidden = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => menu.classList.add('is-open')));
+      menu.querySelector<HTMLElement>('a')?.focus({ preventScroll: true });
+    } else {
+      menu.classList.remove('is-open');
+      window.setTimeout(() => { if (!menu.classList.contains('is-open')) menu.hidden = true; }, 600);
+    }
+  };
+  menuToggle.addEventListener('click', () => setMenu(menuToggle.getAttribute('aria-expanded') !== 'true'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menuToggle.getAttribute('aria-expanded') === 'true') { setMenu(false); menuToggle.focus(); }
+    // حصر التنقل بالكيبورد داخل القائمة المفتوحة
+    if (e.key === 'Tab' && menu.classList.contains('is-open')) {
+      const focusables = [menuToggle, ...menu.querySelectorAll<HTMLElement>('a')];
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  menu.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a')) setMenu(false);
+  });
+  window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => { if (e.matches) setMenu(false); });
+</script>

@@ -1,0 +1,59 @@
+---
+import Breadcrumbs, { type Crumb } from '@/components/ui/Breadcrumbs.astro';
+import Ziggurat from '@/components/Ziggurat.astro';
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  crumbs?: Crumb[];
+  tower?: boolean;
+  compact?: boolean;
+}
+const { eyebrow, title, lead, crumbs, tower = true, compact = false } = Astro.props;
+---
+<section class={`page-hero section--dark ${compact ? 'page-hero--compact' : ''}`}>
+  <div class="container page-hero__grid">
+    <div class="page-hero__text">
+      {crumbs && <Breadcrumbs items={crumbs} />}
+      {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+      <h1 class="page-hero__title">{title}</h1>
+      {lead && <p class="lead page-hero__lead">{lead}</p>}
+      <div class="page-hero__actions"><slot name="actions" /></div>
+      <slot />
+    </div>
+    {tower && (
+      <div class="page-hero__art" aria-hidden="true">
+        <Ziggurat variant="hero" tiers={7} />
+      </div>
+    )}
+  </div>
+</section>
+
+<style>
+  .page-hero {
+    position: relative;
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 1.5rem + 4vw, 5rem));
+    padding-bottom: clamp(3.5rem, 2.5rem + 4vw, 6rem);
+    overflow: clip;
+  }
+  .page-hero--compact { padding-bottom: clamp(2.5rem, 2rem + 2vw, 4rem); }
+  .page-hero__grid { display: grid; gap: 2.5rem; align-items: center; }
+  .page-hero__text { display: grid; gap: 1.1rem; justify-items: start; max-width: 760px; }
+  .page-hero__title {
+    font-size: var(--fs-h1);
+    line-height: 1.35;
+    animation: hero-word 1s var(--ease-expo) 0.1s both;
+  }
+  .page-hero__lead { color: var(--on-dark-muted); max-width: 60ch; animation: hero-word 1s var(--ease-expo) 0.25s both; }
+  .page-hero__actions:empty { display: none; }
+  .page-hero__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; animation: hero-word 1s var(--ease-expo) 0.4s both; }
+  .page-hero__art { display: none; }
+  @keyframes hero-word { from { opacity: 0; transform: translateY(24px); } }
+  @media (min-width: 900px) {
+    .page-hero__grid { grid-template-columns: 1fr 340px; }
+    .page-hero__art { display: block; opacity: 0.9; }
+  }
+  @media (max-width: 480px) {
+    .page-hero__actions :global(.btn) { width: 100%; }
+  }
+</style>

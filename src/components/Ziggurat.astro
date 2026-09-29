@@ -1,0 +1,106 @@
+---
+import { ziggurat } from '@/lib/ziggurat';
+
+interface Props {
+  variant?: 'hero' | 'scroll' | 'cta' | 'mini';
+  tiers?: number;
+  numbered?: boolean;
+  class?: string;
+  label?: string;
+}
+const { variant = 'hero', tiers = 7, numbered = false, class: cls = '', label } = Astro.props;
+const g = ziggurat(tiers);
+const arabicDigits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+---
+<svg
+  class={`zig zig--${variant} ${cls}`}
+  viewBox={g.viewBox}
+  xmlns="http://www.w3.org/2000/svg"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  data-zig
+>
+  <defs>
+    <linearGradient id={`zig-glow-${variant}`} x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="var(--brick-600)" />
+      <stop offset="1" stop-color="var(--brick-400)" />
+    </linearGradient>
+  </defs>
+  <ellipse class="zig__shadow" cx={g.shadow.cx} cy={g.shadow.cy} rx={g.shadow.rx} ry={g.shadow.ry} />
+  {g.tiers.map((t) => (
+    <g class="zt" data-tier={t.index} style={`--i:${t.index}`}>
+      <polygon class="zt__left" points={t.left} />
+      <polygon class="zt__right" points={t.right} />
+      <polygon class="zt__top" points={t.top} />
+      <polygon class="zt__stair" points={t.stair} />
+      <path class="zt__steps" d={t.steps} />
+      {numbered && (
+        <text class="zt__num" x={t.labelAt[0] - 34} y={t.labelAt[1] + 6} text-anchor="middle">{arabicDigits[t.index]}</text>
+      )}
+    </g>
+  ))}
+  <path class="zig__line" d={g.stairLine} pathLength="1" stroke={`url(#zig-glow-${variant})`} />
+</svg>
+
+<style>
+  .zig { width: 100%; height: auto; overflow: visible; }
+  .zig__shadow { fill: rgba(10, 5, 20, 0.45); filter: blur(18px); }
+  .zt polygon { stroke-linejoin: round; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+  .zt__top { fill: rgba(244, 239, 228, 0.16); stroke: rgba(244, 239, 228, 0.45); }
+  .zt__left { fill: rgba(244, 239, 228, 0.09); stroke: rgba(244, 239, 228, 0.3); }
+  .zt__right { fill: rgba(26, 15, 43, 0.5); stroke: rgba(244, 239, 228, 0.22); }
+  .zt__stair { fill: rgba(166, 61, 64, 0.55); stroke: none; }
+  .zt__steps { stroke: rgba(244, 239, 228, 0.35); stroke-width: 1; fill: none; vector-effect: non-scaling-stroke; }
+  .zt__num { font-family: var(--font-display); font-size: 17px; font-weight: 700; fill: rgba(244, 239, 228, 0.55); }
+  .zig__line {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    vector-effect: non-scaling-stroke;
+    filter: drop-shadow(0 0 6px rgba(196, 89, 91, 0.9));
+  }
+
+  /* الهيرو والختام: الطبقات ترتفع واحدة فوق الأخرى ثم يضيء الدرج */
+  :global(.js) .zig--hero .zt,
+  :global(.js) .zig--cta.is-in .zt {
+    animation: zt-rise 0.9s var(--ease-expo) both;
+    animation-delay: calc(0.35s + var(--i) * 0.13s);
+  }
+  :global(.js) .zig--hero .zig__line,
+  :global(.js) .zig--cta.is-in .zig__line {
+    stroke-dashoffset: 1;
+    animation: zig-line 1.3s var(--ease-in-out) 1.35s forwards;
+  }
+  :global(.js) .zig--cta:not(.is-in) .zt { opacity: 0; }
+  :global(.js) .zig--cta:not(.is-in) .zig__line { stroke-dashoffset: 1; }
+  @keyframes zt-rise { from { opacity: 0; transform: translateY(46px); } }
+  @keyframes zig-line { to { stroke-dashoffset: 0; } }
+  .zig--cta.is-in { animation: zig-breathe 5s var(--ease-in-out) 2.8s infinite alternate; }
+  @keyframes zig-breathe { to { filter: drop-shadow(0 0 28px rgba(196, 89, 91, 0.35)); } }
+
+  /* القسم المثبّت: قادمة (منقطة) / نشطة (طوبي متوهج) / مكتملة (كريمية) */
+  .zig--scroll .zt polygon { transition: fill 0.5s var(--ease-out), stroke 0.5s var(--ease-out); }
+  .zig--scroll .zt { transition: opacity 0.5s var(--ease-out), filter 0.5s var(--ease-out); }
+  .zig--scroll .zt:not(.is-done):not(.is-active) polygon { fill: transparent; stroke: rgba(244, 239, 228, 0.32); stroke-dasharray: 4 5; }
+  .zig--scroll .zt:not(.is-done):not(.is-active) .zt__stair,
+  .zig--scroll .zt:not(.is-done):not(.is-active) .zt__steps { opacity: 0; }
+  .zig--scroll .zt.is-done .zt__top { fill: var(--cream-100); stroke: var(--cream-50); }
+  .zig--scroll .zt.is-done .zt__left { fill: rgba(244, 239, 228, 0.78); stroke: rgba(244, 239, 228, 0.9); }
+  .zig--scroll .zt.is-done .zt__right { fill: rgba(244, 239, 228, 0.52); stroke: rgba(244, 239, 228, 0.7); }
+  .zig--scroll .zt.is-done .zt__stair { fill: var(--brick-600); }
+  .zig--scroll .zt.is-done .zt__steps { stroke: rgba(250, 247, 240, 0.6); }
+  .zig--scroll .zt.is-done .zt__num { fill: var(--indigo-900); }
+  .zig--scroll .zt.is-active { filter: drop-shadow(0 0 18px rgba(196, 89, 91, 0.75)); }
+  .zig--scroll .zt.is-active .zt__top { fill: var(--brick-400); stroke: rgba(244, 239, 228, 0.6); }
+  .zig--scroll .zt.is-active .zt__left { fill: var(--brick-600); stroke: var(--brick-400); }
+  .zig--scroll .zt.is-active .zt__right { fill: #7a2b2e; stroke: var(--brick-400); }
+  .zig--scroll .zt.is-active .zt__stair { fill: var(--cream-100); opacity: 0.5; }
+  .zig--scroll .zt.is-active .zt__num { fill: var(--cream-50); }
+  .zig--scroll .zig__line { stroke-dashoffset: calc(1 - var(--progress, 0)); transition: stroke-dashoffset 0.4s linear; }
+
+  .zig--mini .zig__shadow { display: none; }
+</style>
