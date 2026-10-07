@@ -1,0 +1,105 @@
+---
+// معاينة صغيرة لما يستلمه الطالب في كل طبقة (نص تجريبي عام)
+interface Props { layer: number }
+const { layer } = Astro.props;
+---
+<div class={`tp tp--${layer}`} aria-hidden="true">
+  {layer === 0 && (
+    <ul class="tp-list">
+      <li><span class="tp-line" style="--w:78%" /><em>بحاجة إلى تضييق</em></li>
+      <li class="is-pick"><span class="tp-line" style="--w:88%" /><em>قابل للبحث ✓</em></li>
+      <li><span class="tp-line" style="--w:70%" /><em>مراجع قليلة</em></li>
+    </ul>
+  )}
+  {layer === 1 && (
+    <div class="tp-matrix">
+      {['المشكلة', 'الهدف', 'السؤال', 'الفرضية', 'المنهج'].map((c, i) => (
+        <><span class="tp-cell">{c}</span>{i < 4 && <i>‹</i>}</>
+      ))}
+    </div>
+  )}
+  {layer === 2 && (
+    <table class="tp-likert">
+      <tr><th></th><th>٥</th><th>٤</th><th>٣</th><th>٢</th><th>١</th></tr>
+      {[1, 3, 2].map((on) => (
+        <tr><td><span class="tp-line" style="--w:100%" /></td>{[0, 1, 2, 3, 4].map((c) => <td><b class={c === on ? 'on' : ''} /></td>)}</tr>
+      ))}
+    </table>
+  )}
+  {layer === 3 && (
+    <table class="tp-stats">
+      <tr><th>المتغير</th><th>1</th><th>2</th></tr>
+      <tr><td>التحول الرقمي</td><td>1</td><td></td></tr>
+      <tr><td>الأداء المؤسسي</td><td>0.68<sup>**</sup></td><td>1</td></tr>
+    </table>
+  )}
+  {layer === 4 && (
+    <p class="tp-edit">
+      تشير النتائج <del>الى</del> <ins>إلى</ins> وجود علاقة <del>قوية جدا</del> <ins>طردية دالة</ins> بين المتغيرين<ins>،</ins> وهو ما يتفق مع الدراسات السابقة.
+    </p>
+  )}
+  {layer === 5 && (
+    <ul class="tp-refs" dir="ltr">
+      <li><span>Cronbach (1951)</span><b class="ok">✓</b></li>
+      <li><span>Fornell &amp; Larcker (1981)</span><b class="ok">✓</b></li>
+      <li class="bad"><span>Harlow &amp; Qasim (2021)</span><b>✕</b></li>
+    </ul>
+  )}
+  {layer === 6 && (
+    <div class="tp-slide">
+      <span class="tp-slide__k">عرض المناقشة</span>
+      <span class="tp-slide__t">النتائج والتوصيات</span>
+      <span class="tp-slide__bars"><i /><i /><i /></span>
+    </div>
+  )}
+</div>
+
+<style>
+  .tp {
+    margin-top: 0.4rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(250, 247, 240, 0.96);
+    color: var(--ink);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    box-shadow: 0 14px 30px -18px rgba(10, 5, 20, 0.8);
+    max-width: 380px;
+  }
+  .tp-line { display: block; width: var(--w, 100%); height: 7px; border-radius: 6px; background: rgba(30, 21, 48, 0.18); }
+  .tp-list { display: grid; gap: 0.45rem; }
+  .tp-list li { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: center; padding: 0.3rem 0.45rem; border-radius: 8px; }
+  .tp-list em { font-style: normal; font-size: 0.72rem; color: var(--ink-muted); }
+  .tp-list .is-pick { background: var(--brick-tint); outline: 1px solid rgba(166, 61, 64, 0.4); }
+  .tp-list .is-pick em { color: var(--brick-600); font-weight: 600; }
+  .tp-matrix { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
+  .tp-cell { padding: 0.25rem 0.55rem; border-radius: 6px; background: var(--indigo-900); color: var(--cream-100); font-weight: 600; font-size: 0.72rem; }
+  .tp-matrix i { font-style: normal; color: var(--brick-600); font-weight: 700; }
+  .tp-likert, .tp-stats { width: 100%; border-collapse: collapse; }
+  .tp-likert th { font-size: 0.68rem; color: var(--ink-muted); font-weight: 600; }
+  .tp-likert td { padding: 0.28rem 0.2rem; text-align: center; }
+  .tp-likert td:first-child { width: 48%; }
+  .tp-likert b { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(30, 21, 48, 0.35); }
+  .tp-likert b.on { background: var(--brick-600); border-color: var(--brick-600); }
+  .tp-stats th { background: var(--indigo-900); color: var(--cream-50); font-weight: 600; padding: 0.3rem; }
+  .tp-stats td { padding: 0.3rem; border-bottom: 1px solid var(--line-light); text-align: center; direction: ltr; font-weight: 600; color: var(--indigo-900); }
+  .tp-stats td:first-child { direction: rtl; text-align: start; font-weight: 500; }
+  .tp-stats sup { color: var(--brick-600); }
+  .tp-edit { font-size: 0.82rem; line-height: 1.9; }
+  .tp-edit del { color: var(--brick-600); text-decoration-thickness: 1.5px; }
+  .tp-edit ins { text-decoration: none; background: rgba(61, 40, 96, 0.12); color: var(--indigo-900); font-weight: 600; border-radius: 3px; padding: 0 2px; }
+  .tp-refs { display: grid; gap: 0.3rem; font-family: var(--font-latin); }
+  .tp-refs li { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .tp-refs b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 0.7rem; }
+  .tp-refs b.ok { background: rgba(37, 211, 102, 0.18); color: #127a3a; }
+  .tp-refs .bad span { text-decoration: line-through; color: var(--brick-600); }
+  .tp-refs .bad b { background: var(--brick-600); color: var(--cream-50); }
+  .tp-slide { display: grid; gap: 0.35rem; aspect-ratio: 16 / 7; padding: 0.7rem 0.9rem; border-radius: 8px; background: radial-gradient(ellipse at 20% 100%, var(--indigo-700), var(--indigo-950)); color: var(--cream-100); align-content: center; }
+  .tp-slide__k { font-size: 0.66rem; opacity: 0.7; }
+  .tp-slide__t { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; line-height: 1.3; }
+  .tp-slide__bars { display: flex; align-items: flex-end; gap: 4px; height: 18px; }
+  .tp-slide__bars i { width: 14px; background: rgba(244, 239, 228, 0.7); border-radius: 2px; }
+  .tp-slide__bars i:nth-child(1) { height: 40%; }
+  .tp-slide__bars i:nth-child(2) { height: 70%; }
+  .tp-slide__bars i:nth-child(3) { height: 100%; background: var(--brick-400); }
+</style>

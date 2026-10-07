@@ -32,10 +32,11 @@ const interpretation =
       </tbody>
     </table>
     <p class="sd__note">** دالة عند مستوى 0.01</p>
+    <p class="sd__digits">الأرقام في جداول الإحصاء لاتينية كما تخرج من SPSS، ونعرضها بالأرقام العربية إن طلب دليل جامعتك ذلك.</p>
   </div>
   <div class="sd__bubble" data-sd-bubble>
     <p class="sd__bubble-label">تفسير النتيجة</p>
-    <p class="sd__text" data-sd-text>{interpretation}</p>
+    <div class="sd__text-wrap"><p class="sd__text" data-sd-text>{interpretation}</p></div>
   </div>
 </div>
 
@@ -61,24 +62,33 @@ const interpretation =
     line-height: 1.85;
   }
   .sd__bubble-label { font-size: var(--fs-xs); font-weight: 600; color: var(--brick-400); margin-bottom: 0.25rem; }
-  .sd__text { min-height: 7.4em; }
+  .sd__text { min-height: 7.4em; position: relative; }
+  /* خطوط رمادية مكان النص حتى تبدأ الكتابة */
+  .sd__skel { position: absolute; inset: 0; display: grid; align-content: start; gap: 0.75em; padding-top: 0.55em; transition: opacity 0.3s; }
+  .sd__skel i { display: block; height: 0.55em; border-radius: 6px; background: rgba(244, 239, 228, 0.14); }
+  .sd__skel i:nth-child(2) { width: 92%; }
+  .sd__skel i:nth-child(3) { width: 96%; }
+  .sd__skel i:nth-child(4) { width: 60%; }
+  .sd.is-typing .sd__skel { opacity: 0; }
+  .sd__digits { font-size: var(--fs-xs); color: var(--ink-muted); line-height: 1.6; }
   .sd__text :global(.tw) { opacity: 0; transition: opacity 0.25s; }
   .sd__text :global(.tw.on) { opacity: 1; }
   :global(.js:not(.rm)) .sd:not(.is-done) .sd__star { opacity: 0; transform: scale(0.4); }
 </style>
 
 <script>
-  import { gsap, reducedMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
 
-  whenIdle(() => {
+  // مكتبة الحركة تُحمَّل بعد الرسم الأول، لا قبله
+  whenIdle(async () => {
+    const { gsap, reducedMotion } = await import('@/scripts/motion-core');
     document.querySelectorAll<HTMLElement>('[data-sd]').forEach((root) => {
       if (reducedMotion()) { root.classList.add('is-done'); return; }
       const vals = [...root.querySelectorAll<HTMLElement>('[data-sd-val]')];
       const text = root.querySelector<HTMLElement>('[data-sd-text]')!;
       // تقسيم التفسير إلى كلمات (لا حروف)
       const words = (text.textContent || '').trim().split(/\s+/);
-      text.innerHTML = words.map((w) => `<span class="tw">${w}</span>`).join(' ');
+      text.innerHTML = '<span class="sd__skel" aria-hidden="true"><i></i><i></i><i></i><i></i></span>' + words.map((w) => `<span class="tw">${w}</span>`).join(' ');
       const spans = [...text.querySelectorAll<HTMLElement>('.tw')];
       vals.forEach((v) => (v.textContent = '0.00'));
 
@@ -91,7 +101,9 @@ const interpretation =
           tl.to(o, { n: Number(v.dataset.sdVal), duration: 0.9, ease: 'power2.out', onUpdate: () => (v.textContent = o.n.toFixed(2)) }, i * 0.35);
         });
         tl.add(() => root.classList.add('is-done'), '+=0.1');
-        spans.forEach((s, i) => tl.add(() => s.classList.add('on'), `+=${i === 0 ? 0.35 : 0.075}`));
+        // الكتابة تبدأ مبكرًا بالتوازي مع العد، كلمة كلمة
+        tl.add(() => root.classList.add('is-typing'), 0.5);
+        spans.forEach((s, i) => tl.add(() => s.classList.add('on'), 0.55 + i * 0.065));
       }, { threshold: 0.45 });
       io.observe(root);
     });

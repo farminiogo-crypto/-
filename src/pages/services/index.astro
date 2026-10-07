@@ -16,7 +16,7 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
 ---
 <BaseLayout
   title="خدمات الدعم الأكاديمي لطلاب الماجستير والدكتوراه"
-  description="كل خدمات بابل أكاديمي: استشارة منهجية وخطط بحث، تصميم استبانات وتحكيمها، تحليل إحصائي SPSS مشروح، تحرير وتدقيق، تنسيق وتوثيق وتحقق من المراجع، ترجمة أكاديمية، وعروض المناقشة."
+  description="كل خدمات بابل أكاديمي: استشارة منهجية، استبانات، تحليل إحصائي SPSS مشروح، تحرير وتنسيق، تجهيز الأوراق للنشر، تلخيص الدراسات، ترجمة متخصصة ومعتمدة، عروض المناقشة، القبول والابتعاث، الأتمتة والبوتات، وخطط التدريس."
 >
   <PageHero
     crumbs={[{ href: '/services/', label: 'الخدمات' }]}
@@ -25,6 +25,11 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
     lead="اختر الطبقة التي وصلت إليها في رسالتك، أو ابدأ طلبك ونقترح عليك الخطوة التالية."
   >
     <a slot="actions" class="btn btn--primary btn--lg" href="/request/" data-magnetic>ابدأ طلبك في دقيقة</a>
+    <ul slot="art" role="list" class="sh-tiles">
+      {services.map((sv, i) => (
+        <li class={i === 3 ? 'is-hi' : ''} style={`--i:${i}`}><Icon name={sv.data.icon} size={26} /><span>{sv.data.title}</span></li>
+      ))}
+    </ul>
   </PageHero>
 
   <section class="section" aria-labelledby="journey-title">
@@ -91,6 +96,15 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧'];
 </BaseLayout>
 
 <style>
+  .sh-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .sh-tiles li {
+    display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.8rem; border-radius: 12px;
+    background: rgba(244, 239, 228, 0.06); border: 1px solid var(--line-dark); color: var(--on-dark-muted);
+    font-size: 0.85rem; line-height: 1.4; animation: sh-in 0.8s var(--ease-expo) both; animation-delay: calc(0.35s + var(--i) * 0.05s);
+  }
+  .sh-tiles li :global(svg) { flex-shrink: 0; color: var(--cream-100); }
+  .sh-tiles li.is-hi { background: var(--brick-600); border-color: var(--brick-600); color: var(--cream-50); }
+  @keyframes sh-in { from { opacity: 0; transform: translateY(12px); } }
   .journey { display: grid; gap: 0.75rem; }
   .journey__row {
     display: grid;

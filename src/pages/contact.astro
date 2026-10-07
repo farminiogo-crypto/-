@@ -12,6 +12,7 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
   title="تواصل معنا"
   description="تواصل مع بابل أكاديمي عبر واتساب لإرسال تفاصيل رسالتك وملفاتك، ونرسل لك عرضًا مكتوبًا بالخطوة التالية وتكلفتها قبل أي التزام."
   motion={false}
+  fab={false}
 >
   <PageHero
     compact
@@ -44,6 +45,20 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
           <span class="ct-ch__label">المدينة</span>
           <span class="ct-ch__val">{site.city}، المملكة العربية السعودية</span>
         </div>
+        {(site.hours || site.responseTime) && (
+          <div class="ct-ch card">
+            <span class="ct-ch__icon"><Icon name="clock" size={24} /></span>
+            <span class="ct-ch__label">أوقات الرد</span>
+            <span class="ct-ch__val">{[site.hours, site.responseTime].filter(Boolean).join('. ')}</span>
+          </div>
+        )}
+        {site.paymentMethods.length > 0 && (
+          <div class="ct-ch card">
+            <span class="ct-ch__icon"><Icon name="wallet" size={24} /></span>
+            <span class="ct-ch__label">طرق الدفع</span>
+            <span class="ct-ch__val">{site.paymentMethods.join('، ')}</span>
+          </div>
+        )}
         <div class="ct-tips">
           <h2>لرد أسرع وأدق</h2>
           <ul role="list">
@@ -55,6 +70,7 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
       </div>
 
       <form class="ct-form card" data-ct-form action={waBase} method="get" target="_blank">
+        <input type="hidden" name="phone" value={site.whatsapp} />
         <h2>رسالة سريعة</h2>
         <p class="muted">اكتب رسالتك هنا، ونفتحها لك جاهزة في واتساب.</p>
         <fieldset class="ct-topics">
@@ -126,7 +142,7 @@ const topics = ['استفسار عام', 'سؤال عن خدمة', 'متابعة
     if (!msg) { err.hidden = false; form.querySelector<HTMLTextAreaElement>('#ct-msg')!.focus(); return; }
     err.hidden = true;
     const name = String(fd.get('name') || '').trim();
-    const lines = ['مرحبًا بابل أكاديمي 👋', `الموضوع: ${fd.get('topic')}`, ...(name ? [`الاسم: ${name}`] : []), msg];
+    const lines = ['مرحبًا بابل أكاديمي،', `الموضوع: ${fd.get('topic')}`, ...(name ? [`الاسم: ${name}`] : []), msg];
     window.open(wa(lines.join('\n')), '_blank', 'noopener');
   });
 </script>

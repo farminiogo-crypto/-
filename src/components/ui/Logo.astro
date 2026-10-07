@@ -4,7 +4,7 @@ import { site } from '@/config/site';
 interface Props { href?: string; class?: string; size?: 'md' | 'lg' }
 const { href = '/', class: cls = '', size = 'md' } = Astro.props;
 ---
-<a href={href} class={`logo logo--${size} ${cls}`} aria-label={`${site.nameAr} — الصفحة الرئيسية`}>
+<a href={href} class={`logo logo--${size} ${cls}`} aria-label={`${site.nameAr} ${site.nameEn} — الصفحة الرئيسية`}>
   <LogoMark size={size === 'lg' ? 52 : 40} />
   <span class="logo__text">
     <span class="logo__ar">{site.nameAr}</span>
@@ -30,9 +30,9 @@ const { href = '/', class: cls = '', size = 'md' } = Astro.props;
   }
   .logo__en {
     font-family: var(--font-latin);
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     letter-spacing: 0.08em;
-    opacity: 0.75;
+    opacity: 0.8;
     margin-top: 0.1rem;
     direction: ltr;
     text-align: right;

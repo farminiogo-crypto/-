@@ -1,10 +1,13 @@
+// تصنيفات فلتر المعرض (حسب نوع الخدمة)
 export const workCategories = {
-  stats: 'تحليل إحصائي',
-  questionnaire: 'استبانات',
-  editing: 'تنسيق وتحرير',
+  stats: 'تحليل',
   translation: 'ترجمة',
+  editing: 'تدقيق',
   decks: 'عروض',
-  cv: 'سير ذاتية',
-  tech: 'تقنية',
+  tech: 'برمجة',
+  career: 'مهني',
 } as const;
 export type WorkCategory = keyof typeof workCategories;
+
+// الوسم الثابت على كل عمل في المعرض
+export const workBadge = { strong: 'نموذج تطبيقي', rest: 'البيانات توضيحية والبيانات الشخصية محجوبة' };

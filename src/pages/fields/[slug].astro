@@ -20,7 +20,7 @@ const services = (await getCollection('services', (s) => d.services.includes(s.i
 const others = (await getCollection('fields')).filter((f) => f.id !== field.id).sort((a, b) => a.data.order - b.data.order);
 const msg = waMessages.field(d.title);
 ---
-<BaseLayout title={d.seoTitle} description={d.seoDescription}>
+<BaseLayout title={d.seoTitle} description={d.seoDescription} ogImage={`/og/fields-${field.id}.png`}>
   <PageHero
     crumbs={[{ href: '/services/#fields', label: 'المجالات' }, { href: `/fields/${field.id}/`, label: d.title }]}
     eyebrow="مجال أكاديمي"
@@ -68,6 +68,46 @@ const msg = waMessages.field(d.title);
       </ul>
     </div>
   </section>
+
+  {(d.tests.length > 0 || d.mistakes.length > 0) && (
+    <section class="section" aria-labelledby="ft-title">
+      <div class="container fd-deep">
+        {d.tests.length > 0 && (
+          <div>
+            <SectionTitle id="ft-title" eyebrow="التحليل الإحصائي" title="اختبارات تتكرر في هذا المجال" />
+            <ol role="list" class="fd-tests" data-reveal="stagger">
+              {d.tests.map((t) => (
+                <li>
+                  <h3 class="fd-tests__name">{t.name}</h3>
+                  <p>{t.use}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {d.mistakes.length > 0 && (
+          <aside class="fd-mistakes card" aria-labelledby="fm-title" data-reveal="fade">
+            <h2 id="fm-title" class="fd-h"><Icon name="triangle-alert" size={22} /> أخطاء شائعة نراها في رسائل هذا المجال</h2>
+            <ul role="list">
+              {d.mistakes.map((m) => <li>{m}</li>)}
+            </ul>
+          </aside>
+        )}
+      </div>
+    </section>
+  )}
+
+  {d.exampleTitles.length > 0 && (
+    <section class="section section--tight section--cream50" aria-labelledby="fx-title">
+      <div class="container">
+        <h2 id="fx-title" class="fd-h">أمثلة على عناوين نعمل على أمثالها</h2>
+        <p class="fd-note">عناوين افتراضية للتوضيح، وليست من ملفات عملاء.</p>
+        <ul role="list" class="fd-examples">
+          {d.exampleTitles.map((t) => <li><Icon name="file-text" size={18} /><span>{t}</span></li>)}
+        </ul>
+      </div>
+    </section>
+  )}
 
   {d.faq.length > 0 && (
     <section class="section" aria-labelledby="ffaq-title">
@@ -120,6 +160,25 @@ const msg = waMessages.field(d.title);
   .fd-svc__title { display: block; font-weight: 600; color: var(--indigo-900); }
   .fd-svc__short { display: block; font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.7; }
   .fd-svc :global(.fd-svc__arrow) { margin-inline-start: auto; color: var(--brick-600); flex-shrink: 0; }
+  .fd-deep { display: grid; gap: 2.5rem; align-items: start; }
+  @media (min-width: 1024px) { .fd-deep { grid-template-columns: 1.3fr 1fr; gap: 4rem; } }
+  .fd-tests { display: grid; gap: 1rem; counter-reset: t; }
+  .fd-tests li { position: relative; padding: 1.1rem 1.25rem; padding-inline-start: 3.25rem; border-radius: var(--radius-m); background: var(--cream-50); border: 1px solid var(--line-light); counter-increment: t; }
+  .fd-tests li::before { content: counter(t, arabic-indic); position: absolute; inset-inline-start: 1.1rem; top: 1rem; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; color: var(--brick-600); }
+  .fd-tests__name { font-size: 1.05rem; font-family: var(--font-body); font-weight: 600; color: var(--indigo-900); margin-bottom: 0.35rem; line-height: 1.6; }
+  .fd-tests p { color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.85; }
+  .fd-mistakes { padding: 1.75rem; background: var(--indigo-900); color: var(--on-dark); border-color: var(--line-dark); }
+  @media (min-width: 1024px) { .fd-mistakes { position: sticky; top: calc(var(--header-h) + 1.5rem); } }
+  .fd-mistakes .fd-h { color: var(--on-dark); display: flex; gap: 0.6rem; align-items: flex-start; line-height: 1.5; }
+  .fd-mistakes .fd-h :global(svg) { color: var(--brick-400); flex-shrink: 0; margin-top: 0.3rem; }
+  .fd-mistakes ul { display: grid; gap: 0.9rem; }
+  .fd-mistakes li { position: relative; padding-inline-start: 1.1rem; color: var(--on-dark-muted); line-height: 1.85; font-size: var(--fs-small); }
+  .fd-mistakes li::before { content: ''; position: absolute; inset-inline-start: 0; top: 0.75em; width: 6px; height: 6px; border-radius: 50%; background: var(--brick-400); }
+  .fd-note { font-size: var(--fs-small); color: var(--ink-muted); margin: -0.5rem 0 1rem; }
+  .fd-examples { display: grid; gap: 0.6rem; }
+  @media (min-width: 900px) { .fd-examples { grid-template-columns: 1fr 1fr; } }
+  .fd-examples li { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.9rem 1rem; border-radius: var(--radius-m); background: var(--cream-100); border: 1px solid var(--line-light); line-height: 1.8; }
+  .fd-examples :global(svg) { color: var(--indigo-700); flex-shrink: 0; margin-top: 0.3rem; }
   .fd-others { display: flex; flex-wrap: wrap; gap: 0.6rem; }
   .fd-others a {
     display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0.5rem 1rem;

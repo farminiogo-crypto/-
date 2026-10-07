@@ -10,13 +10,22 @@ const BASE = process.env.BASE || 'http://localhost:4321';
 const fm = (file) => {
   const src = fs.readFileSync(file, 'utf8').split('---')[1];
   const get = (k) => { const m = src.match(new RegExp(`^${k}:\\s*(.+)$`, 'm')); return m ? m[1].replace(/^"|"$/g, '').trim() : ''; };
-  return { title: get('title'), short: get('short') || get('description'), category: get('category') };
+  const img = (src.match(/^\s+- src:\s*(\S+)$/m) || [])[1] || '';
+  return { title: get('title'), short: get('short') || get('description') || get('summary'), category: get('category'), level: get('level'), field: get('field'), img };
 };
 
 const items = [{ out: 'default', eyebrow: 'بابل أكاديمي', title: 'من الفكرة إلى المناقشة… نصعد معك درجةً درجة.', sub: 'نرافقك من الفكرة إلى المناقشة — بدقة، وسرية، وفي الموعد.' }];
 for (const f of fs.readdirSync(path.join(ROOT, 'src/content/services'))) {
   const d = fm(path.join(ROOT, 'src/content/services', f));
   items.push({ out: `services-${f.replace('.md', '')}`, eyebrow: 'خدمة من بابل أكاديمي', title: d.title, sub: d.short });
+}
+for (const f of fs.readdirSync(path.join(ROOT, 'src/content/fields'))) {
+  const d = fm(path.join(ROOT, 'src/content/fields', f));
+  items.push({ out: `fields-${f.replace('.md', '')}`, eyebrow: 'مجال أكاديمي · بابل أكاديمي', title: d.title, sub: d.short });
+}
+for (const f of fs.readdirSync(path.join(ROOT, 'src/content/portfolio'))) {
+  const d = fm(path.join(ROOT, 'src/content/portfolio', f));
+  items.push({ out: `work-${f.replace('.md', '')}`, eyebrow: `من أعمالنا · ${d.level} · ${d.field}`, title: d.title, sub: d.short, img: d.img });
 }
 for (const f of fs.readdirSync(path.join(ROOT, 'src/content/blog'))) {
   const d = fm(path.join(ROOT, 'src/content/blog', f));
@@ -37,18 +46,19 @@ body:after{content:'';position:absolute;left:0;right:0;bottom:0;height:10px;back
 .brand{display:flex;align-items:center;gap:14px;font-family:Amiri;font-weight:700;font-size:34px}
 .brand small{display:block;font-family:Lora;font-size:15px;letter-spacing:.08em;opacity:.7;direction:ltr;text-align:right}
 .e{font-size:24px;font-weight:600;color:#C4595B}
-h1{font-family:Amiri;font-weight:700;font-size:${it.title.length > 38 ? 54 : 64}px;line-height:1.35}
-p{font-size:25px;line-height:1.7;color:rgba(244,239,228,.78);max-width:640px}
+h1{font-family:Amiri,Lora,serif;font-weight:700;font-size:${it.title.length > 60 ? 46 : it.title.length > 38 ? 54 : 64}px;line-height:1.35}
+p{font-size:25px;line-height:1.7;color:rgba(244,239,228,.78);max-width:640px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .z svg{width:100%;height:auto;overflow:visible}
 .z .zt__top{fill:rgba(244,239,228,.2);stroke:rgba(244,239,228,.5)}.z .zt__left{fill:rgba(244,239,228,.1);stroke:rgba(244,239,228,.3)}
 .z .zt__right{fill:rgba(26,15,43,.55);stroke:rgba(244,239,228,.22)}.z .zt__stair{fill:rgba(166,61,64,.75)}
 .z .zt__steps{stroke:rgba(244,239,228,.4);fill:none}.z .zig__line{fill:none;stroke:#C4595B;stroke-width:4;filter:drop-shadow(0 0 6px rgba(196,89,91,.9))}
-.z .zig__shadow{fill:rgba(10,5,20,.5);filter:blur(18px)}.z .zt__num{display:none}
+.z .zig__shadow{fill:rgba(10,5,20,.5);filter:blur(18px)}.z .zt__num,.z .zig__run{display:none}
 .z polygon{stroke-width:1.2}
+.shot{display:grid;place-items:center;height:500px}.shot img{max-width:100%;max-height:500px;border-radius:10px;background:#fff;box-shadow:0 40px 80px -30px rgba(0,0,0,.8);transform:rotate(-3deg)}
 </style></head><body><div class="t">
 <div class="brand">${LOGO}<span>بابل أكاديمي<small>Babel Academic</small></span></div>
 <div class="e">${it.eyebrow}</div><h1>${it.title}</h1>${it.sub ? `<p>${it.sub}</p>` : ''}</div>
-<div class="z">${zig}</div></body></html>`;
+${it.img ? `<div class="shot"><img src="${BASE}${it.img}"></div>` : `<div class="z">${zig}</div>`}</body></html>`;
 
 const LOGO = `<svg width="54" height="54" viewBox="0 0 40 40"><g fill="#F4EFE4"><rect x="2" y="30" width="36" height="7" rx="1"/><rect x="7" y="22.5" width="26" height="7" rx="1"/><rect x="11.5" y="15" width="17" height="7" rx="1"/><rect x="15.5" y="7.5" width="9" height="7" rx="1"/></g><rect x="18" y="7.5" width="4" height="29.5" fill="#A63D40"/></svg>`;
 

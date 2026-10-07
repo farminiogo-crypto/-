@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Icon from '@/components/ui/Icon.astro';
 import BrandIcon from '@/components/ui/BrandIcon.astro';
-import { wa, waBase } from '@/config/site';
+import { site, wa, waBase } from '@/config/site';
 
 const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
 const stages = [
@@ -13,27 +13,28 @@ const stages = [
   { v: 'أخرى', icon: 'sparkles' },
 ];
 const steps = ['المرحلة', 'الخدمة', 'التفاصيل', 'التواصل'];
-const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد.');
+const fallback = wa('مرحبًا بابل أكاديمي، أود بدء طلب جديد.');
 ---
 <div class="wz" data-wz>
   <div class="wz__progress" aria-hidden="true">
     <svg class="wz__tiers" viewBox="0 0 40 40" width="56" height="56">
-      <rect data-wz-tier="0" x="2" y="30" width="36" height="7" rx="1" />
+      <rect data-wz-tier="0" class="is-active" x="2" y="30" width="36" height="7" rx="1" />
       <rect data-wz-tier="1" x="7" y="22.5" width="26" height="7" rx="1" />
       <rect data-wz-tier="2" x="11.5" y="15" width="17" height="7" rx="1" />
       <rect data-wz-tier="3" x="15.5" y="7.5" width="9" height="7" rx="1" />
     </svg>
     <ol role="list" class="wz__labels">
-      {steps.map((s, i) => <li data-wz-label={i}><span class="wz__dot">{['١', '٢', '٣', '٤'][i]}</span>{s}</li>)}
+      {steps.map((s, i) => <li data-wz-label={i} class={i === 0 ? 'is-active' : undefined}><span class="wz__dot">{['١', '٢', '٣', '٤'][i]}</span><span class="wz__lbl">{s}</span></li>)}
     </ol>
   </div>
   <p class="sr-only" aria-live="polite" data-wz-live></p>
 
   <!-- بدون JS يرسل النموذج رسالة عامة إلى واتساب؛ مع JS تُبنى رسالة منسقة كاملة -->
   <form class="wz__form" action={waBase} method="get" target="_blank" novalidate data-wz-form>
-    <input type="hidden" name="text" value="مرحبًا بابل أكاديمي 👋 أود بدء طلب جديد." data-wz-nojs />
+    <input type="hidden" name="phone" value={site.whatsapp} data-wz-nojs />
+    <input type="hidden" name="text" value="مرحبًا بابل أكاديمي، أود بدء طلب جديد." data-wz-nojs />
 
-    <fieldset class="wz__step" data-wz-step="0">
+    <fieldset class="wz__step is-current" data-wz-step="0">
       <legend class="wz__q"><span class="wz__qn">١</span> في أي مرحلة أنت؟</legend>
       <div class="wz__cards wz__cards--stage">
         {stages.map((s) => (
@@ -71,11 +72,20 @@ const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء ط�
           <input id="wz-major" name="major" type="text" autocomplete="off" placeholder="مثال: إدارة تربوية، تسويق، تمريض" aria-describedby="wz-e-major" />
           <p class="wz__err" id="wz-e-major" data-wz-err="major" hidden>اكتب تخصصك باختصار.</p>
         </div>
-        <div class="wz__field">
-          <label for="wz-date">الموعد المطلوب</label>
-          <input id="wz-date" name="date" type="date" aria-describedby="wz-e-date" />
-          <p class="wz__err" id="wz-e-date" data-wz-err="date" hidden>اختر تاريخًا قادمًا تقريبيًا، ويمكن تعديله لاحقًا.</p>
-        </div>
+        <fieldset class="wz__field wz__field--full wz__when">
+          <legend>متى تحتاج العمل؟</legend>
+          <div class="wz__chips">
+            {[['week', 'خلال أسبوع'], ['2weeks', 'خلال أسبوعين'], ['month', 'خلال شهر'], ['date', 'تاريخ محدد']].map(([v, l]) => (
+              <label class="wz__chip"><input type="radio" name="when" value={v} data-label={l} /><span>{l}</span></label>
+            ))}
+          </div>
+          <div class="wz__date" data-wz-date hidden>
+            <label for="wz-date" class="sr-only">التاريخ المطلوب</label>
+            <input id="wz-date" name="date" type="date" lang="ar" aria-describedby="wz-date-ar wz-e-date" />
+            <p class="wz__date-ar" id="wz-date-ar" data-wz-date-ar aria-live="polite"></p>
+          </div>
+          <p class="wz__err" id="wz-e-date" data-wz-err="date" hidden>اختر تاريخًا قادمًا، ويمكن تعديله لاحقًا.</p>
+        </fieldset>
         <div class="wz__field wz__field--full">
           <label for="wz-desc">وصف مختصر</label>
           <textarea id="wz-desc" name="desc" rows="4" placeholder="أين وصلت في عملك، وما المطلوب بالضبط، وأي ملاحظات من مشرفك" aria-describedby="wz-e-desc"></textarea>
@@ -98,8 +108,8 @@ const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء ط�
         </div>
         <div class="wz__field">
           <label for="wz-phone">رقم الجوال</label>
-          <input id="wz-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05XXXXXXXX" aria-describedby="wz-e-phone" />
-          <p class="wz__err" id="wz-e-phone" data-wz-err="phone" hidden>اكتب رقم جوال صحيحًا، مثل 05XXXXXXXX أو ‎+9665XXXXXXXX.</p>
+          <input id="wz-phone" name="mobile" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05XXXXXXXX" aria-describedby="wz-e-phone" />
+          <p class="wz__err" id="wz-e-phone" data-wz-err="mobile" hidden>اكتب رقم جوال صحيحًا، مثل 05XXXXXXXX أو ‎+9665XXXXXXXX.</p>
         </div>
       </div>
       <p class="wz__privacy"><Icon name="lock" size={16} /> بياناتك تذهب إلى محادثة واتساب فقط، ولا تُحفظ على أي خادم.</p>
@@ -137,6 +147,12 @@ const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء ط�
   .wz__labels li + li::before { content: ''; width: 18px; height: 1px; background: var(--line-light); margin-inline-end: 0.3rem; }
   .wz__dot { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line-light); font-size: 0.8rem; font-weight: 600; }
   .wz__labels li.is-active { color: var(--indigo-900); font-weight: 600; }
+  @media (max-width: 600px) {
+    .wz__labels { flex-wrap: nowrap; gap: 0.35rem; }
+    .wz__labels li + li::before { width: 10px; }
+    .wz__labels li:not(.is-active) .wz__lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .wz__tiers { width: 44px; height: 44px; }
+  }
   .wz__labels li.is-active .wz__dot { background: var(--brick-600); border-color: var(--brick-600); color: var(--cream-50); }
   .wz__labels li.is-done .wz__dot { background: var(--indigo-900); border-color: var(--indigo-900); color: var(--cream-50); }
   :global(.js) .wz__tiers { display: block; }
@@ -184,6 +200,22 @@ const fallback = wa('مرحبًا بابل أكاديمي 👋 أود بدء ط�
   @media (min-width: 720px) { .wz__fields { grid-template-columns: 1fr 1fr; } .wz__field--full { grid-column: 1 / -1; } }
   .wz__field { display: grid; gap: 0.4rem; }
   .wz__field label { font-weight: 600; color: var(--indigo-900); }
+  .wz__when { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .wz__when legend { font-weight: 600; color: var(--indigo-900); padding: 0; margin-bottom: 0.5rem; }
+  .wz__chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .wz__chip { position: relative; cursor: pointer; }
+  .wz__chip input { position: absolute; opacity: 0; inset: 0; pointer-events: none; }
+  .wz__chip span {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0.45rem 1rem;
+    border-radius: var(--radius-pill); border: 1.5px solid rgba(44, 26, 69, 0.2); background: var(--cream-50);
+    font-weight: 500; color: var(--indigo-900); transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .wz__chip:hover span { border-color: rgba(44, 26, 69, 0.45); }
+  .wz__chip input:focus-visible + span { outline: 2px solid var(--brick-600); outline-offset: 3px; }
+  .wz__chip input:checked + span { background: var(--indigo-900); border-color: var(--indigo-900); color: var(--cream-100); }
+  .wz__date { display: grid; gap: 0.35rem; margin-top: 0.75rem; max-width: 320px; }
+  .wz__date[hidden] { display: none; }
+  .wz__date-ar { font-size: var(--fs-small); color: var(--brick-600); font-weight: 600; min-height: 1.5em; }
   .wz__opt { font-weight: 400; color: var(--ink-muted); font-size: var(--fs-small); }
   .wz__field input, .wz__field textarea {
     width: 100%;

@@ -71,10 +71,11 @@ const { dark = false } = Astro.props;
 </style>
 
 <script>
-  import { gsap, reducedMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
 
-  whenIdle(() => {
+  // مكتبة الحركة تُحمَّل بعد الرسم الأول، لا قبله
+  whenIdle(async () => {
+    const { gsap, reducedMotion } = await import('@/scripts/motion-core');
     // الخط الطوبي يرسم نفسه أثناء التمرير
     document.querySelectorAll<HTMLElement>('[data-tl]').forEach((tl) => {
       if (reducedMotion()) return;

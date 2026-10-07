@@ -45,7 +45,7 @@ import { site } from '@/config/site';
   <Testimonials />
 
   <section class="section" aria-labelledby="faq-title">
-    <div class="container container--narrow">
+    <div class="container container--narrow home-faq">
       <SectionTitle id="faq-title" eyebrow="أسئلة شائعة" title="قبل أن تسأل." />
       <FAQ items={homeFaq} />
       <p class="how__more" data-reveal="fade">
@@ -59,4 +59,8 @@ import { site } from '@/config/site';
 
 <style>
   .how__more { display: flex; justify-content: center; margin-top: 2.5rem; }
+  /* الموبايل: أول أربعة أسئلة فقط، والباقي في صفحة الأسئلة */
+  @media (max-width: 767px) {
+    .home-faq :global(.faq__item:nth-child(n + 5)) { display: none; }
+  }
 </style>

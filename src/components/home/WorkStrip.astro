@@ -1,9 +1,10 @@
 ---
+import { isPublic } from '@/lib/work';
 import { getCollection } from 'astro:content';
 import SectionTitle from '@/components/ui/SectionTitle.astro';
 import WorkCard from '@/components/WorkCard.astro';
 import Icon from '@/components/ui/Icon.astro';
-const works = (await getCollection('portfolio', (w) => w.data.published && w.data.featured))
+const works = (await getCollection('portfolio', (w) => isPublic(w) && w.data.featured))
   .sort((a, b) => a.data.order - b.data.order)
   .slice(0, 6);
 ---
@@ -11,7 +12,7 @@ const works = (await getCollection('portfolio', (w) => w.data.published && w.dat
   <section class="strip" aria-labelledby="work-title" data-strip>
     <div class="strip__pin" data-strip-pin>
       <div class="container strip__head">
-        <SectionTitle id="work-title" eyebrow="أعمالنا" title="عيّنات من شغلنا — بلا أسماء، وبكل التفاصيل." />
+        <SectionTitle id="work-title" eyebrow="أعمالنا" title="نماذج تطبيقية من شغلنا الفعلي." lead="البيانات داخلها توضيحية، والبيانات الشخصية محجوبة." />
         <a class="btn btn--outline strip__all" href="/work/">شاهد كل الأعمال <Icon name="arrow-left" size={18} /></a>
       </div>
       <div class="strip__viewport" data-strip-viewport>
@@ -70,17 +71,18 @@ const works = (await getCollection('portfolio', (w) => w.data.published && w.dat
     :global(.js:not(.rm)) .strip { padding-block: 0; }
     :global(.js:not(.rm)) .strip__pin { height: 100vh; display: flex; flex-direction: column; justify-content: center; }
     :global(.js:not(.rm)) .strip__viewport { overflow: visible; scroll-snap-type: none; padding-bottom: 0; }
-    .strip__item { width: 400px; }
+    .strip__item { width: 420px; }
     .strip__row { gap: 1.5rem; }
     .strip__viewport { padding-inline: max(var(--gutter), calc((100vw - var(--container)) / 2)); }
   }
 </style>
 
 <script>
-  import { gsap, reducedMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
 
-  whenIdle(() => {
+  // مكتبة الحركة تُحمَّل بعد الرسم الأول، لا قبله
+  whenIdle(async () => {
+    const { gsap, reducedMotion } = await import('@/scripts/motion-core');
     const pin = document.querySelector<HTMLElement>('[data-strip-pin]');
     const row = document.querySelector<HTMLElement>('[data-strip-row]');
     const viewport = document.querySelector<HTMLElement>('[data-strip-viewport]');

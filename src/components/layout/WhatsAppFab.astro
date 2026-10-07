@@ -13,7 +13,8 @@ const href = wa(waMessages.general);
     </a>
   </div>
   <a class="wa-fab__btn" href={href} target="_blank" rel="noopener" aria-label="تواصل معنا عبر واتساب" data-wa-btn>
-    <BrandIcon name="whatsapp" size={30} />
+    <span class="wa-fab__icon"><BrandIcon name="whatsapp" size={22} /></span>
+    <span class="wa-fab__label">واتساب</span>
   </a>
 </div>
 
@@ -32,23 +33,35 @@ const href = wa(waMessages.general);
   @media (min-width: 1024px) { .wa-fab { left: 28px; bottom: 28px; } }
   :global(.js) .wa-fab:not(.is-visible),
   .wa-fab.is-tucked { opacity: 0; transform: translateY(16px) scale(0.9); visibility: hidden; pointer-events: none; }
+  /* كبسولة داكنة بلون الهوية مع أيقونة واتساب خضراء */
   .wa-fab__btn {
-    display: grid;
-    place-items: center;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: var(--whatsapp);
-    color: #fff;
-    box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding: 0.35rem 0.4rem 0.35rem 1.1rem;
+    border-radius: var(--radius-pill);
+    background: var(--indigo-900);
+    color: var(--cream-100);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid rgba(244, 239, 228, 0.14);
+    box-shadow: 0 12px 30px -10px rgba(26, 15, 43, 0.6);
     animation: wa-pulse 10s var(--ease-out) 3s infinite;
-    transition: transform var(--dur-s) var(--ease-out);
+    transition: transform var(--dur-s) var(--ease-out), background-color var(--dur-s);
   }
-  .wa-fab__btn:hover { transform: scale(1.06); }
+  .wa-fab__btn:hover { transform: translateY(-2px); background: var(--indigo-700); }
+  .wa-fab__icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--whatsapp); color: #fff; }
   @keyframes wa-pulse {
-    0% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 0 rgba(37, 211, 102, 0.55); }
-    9% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 16px rgba(37, 211, 102, 0); }
-    100% { box-shadow: 0 10px 28px -8px rgba(26, 15, 43, 0.5), 0 0 0 0 rgba(37, 211, 102, 0); }
+    0% { box-shadow: 0 12px 30px -10px rgba(26, 15, 43, 0.6), 0 0 0 0 rgba(37, 211, 102, 0.45); }
+    9% { box-shadow: 0 12px 30px -10px rgba(26, 15, 43, 0.6), 0 0 0 14px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 12px 30px -10px rgba(26, 15, 43, 0.6), 0 0 0 0 rgba(37, 211, 102, 0); }
+  }
+  @media (max-width: 767px) {
+    .wa-fab__btn { padding: 0.3rem; min-height: 0; }
+    .wa-fab__label { display: none; }
+    .wa-fab__icon { width: 46px; height: 46px; }
   }
   .wa-fab__bubble {
     position: relative;
@@ -110,19 +123,21 @@ const href = wa(waMessages.general);
   close.addEventListener('click', () => { bubble.hidden = true; btn.focus(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !bubble.hidden) { bubble.hidden = true; btn.focus(); } });
 
-  // يختفي فوق الفوتر دائمًا، وفي الجوال أيضًا حين تظهر أزرار الصفحة الأساسية حتى لا يغطيها
+  // يختفي فوق الفوتر وقسم الختام في كل الأحجام، وفي الجوال أيضًا فوق أزرار الهيرو حتى لا يغطيها
   const mobile = window.matchMedia('(max-width: 767px)');
-  const blockers = document.querySelectorAll<HTMLElement>('[data-fab-hide], .site-footer');
+  const blockers = document.querySelectorAll<HTMLElement>('[data-fab-hide], .site-footer, .fcta');
   if (blockers.length && 'IntersectionObserver' in window) {
     const visible = new Set<Element>();
+    const always = (el: Element) => el.classList.contains('site-footer') || el.classList.contains('fcta');
     const update = () => {
-      const hide = [...visible].some((el) => el.classList.contains('site-footer') || mobile.matches);
+      const hide = [...visible].some((el) => always(el) || mobile.matches);
       fab.classList.toggle('is-tucked', hide);
+      if (hide) bubble.hidden = true;
     };
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => (en.isIntersecting ? visible.add(en.target) : visible.delete(en.target)));
       update();
-    }, { rootMargin: '0px 0px -40px 0px' });
+    }, { rootMargin: '0px' });
     blockers.forEach((b) => io.observe(b));
     mobile.addEventListener('change', update);
   }

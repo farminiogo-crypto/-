@@ -2,12 +2,14 @@
 import { getCollection } from 'astro:content';
 import Icon from '@/components/ui/Icon.astro';
 // نسخة مصغرة من معالج الطلب: خطوتان هنا، والباقي في /request/ (يعمل بدون JS لأنه نموذج GET عادي)
-const services = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+// خدمات الرسالة فقط هنا؛ بقية الخدمات (القبول، الأتمتة، الخطط...) متاحة في صفحة الطلب الكاملة
+const thesisServices = ['research-consulting', 'questionnaire', 'statistical-analysis', 'editing', 'formatting-references', 'journal-publishing', 'study-summaries', 'translation', 'presentations-defense'];
+const services = (await getCollection('services', (s) => thesisServices.includes(s.id))).sort((a, b) => a.data.order - b.data.order);
 const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'باحث', 'أخرى'];
 ---
-<section class="section section--cream50 mini" aria-labelledby="mini-title">
+<section class="section section--cream50 mini" aria-labelledby="mini-title" data-fab-hide>
   <div class="container">
-    <form class="mini__card" action="/request/" method="get">
+    <form class="mini__card" action="/request/" method="get" data-mini>
       <div class="mini__head">
         <p class="eyebrow">ابدأ من هنا</p>
         <h2 id="mini-title" data-reveal="heading">أين وصلت في رسالتك؟</h2>
@@ -28,6 +30,7 @@ const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'با�
             <label class="mini__opt"><input type="checkbox" name="service" value={s.id} /><span><Icon name={s.data.icon} size={16} /> {s.data.title}</span></label>
           ))}
         </div>
+        <p class="mini__more">تبحث عن خدمة أخرى؟ <a href="/request/">كل الخدمات في صفحة الطلب</a></p>
       </fieldset>
       <button class="btn btn--primary btn--lg mini__go" type="submit" data-magnetic>أكمل طلبك <Icon name="arrow-left" size={18} /></button>
     </form>
@@ -35,6 +38,8 @@ const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'با�
 </section>
 
 <style>
+  .mini__more { margin-top: 0.75rem; font-size: var(--fs-small); color: var(--ink-muted); }
+  .mini__more a { color: var(--brick-600); font-weight: 600; }
   .mini { padding-top: 0; }
   .mini__card {
     display: grid;
@@ -73,3 +78,11 @@ const stages = ['بكالوريوس', 'ماجستير', 'دكتوراه', 'با�
   .mini__go { justify-self: start; }
   @media (max-width: 480px) { .mini__go { width: 100%; } }
 </style>
+
+<script>
+  import { track } from '@/scripts/track';
+  document.querySelector<HTMLFormElement>('[data-mini]')?.addEventListener('submit', (e) => {
+    const f = new FormData(e.currentTarget as HTMLFormElement);
+    track('mini_wizard_submit', { stage: String(f.get('stage') || ''), service: f.getAll('service').join(',') });
+  });
+</script>

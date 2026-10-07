@@ -22,7 +22,9 @@ const { eyebrow, title, lead, crumbs, tower = true, compact = false, activeTier 
       <div class="page-hero__actions"><slot name="actions" /></div>
       <slot />
     </div>
-    {tower && (
+    {Astro.slots.has('art') ? (
+      <div class="page-hero__art page-hero__art--custom" aria-hidden="true"><slot name="art" /></div>
+    ) : tower && (
       <div class="page-hero__art" aria-hidden="true">
         {activeTier !== undefined ? <Ziggurat variant="scroll" numbered active={activeTier} /> : <Ziggurat variant="hero" tiers={7} />}
       </div>
@@ -33,8 +35,8 @@ const { eyebrow, title, lead, crumbs, tower = true, compact = false, activeTier 
 <style>
   .page-hero {
     position: relative;
-    padding-top: calc(var(--header-h) + clamp(2.5rem, 1.5rem + 4vw, 5rem));
-    padding-bottom: clamp(3.5rem, 2.5rem + 4vw, 6rem);
+    padding-top: calc(var(--header-h) + clamp(2rem, 1.25rem + 3vw, 4rem));
+    padding-bottom: clamp(3rem, 2rem + 3vw, 5rem);
     overflow: clip;
   }
   .page-hero--compact { padding-bottom: clamp(2.5rem, 2rem + 2vw, 4rem); }
@@ -53,6 +55,8 @@ const { eyebrow, title, lead, crumbs, tower = true, compact = false, activeTier 
   @media (min-width: 900px) {
     .page-hero__grid { grid-template-columns: 1fr 340px; }
     .page-hero__art { display: block; opacity: 0.9; }
+    .page-hero__grid:has(.page-hero__art--custom) { grid-template-columns: 1fr 400px; }
+    .page-hero__art--custom { opacity: 1; animation: hero-word 1.2s var(--ease-expo) 0.3s both; }
   }
   @media (max-width: 480px) {
     .page-hero__actions :global(.btn) { width: 100%; }

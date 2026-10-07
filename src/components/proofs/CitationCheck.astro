@@ -78,10 +78,11 @@ const refs = [
 </style>
 
 <script>
-  import { gsap, reducedMotion } from '@/scripts/motion-core';
   import { whenIdle } from '@/scripts/idle';
 
-  whenIdle(() => {
+  // مكتبة الحركة تُحمَّل بعد الرسم الأول، لا قبله
+  whenIdle(async () => {
+    const { gsap, reducedMotion } = await import('@/scripts/motion-core');
     document.querySelectorAll<HTMLElement>('[data-cc]').forEach((root) => {
       if (reducedMotion()) { root.classList.add('is-checked'); return; }
       const scan = root.querySelector<HTMLElement>('[data-cc-scan]')!;
