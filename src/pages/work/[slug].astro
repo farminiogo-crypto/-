@@ -50,8 +50,8 @@ const coverThumb = cover ? thumb(cover) : null;
           <a href={cover.src} data-lb="0" aria-label={`تكبير الصورة: ${cover.alt}`}>
             <img
               src={coverThumb!.src}
-              srcset={cover.width > 720 ? `${coverThumb!.src} 720w, ${cover.src} ${cover.width}w` : undefined}
-              sizes="(min-width: 1024px) 560px, calc(100vw - 2.5rem)"
+              srcset={`${cover.src.replace(/\.webp$/, '-md.webp')} 600w, ${coverThumb!.src} 720w${cover.width > 720 ? `, ${cover.src} ${cover.width}w` : ''}`}
+              sizes="(min-width: 1024px) 560px, calc(100vw - 5rem)"
               width={cover.width}
               height={cover.height}
               alt={cover.alt}
