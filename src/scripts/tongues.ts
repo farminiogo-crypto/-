@@ -73,20 +73,21 @@ export function initTongues() {
     const t = tiers[tierIdx];
     // الوصول إلى الطبقة لحظة ارتفاعها
     const leave = TIER_START + tierIdx * TIER_STEP + rand(-120, 220);
-    const x = rand(W * 0.04, W * 0.96), y = rand(H * 0.04, H * 0.9);
+    // الكلمات اللاتينية تُرسم نحو اليمين (اتجاه النص)، فتبدأ أبعد عن الحافة المقابلة لعمود النص
+    const x = w.latin ? rand(W * 0.04, W * 0.7) : rand(W * 0.12, W * 0.9), y = rand(H * 0.04, H * 0.9);
     return {
       x, y, sx: x, sy: y, vx: rand(-0.22, 0.22), vy: rand(-0.3, 0.05),
       tx: t.x + rand(-t.w * 0.3, t.w * 0.3), ty: t.y + rand(-6, 6),
       word: w.t, latin: w.latin,
       size: rand(12, mobile ? 18 : 24),
-      alpha: 0, maxAlpha: rand(0.4, 0.85), brick: Math.random() < 0.18,
+      alpha: 0, maxAlpha: rand(0.35, 0.75), brick: Math.random() < 0.18,
       leave: Math.max(80, leave), state: 'drift', life: 0, period: 0,
     };
   };
 
   const makeAmbient = (): P => {
     const w = pick(WORDS);
-    const x = rand(W * 0.08, W * 0.92), y = rand(H * 0.15, H * 0.85);
+    const x = w.latin ? rand(W * 0.08, W * 0.66) : rand(W * 0.14, W * 0.86), y = rand(H * 0.15, H * 0.85);
     return {
       x, y, sx: x, sy: y, vx: rand(-0.12, 0.12), vy: rand(-0.14, -0.04), tx: 0, ty: 0,
       word: w.t, latin: w.latin, size: rand(12, 16),

@@ -122,6 +122,106 @@
       "source": "/images/why-us.webp",
       "destination": "/og/default.png",
       "permanent": true
+    },
+    {
+      "source": "/work/arabic-stats-report/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/arabic-stats-report",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/cv-banking/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/cv-banking",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/deck-translation-rtl-ltr/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/deck-translation-rtl-ltr",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/defense-deck-law/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/defense-deck-law",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/lit-review-editing/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/lit-review-editing",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/media-cultivation-survey/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/media-cultivation-survey",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/medical-deck-figures/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/medical-deck-figures",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/nursing-checklist-bilingual/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/nursing-checklist-bilingual",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/phd-proposal-review/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/phd-proposal-review",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/thesis-formatting-80p/",
+      "destination": "/work/",
+      "permanent": true
+    },
+    {
+      "source": "/work/thesis-formatting-80p",
+      "destination": "/work/",
+      "permanent": true
     }
   ],
   "headers": [

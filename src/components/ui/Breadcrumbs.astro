@@ -1,5 +1,6 @@
 ---
 import { siteUrl } from '@/config/site';
+import { bidi } from '@/lib/bidi';
 export interface Crumb { href: string; label: string }
 interface Props { items: Crumb[] }
 const { items } = Astro.props;
@@ -16,7 +17,7 @@ const ld = siteUrl
   <ol role="list">
     {all.map((c, i) => (
       <li>
-        {i < all.length - 1 ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+        {i < all.length - 1 ? <a href={c.href} set:html={bidi(c.label)} /> : <span aria-current="page" set:html={bidi(c.label)} />}
       </li>
     ))}
   </ol>

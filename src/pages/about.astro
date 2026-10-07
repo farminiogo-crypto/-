@@ -85,6 +85,8 @@ const team = site.team;
   <section class="section section--cream50" aria-labelledby="team-title">
     <div class="container">
       <SectionTitle id="team-title" eyebrow="الفريق" title="باحثون ومحللون ومترجمون ومصممون." lead="يعمل على كل طلب مختص في نوع الخدمة ومجال رسالتك، ونبقى على تواصل معك من البداية إلى التسليم." />
+      {/* TODO (قرار محمود): مكان أسماء الفريق وصورهم. لا تُضاف أسماء ولا صور قبل موافقة أصحابها.
+          عند الموافقة تُكتب البيانات في site.team داخل src/config/site.ts فيظهر القسم تلقائيًا هنا. */}
       {team.length > 0 && (
         <ul role="list" class="ab-team" data-reveal="stagger">
           {team.map((m) => (

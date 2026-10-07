@@ -85,6 +85,11 @@ const split = lines.map((l) => l.split(' ').map((w) => ({ w, d: d++ })));
   }
   /* الحروف محصورة في منطقة البرج ولا تدخل عمود النص */
   .hero__canvas { position: absolute; top: -18%; bottom: -6%; left: -14%; right: -4%; width: 118%; height: 124%; z-index: 0; pointer-events: none; }
+  /* الكلمات تبهت تدريجيًا عند حافة الرسم بدل أن تُقص فجأة: أعلى وأسفل على الجوال (النص تحت الرسم) */
+  .hero__canvas {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 82%, transparent 100%);
+  }
   .hero__grid { position: relative; z-index: 1; display: grid; gap: 1.5rem; align-items: center; }
   .hero__text { display: grid; gap: 1.25rem; justify-items: start; order: 2; }
   .hero__art { position: relative; order: 1; width: min(78vw, 340px); margin-inline: auto; perspective: 1000px; }
@@ -162,6 +167,13 @@ const split = lines.map((l) => l.split(' ').map((w) => ({ w, d: d++ })));
     .hero__actions { width: 100%; }
     .hero__actions .btn { width: 100%; }
     .hero__trust { font-size: var(--fs-xs); }
+  }
+  /* الديسكتوب: النص على يمين الرسم، فالكلمات تبهت كلما اقتربت منه */
+  @media (min-width: 1024px) {
+    .hero__canvas {
+      -webkit-mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.35) 10%, #000 24%);
+      mask-image: linear-gradient(to left, transparent 0, rgba(0, 0, 0, 0.35) 10%, #000 24%);
+    }
   }
   @media (min-width: 1024px) {
     .hero { padding-bottom: 4rem; }

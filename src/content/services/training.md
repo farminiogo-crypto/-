@@ -3,7 +3,7 @@ title: التدريب على البرامج
 short: جلسات عملية على SPSS وExcel وأدوات البحث، بملفاتك أنت.
 promise: بدل أن تحفظ خطوات من فيديو عام، تتعلم البرنامج على بياناتك ورسالتك، فتخرج من الجلسة وقد تقدمت في عملك فعلًا.
 icon: graduation-cap
-order: 10
+order: 13
 featured: false
 seoTitle: دورات تدريب SPSS وExcel وأدوات البحث العلمي بملفاتك
 seoDescription: جلسات تدريب فردية وجماعية على SPSS وExcel وAMOS وأدوات إدارة المراجع مثل Zotero وMendeley، مطبقة على بيانات الطالب وملفاته الحقيقية.
@@ -32,7 +32,12 @@ faq:
   - q: هل الجلسات فردية فقط؟
     a: فردية أو جماعية. المجموعات الطلابية يمكنها طلب ورشة مشتركة بتكلفة أقل للفرد.
 related:
-  - arabic-stats-report
+  - spss-analysis-apa
+keyword: تدريب
+relatedServices:
+  - statistical-analysis
+  - software
+  - lesson-plans
 ---
 
 أفضل طريقة لفهم نتائجك أن تعرف كيف خرجت. التدريب عندنا لا يبدأ من كتاب ولا من أمثلة جاهزة، بل من ملف بياناتك ورسالتك أنت.

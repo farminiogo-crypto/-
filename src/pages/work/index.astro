@@ -3,7 +3,8 @@ import { isPublic } from '@/lib/work';
 import { getCollection } from 'astro:content';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHero from '@/components/PageHero.astro';
-import Mock from '@/components/Mock.astro';
+import { thumb } from '@/lib/work';
+import { workBadge } from '@/data/work';
 import WorkCard from '@/components/WorkCard.astro';
 import FinalCTA from '@/components/FinalCTA.astro';
 import Icon from '@/components/ui/Icon.astro';
@@ -11,22 +12,28 @@ import { workCategories, type WorkCategory } from '@/data/work';
 
 const works = (await getCollection('portfolio', isPublic)).sort((a, b) => a.data.order - b.data.order);
 const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works.some((w) => w.data.categories.includes(c)));
+// ثلاث صور من أعمال مختلفة للهيرو
+const fanIds = ['defense-deck', 'translation-academic', 'clinic-system'];
+const fan = fanIds.map((id) => works.find((w) => w.id === id)?.data.images[0]).filter((x) => x !== undefined);
 ---
 <BaseLayout
-  title="أعمالنا: نماذج من التحليل الإحصائي والاستبانات والتنسيق والترجمة"
-  description="عينات من أعمال بابل أكاديمي بلا أسماء: استبانات محكمة، تقارير تحليل إحصائي عربية، تنسيق رسائل، ترجمة أكاديمية، عروض مناقشة، سير ذاتية، وحلول تقنية."
+  title="أعمالنا: نماذج تطبيقية في التحليل والترجمة والتدقيق والعروض والأنظمة"
+  description="نماذج تطبيقية من شغل بابل أكاديمي الفعلي: تحليل إحصائي بمخرجات SPSS، عرض مناقشة، ترجمة أكاديمية ومعتمدة وطبية، تدقيق بتتبع التغييرات، سير ذاتية، ونظام عيادة ببوت حجز. البيانات توضيحية والبيانات الشخصية محجوبة."
 >
   <PageHero
     crumbs={[{ href: '/work/', label: 'أعمالنا' }]}
     eyebrow="المعرض"
-    title="عيّنات من شغلنا — بلا أسماء، وبكل التفاصيل."
-    lead="لا نذكر اسم عميل ولا جامعة ولا جهة، ولا ننقل أي نص من ملف عميل. نعرض المرحلة والمجال وما نفذناه بالضبط."
+    title="نماذج تطبيقية من شغلنا الفعلي."
+    lead="الملفات والأنظمة هنا نفذها فريقنا كما ننفذ أي طلب. البيانات داخلها توضيحية محضّرة للعرض، والبيانات الشخصية محجوبة."
   >
-    <div slot="art" class="wh-fan">
-      <Mock type="deck" tilt={false} class="wh-fan__c wh-fan__c--1" />
-      <Mock type="stats" tilt={false} class="wh-fan__c wh-fan__c--2" />
-      <Mock type="doc" tilt={false} class="wh-fan__c wh-fan__c--3" />
-    </div>
+    {fan.length === 3 && (
+      <div slot="art" class="wh-fan">
+        {fan.map((img, i) => {
+          const t = thumb(img);
+          return <img class={`wh-fan__c wh-fan__c--${i + 1}`} src={t.src} width={t.width} height={t.height} alt="" loading="lazy" decoding="async" />;
+        })}
+      </div>
+    )}
   </PageHero>
 
   <section class="section work-sec">
@@ -44,15 +51,15 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
       </div>
       <p class="sr-only" aria-live="polite" data-filter-status></p>
       <ul role="list" class="masonry" data-grid>
-        {works.map((w) => (
+        {works.map((w, i) => (
           <li class="masonry__item" data-cats={w.data.categories.join(' ')} data-flip-id={w.id}>
-            <WorkCard item={w} headingLevel="h2" />
+            <WorkCard item={w} headingLevel="h2" eager={i === 0} />
           </li>
         ))}
       </ul>
       <p class="work-note" data-reveal="fade">
         <Icon name="shield-check" size={20} />
-        كل عمل معروض هنا بعد حذف ما يدل على صاحبه. المجسمات توضيحية بنص عام، وستحل محلها لقطات مموهة من الأعمال نفسها.
+        <span><b>{workBadge.strong}</b>: كل عمل هنا نفذه فريقنا فعلًا، لكن بيانات الدراسات فيه توضيحية محضّرة للعرض، والأسماء والبيانات الشخصية محجوبة أو افتراضية.</span>
       </p>
     </div>
   </section>
@@ -81,10 +88,10 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
   .filter[aria-pressed='true'] { background: var(--indigo-900); color: var(--cream-100); border-color: var(--indigo-900); }
   .filter__n { font-size: var(--fs-xs); opacity: 0.65; }
   .wh-fan { position: relative; height: 300px; }
-  .wh-fan :global(.wh-fan__c) { position: absolute; width: 250px; border-radius: 10px; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7); }
-  .wh-fan :global(.wh-fan__c--1) { top: 20px; left: 0; transform: rotate(-8deg); }
-  .wh-fan :global(.wh-fan__c--2) { top: 50px; left: 80px; transform: rotate(3deg); }
-  .wh-fan :global(.wh-fan__c--3) { top: 0; right: 0; transform: rotate(9deg); width: 190px; }
+  .wh-fan__c { position: absolute; width: 250px; height: auto; border-radius: 8px; background: #fff; box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.75); }
+  .wh-fan__c--1 { top: 30px; left: 0; transform: rotate(-7deg); }
+  .wh-fan__c--2 { top: 0; right: 0; width: 170px; transform: rotate(6deg); }
+  .wh-fan__c--3 { top: 120px; left: 90px; width: 240px; transform: rotate(2deg); }
   .masonry { columns: 1; column-gap: 1.25rem; }
   .masonry__item { break-inside: avoid; margin-bottom: 1.25rem; }
   .masonry__item[hidden] { display: none; }
@@ -95,7 +102,8 @@ const cats = (Object.keys(workCategories) as WorkCategory[]).filter((c) => works
   .masonry__item:nth-child(4n) :global(.work-card__visual) { aspect-ratio: 5 / 4; }
   .work-empty { padding: 2rem; border-radius: var(--radius-card); background: var(--cream-50); border: 1px dashed var(--line-light); line-height: 1.9; margin-bottom: 2rem; }
   .work-note { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 2rem; font-size: var(--fs-small); color: var(--ink-muted); max-width: 70ch; }
-  .work-note :global(svg) { color: var(--brick-600); margin-top: 0.25rem; }
+  .work-note :global(svg) { color: var(--brick-600); margin-top: 0.25rem; flex-shrink: 0; }
+  .work-note b { color: var(--indigo-900); }
 </style>
 
 <script>

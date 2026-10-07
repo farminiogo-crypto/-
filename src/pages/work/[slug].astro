@@ -8,7 +8,9 @@ import Icon from '@/components/ui/Icon.astro';
 import BrandIcon from '@/components/ui/BrandIcon.astro';
 import WorkCard from '@/components/WorkCard.astro';
 import FinalCTA from '@/components/FinalCTA.astro';
-import { workCategories } from '@/data/work';
+import { workCategories, workBadge } from '@/data/work';
+import { thumb } from '@/lib/work';
+import { bidi } from '@/lib/bidi';
 import { wa, waMessages } from '@/config/site';
 
 export async function getStaticPaths() {
@@ -23,6 +25,9 @@ const d = work.data;
 const services = (await getCollection('services', (s) => d.services.includes(s.id)));
 const msg = waMessages.work(d.title);
 const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
+const cover = d.images[0];
+const coverWide = cover ? cover.width / cover.height >= 1.3 : false;
+const coverThumb = cover ? thumb(cover) : null;
 ---
 <BaseLayout title={`${d.title} — ${d.level}، ${d.field}`} description={`${d.summary} (${d.level} — ${d.field})`} ogImage={`/og/work-${work.id}.png`} preloadHeading>
   <!-- شارات المرحلة والمجال فوق العنوان بخط Plex 600؛ تحميله مبكرًا يمنع قفز الصفحة -->
@@ -36,54 +41,101 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
           <span class="chip">{d.field}</span>
           {d.categories.map((c) => <span class="chip chip--brick">{workCategories[c]}</span>)}
         </p>
-        <h1>{d.title}</h1>
-        <p class="lead">{d.summary}</p>
+        <h1 set:html={bidi(d.title)} />
+        <p class="lead" set:html={bidi(d.summary)} />
+        <p class="case-badge"><Icon name="shield-check" size={16} /><span><b>{workBadge.strong}</b> · {workBadge.rest}</span></p>
       </div>
-      <div class="case-hero__visual">
-        {d.image ? <img src={d.image} alt={`لقطة مموهة من العمل: ${d.title}`} /> : <Mock type={d.mock} title={d.mockTitle} variant={d.mockVariant} />}
+      <div class={`case-hero__visual ${cover ? 'case-hero__visual--img' : ''} ${coverWide ? 'case-hero__visual--wide' : ''}`}>
+        {cover ? (
+          <a href={cover.src} data-lb="0" aria-label={`تكبير الصورة: ${cover.alt}`}>
+            <img
+              src={coverThumb!.src}
+              srcset={cover.width > 720 ? `${coverThumb!.src} 720w, ${cover.src} ${cover.width}w` : undefined}
+              sizes="(min-width: 1024px) 560px, calc(100vw - 2.5rem)"
+              width={cover.width}
+              height={cover.height}
+              alt={cover.alt}
+              fetchpriority="high"
+              style={cover.position ? `object-position:${cover.position}` : undefined}
+            />
+          </a>
+        ) : (
+          <Mock type={d.mock} title={d.mockTitle} variant={d.mockVariant} />
+        )}
       </div>
     </div>
   </section>
 
+  {d.images.length > 1 && (
+    <section class="section section--cream50 gal-sec" aria-labelledby="gal-title">
+      <div class="container">
+        <h2 id="gal-title" class="gal__title">الصور <span class="muted">· اضغط على أي صورة لتكبيرها</span></h2>
+        <ul role="list" class={`gal gal--${Math.min(d.images.length, 4)}`}>
+          {d.images.map((img, i) => {
+            const t = thumb(img);
+            const tall = img.height / img.width > 1.6;
+            const ratio = tall ? '3 / 4' : img.height > img.width ? '4 / 5' : `${img.width} / ${img.height}`;
+            return (
+              <li class={`gal__item ${tall ? 'gal__item--tall' : ''}`}>
+                <a href={img.src} data-lb={i} aria-label={`تكبير الصورة: ${img.alt}`} style={`aspect-ratio:${ratio}`}>
+                  <img src={t.src} width={t.width} height={t.height} alt={img.alt} loading="lazy" decoding="async" />
+                </a>
+                <p class="gal__cap" set:html={bidi(img.alt)} />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  )}
+
   <section class="section">
     <div class="container case">
       <article class="case__main">
-        <section class="case__block" aria-labelledby="c1">
-          <p class="eyebrow">التحدي</p>
-          <h2 id="c1" data-reveal="heading">من أين بدأنا</h2>
-          <p class="lead" data-reveal="fade">{d.challenge}</p>
-        </section>
+        {d.challenge && (
+          <section class="case__block" aria-labelledby="c1">
+            <p class="eyebrow">التحدي</p>
+            <h2 id="c1" data-reveal="heading">من أين بدأنا</h2>
+            <p class="lead" data-reveal="fade">{d.challenge}</p>
+          </section>
+        )}
 
         <section class="case__block" aria-labelledby="c2">
           <p class="eyebrow">ما نفذناه</p>
           <h2 id="c2" data-reveal="heading">العمل خطوة خطوة</h2>
           <ol role="list" class="case__done" data-reveal="stagger">
             {d.done.map((x, i) => (
-              <li><span class="case__n">{digits[i]}</span><span>{x}</span></li>
+              <li><span class="case__n">{digits[i]}</span><span set:html={bidi(x)} /></li>
             ))}
           </ol>
         </section>
 
+        {d.received.length > 0 && (
         <section class="case__block" aria-labelledby="c3">
-          <p class="eyebrow">ما استلمه العميل</p>
+          <p class="eyebrow">التسليم</p>
           <h2 id="c3" data-reveal="heading">المخرجات</h2>
           <ul role="list" class="case__got" data-reveal="stagger">
             {d.received.map((x) => (
-              <li><Icon name="file-text" size={22} /><span>{x}</span></li>
+              <li><Icon name="file-text" size={22} /><span set:html={bidi(x)} /></li>
             ))}
           </ul>
         </section>
+        )}
       </article>
 
       <aside class="case__side">
         <div class="card case__card">
-          <h2 class="case__side-title">الأدوات</h2>
-          <ul role="list" class="case__tools">
-            {d.tools.map((t) => <li class="chip" lang="en" dir="ltr">{t}</li>)}
-          </ul>
+          {d.tools.length > 0 && (
+            <>
+              <h2 class="case__side-title">الأدوات</h2>
+              <ul role="list" class="case__tools">
+                {d.tools.map((t) => <li class="chip" lang="en" dir="ltr">{t}</li>)}
+              </ul>
+            </>
+          )}
           {services.length > 0 && (
             <>
-              <h2 class="case__side-title case__side-title--gap">الخدمات المستخدمة</h2>
+              <h2 class={`case__side-title ${d.tools.length > 0 ? 'case__side-title--gap' : ''}`}>الخدمات المستخدمة</h2>
               <ul role="list" class="case__svcs">
                 {services.map((s) => (
                   <li><a href={`/services/${s.id}/`}><Icon name={s.data.icon} size={18} /> {s.data.title}</a></li>
@@ -91,7 +143,7 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
               </ul>
             </>
           )}
-          <p class="case__privacy"><Icon name="lock" size={16} /> لا اسم عميل ولا جهة، ولا نص منقول من ملف العميل.</p>
+          <p class="case__privacy"><Icon name="shield-check" size={16} /> <span><b>{workBadge.strong}</b> · {workBadge.rest}</span></p>
           <a class="btn btn--wa btn--block" href={wa(msg)} target="_blank" rel="noopener" data-fab-hide><BrandIcon name="whatsapp" /> عندي عمل مشابه</a>
         </div>
       </aside>
@@ -107,6 +159,24 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
   </section>
 
   <FinalCTA title="عندك عمل مشابه؟" text="أرسل لنا تفاصيله، ونخبرك كيف نعمل عليه، وماذا ستستلم، ومتى، وبكم، قبل أي التزام." waMessage={msg} />
+
+  {d.images.length > 0 && (
+    <dialog class="lb" aria-label="عرض الصور" data-lb-dialog>
+      <figure class="lb__fig">
+        <img class="lb__img" alt="" data-lb-img />
+        <figcaption class="lb__cap" data-lb-cap></figcaption>
+      </figure>
+      <button type="button" class="lb__btn lb__close" aria-label="إغلاق" data-lb-close><Icon name="x" size={24} /></button>
+      {d.images.length > 1 && (
+        <>
+          <button type="button" class="lb__btn lb__prev" aria-label="الصورة السابقة" data-lb-step="-1"><Icon name="chevron-right" size={26} /></button>
+          <button type="button" class="lb__btn lb__next" aria-label="الصورة التالية" data-lb-step="1"><Icon name="chevron-left" size={26} /></button>
+        </>
+      )}
+      <p class="lb__n" data-lb-n></p>
+    </dialog>
+    <script type="application/json" data-lb-data set:html={JSON.stringify(d.images.map((i) => ({ src: i.src, alt: i.alt, width: i.width, height: i.height })))} />
+  )}
 </BaseLayout>
 
 <style>
@@ -119,6 +189,43 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
   .chip--brick { background: rgba(166, 61, 64, 0.3) !important; border-color: rgba(196, 89, 91, 0.5) !important; }
   .case-hero__visual { padding: 1rem; border-radius: var(--radius-card); background: radial-gradient(ellipse at 50% 110%, rgba(166, 61, 64, 0.35), transparent 60%), linear-gradient(160deg, #e9e2d3, #d8cfbd); aspect-ratio: 4 / 3; display: grid; place-items: center; }
   .case-hero__visual img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+  .case-hero__visual--img { padding: 1.25rem 1.25rem 0; place-items: stretch; overflow: hidden; }
+  .case-hero__visual--img a { display: block; height: 100%; cursor: zoom-in; }
+  .case-hero__visual--img img { object-position: top; border-radius: 10px 10px 0 0; background: #fff; box-shadow: 0 20px 40px -24px rgba(10, 5, 20, 0.7); }
+  /* الصور العريضة (شرائح، لوحات تحكم) تظهر كاملة بلا قص */
+  .case-hero__visual--wide { aspect-ratio: auto; padding: 1.25rem; place-items: center; }
+  .case-hero__visual--wide a { height: auto; }
+  .case-hero__visual--wide img { height: auto; border-radius: 8px; }
+  .case-badge { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.55rem 0.9rem; border-radius: var(--radius-m); background: rgba(244, 239, 228, 0.07); border: 1px solid var(--line-dark); font-size: var(--fs-small); color: var(--on-dark-muted); line-height: 1.7; }
+  .case-badge b { color: var(--cream-50); font-weight: 600; }
+  .case-badge :global(svg) { flex-shrink: 0; margin-top: 0.3rem; color: var(--brick-400); }
+
+  .gal-sec { padding-block: clamp(2.5rem, 2rem + 2vw, 4rem); }
+  .gal__title { font-size: var(--fs-h3); margin-bottom: 1.25rem; }
+  .gal__title .muted { font-family: var(--font-body); font-size: var(--fs-small); font-weight: 400; }
+  .gal { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 720px) { .gal { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1100px) { .gal--3, .gal--4 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .gal__item { display: grid; gap: 0.6rem; align-content: start; }
+  .gal__item a { display: block; border-radius: var(--radius-m); overflow: hidden; background: #fff; border: 1px solid var(--line-light); box-shadow: var(--shadow-1); cursor: zoom-in; aspect-ratio: 4 / 3; }
+  .gal__item img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 0.6s var(--ease-expo); }
+  .gal__item a:hover img { transform: scale(1.02); }
+  .gal__item a:focus-visible { outline: 3px solid var(--brick-600); outline-offset: 3px; }
+  .gal__cap { font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.7; }
+
+  .lb { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(13, 8, 22, 0.94); color: var(--cream-50); }
+  .lb::backdrop { background: rgba(13, 8, 22, 0.6); }
+  .lb[open] { display: grid; place-items: center; }
+  .lb__fig { margin: 0; display: grid; gap: 0.75rem; justify-items: center; padding: 4rem 1rem 3.5rem; max-height: 100dvh; }
+  .lb__img { max-width: min(96vw, 1400px); max-height: calc(100dvh - 9rem); width: auto; height: auto; object-fit: contain; border-radius: 6px; background: #fff; }
+  .lb__cap { font-size: var(--fs-small); color: var(--on-dark-muted); text-align: center; max-width: 70ch; line-height: 1.7; }
+  .lb__btn { position: absolute; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line-dark); background: rgba(26, 15, 43, 0.8); color: var(--cream-50); cursor: pointer; }
+  .lb__btn:hover { background: var(--brick-600); }
+  .lb__close { top: 1rem; inset-inline-start: 1rem; }
+  .lb__prev { top: 50%; inset-inline-start: 1rem; transform: translateY(-50%); }
+  .lb__next { top: 50%; inset-inline-end: 1rem; transform: translateY(-50%); }
+  .lb__n { position: absolute; top: 1.6rem; inset-inline-end: 1.25rem; font-size: var(--fs-small); color: var(--on-dark-muted); }
+  @media (max-width: 600px) { .lb__prev, .lb__next { top: auto; bottom: 1rem; transform: none; } }
   @media (min-width: 1024px) { .case-hero__grid { grid-template-columns: 1.1fr 0.9fr; gap: 4rem; } }
 
   .case { display: grid; gap: 3rem; }
@@ -138,7 +245,9 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
   .case__svcs { display: grid; gap: 0.25rem; }
   .case__svcs a { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 40px; color: var(--indigo-900); font-weight: 500; text-decoration: none; }
   .case__svcs a:hover { color: var(--brick-600); }
-  .case__privacy { display: flex; gap: 0.5rem; align-items: center; font-size: var(--fs-xs); color: var(--ink-muted); margin-block: 0.5rem; }
+  .case__privacy { display: flex; gap: 0.5rem; align-items: flex-start; font-size: var(--fs-xs); color: var(--ink-muted); margin-block: 0.5rem; line-height: 1.7; }
+  .case__privacy b { color: var(--indigo-900); font-weight: 600; }
+  .case__privacy :global(svg) { flex-shrink: 0; margin-top: 0.15rem; color: var(--brick-600); }
   @media (min-width: 1024px) {
     .case { grid-template-columns: 1fr 340px; gap: 4rem; align-items: start; }
     .case__side { position: sticky; top: calc(var(--header-h) + 1.5rem); }
@@ -148,3 +257,46 @@ const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
   .case-next__title { font-size: var(--fs-h3); }
   .case-next__card { width: min(100%, 420px); }
 </style>
+
+<script>
+  // عرض الصور مكبرة: بدون JS تفتح الروابط الصورة نفسها
+  const dlg = document.querySelector<HTMLDialogElement>('[data-lb-dialog]');
+  const data = document.querySelector<HTMLScriptElement>('[data-lb-data]');
+  if (dlg && data && typeof dlg.showModal === 'function') {
+    const imgs: { src: string; alt: string; width: number; height: number }[] = JSON.parse(data.textContent || '[]');
+    const el = dlg.querySelector<HTMLImageElement>('[data-lb-img]')!;
+    const cap = dlg.querySelector<HTMLElement>('[data-lb-cap]')!;
+    const n = dlg.querySelector<HTMLElement>('[data-lb-n]')!;
+    const ar = (x: number) => x.toLocaleString('ar-SA');
+    let cur = 0;
+    let opener: HTMLElement | null = null;
+    const show = (i: number) => {
+      cur = (i + imgs.length) % imgs.length;
+      const im = imgs[cur];
+      el.src = im.src;
+      el.alt = im.alt;
+      el.width = im.width;
+      el.height = im.height;
+      cap.textContent = im.alt;
+      n.textContent = imgs.length > 1 ? `${ar(cur + 1)} من ${ar(imgs.length)}` : '';
+    };
+    document.querySelectorAll<HTMLAnchorElement>('[data-lb]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        opener = a;
+        show(Number(a.dataset.lb));
+        dlg.showModal();
+      });
+    });
+    dlg.querySelector('[data-lb-close]')?.addEventListener('click', () => dlg.close());
+    dlg.querySelectorAll<HTMLButtonElement>('[data-lb-step]').forEach((b) => b.addEventListener('click', () => show(cur + Number(b.dataset.lbStep))));
+    // الضغط خارج الصورة يغلق، والأسهم تتنقل (في RTL: السهم الأيسر للتالي)
+    dlg.addEventListener('click', (e) => { if (e.target === dlg || (e.target as HTMLElement).classList.contains('lb__fig')) dlg.close(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (imgs.length < 2) return;
+      if (e.key === 'ArrowLeft') show(cur + 1);
+      if (e.key === 'ArrowRight') show(cur - 1);
+    });
+    dlg.addEventListener('close', () => opener?.focus());
+  }
+</script>

@@ -11,6 +11,7 @@ import FAQ from '@/components/FAQ.astro';
 import FinalCTA from '@/components/FinalCTA.astro';
 import { wa, waMessages, site, siteUrl } from '@/config/site';
 import { serviceLayer } from '@/data/services';
+import { bidi } from '@/lib/bidi';
 
 export async function getStaticPaths() {
   const services = await getCollection('services');
@@ -20,8 +21,11 @@ const { service } = Astro.props;
 const d = service.data;
 const { Content } = await render(service);
 const works = (await getCollection('portfolio', (w) => isPublic(w) && d.related.includes(w.id))).sort((a, b) => a.data.order - b.data.order);
-const others = (await getCollection('services')).filter((s) => s.id !== service.id).sort((a, b) => a.data.order - b.data.order);
-const msg = waMessages.service(d.title);
+const allServices = (await getCollection('services')).sort((a, b) => a.data.order - b.data.order);
+const relatedServices = d.relatedServices.map((id) => allServices.find((s) => s.id === id)).filter((s) => s !== undefined);
+const others = allServices.filter((s) => s.id !== service.id && !d.relatedServices.includes(s.id));
+const msg = waMessages.service(d.title, d.keyword);
+const publicWorks = new Set((await getCollection('portfolio', isPublic)).map((w) => w.id));
 const digits = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨'];
 
 const ld = {
@@ -62,6 +66,31 @@ const ld = {
       </aside>
     </div>
   </section>
+
+  {d.variants.length > 0 && (
+    <section class="section section--cream50" aria-labelledby="types-title" id="types">
+      <div class="container">
+        <SectionTitle id="types-title" eyebrow="الأنواع" title="اختر النوع الذي تحتاجه" lead="السعر حسب حجم العمل. اختر النوع، ونرد عليك بالتفاصيل والمدة والتكلفة قبل أي التزام." />
+        <ul role="list" class="sv-types" data-reveal="stagger">
+          {d.variants.map((v) => (
+            <li class="sv-type">
+              <span class="sv-type__icon"><Icon name={v.icon} size={24} /></span>
+              <h3 class="sv-type__title">{v.title}</h3>
+              <p class="sv-type__text" set:html={bidi(v.text)} />
+              <div class="sv-type__actions">
+                <a class="btn btn--wa btn--sm" href={wa(waMessages.service(v.title, v.keyword))} target="_blank" rel="noopener" data-wa-loc="service_type">
+                  <BrandIcon name="whatsapp" size={18} /> «{v.keyword}» على واتساب
+                </a>
+                {v.work && publicWorks.has(v.work) && (
+                  <a class="link-arrow sv-type__work" href={`/work/${v.work}/`}>شاهد نموذجًا <Icon name="arrow-left" size={16} /></a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
 
   <section class="section section--dark" aria-labelledby="get-title">
     <div class="container">
@@ -111,6 +140,28 @@ const ld = {
       <FAQ items={d.faq} />
     </div>
   </section>
+
+  {relatedServices.length > 0 && (
+    <section class="section section--tight" aria-labelledby="relsv-title">
+      <div class="container">
+        <h2 id="relsv-title" class="sv-more__title">خدمات مرتبطة</h2>
+        <ul role="list" class="sv-rel">
+          {relatedServices.map((s) => (
+            <li>
+              <a class="sv-rel__card" href={`/services/${s.id}/`}>
+                <span class="sv-rel__icon"><Icon name={s.data.icon} size={22} /></span>
+                <span>
+                  <span class="sv-rel__title">{s.data.title}</span>
+                  <span class="sv-rel__short">{s.data.short}</span>
+                </span>
+                <Icon name="arrow-left" size={18} class="sv-rel__arrow" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
 
   <section class="section section--tight section--cream50" aria-labelledby="more-title">
     <div class="container">
@@ -178,6 +229,32 @@ const ld = {
     .sv-steps { grid-auto-flow: column; grid-auto-columns: 1fr; align-items: end; }
     .sv-step { flex-direction: column; margin-bottom: calc(var(--i) * 1.75rem); }
   }
+
+  .sv-types { display: grid; gap: 1rem; }
+  @media (min-width: 720px) { .sv-types { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) { .sv-types { grid-template-columns: repeat(3, 1fr); } }
+  .sv-type {
+    display: flex; flex-direction: column; gap: 0.6rem; padding: 1.5rem;
+    border-radius: var(--radius-card); background: var(--cream-100); border: 1px solid var(--line-light);
+  }
+  .sv-type__icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--indigo-900); color: var(--cream-100); margin-bottom: 0.25rem; }
+  .sv-type__title { font-size: 1.2rem; line-height: 1.5; }
+  .sv-type__text { color: var(--ink-muted); font-size: var(--fs-small); line-height: 1.85; }
+  .sv-type__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: auto; padding-top: 0.5rem; }
+  .sv-type__work { font-size: var(--fs-small); }
+
+  .sv-rel { display: grid; gap: 0.75rem; }
+  @media (min-width: 900px) { .sv-rel { grid-template-columns: repeat(3, 1fr); } }
+  .sv-rel__card {
+    display: flex; align-items: center; gap: 1rem; height: 100%; padding: 1.1rem 1.25rem;
+    border-radius: var(--radius-card); background: var(--cream-50); border: 1px solid var(--line-light);
+    text-decoration: none; transition: border-color 0.3s, transform 0.4s var(--ease-expo);
+  }
+  .sv-rel__card:hover { border-color: var(--brick-600); transform: translateY(-2px); }
+  .sv-rel__icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; background: var(--indigo-900); color: var(--cream-100); }
+  .sv-rel__title { display: block; font-weight: 600; color: var(--indigo-900); line-height: 1.5; }
+  .sv-rel__short { display: block; font-size: var(--fs-xs); color: var(--ink-muted); line-height: 1.7; margin-top: 0.15rem; }
+  .sv-rel__card :global(.sv-rel__arrow) { margin-inline-start: auto; color: var(--brick-600); flex-shrink: 0; }
 
   .sv-works { display: grid; gap: 1.25rem; }
   @media (min-width: 720px) { .sv-works { grid-template-columns: repeat(2, 1fr); } }

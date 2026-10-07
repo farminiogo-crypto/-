@@ -35,8 +35,13 @@ faq:
   - q: كم يستغرق تحرير رسالة كاملة؟
     a: يعتمد على عدد الصفحات وحالة النص. نحدد الموعد كتابيًا في العرض بعد أن نطلع على عينة من الملف.
 related:
-  - lit-review-editing
-  - thesis-formatting-80p
+  - tracked-editing
+  - mt-post-editing
+keyword: تدقيق
+relatedServices:
+  - formatting-references
+  - journal-publishing
+  - translation
 ---
 
 الأخطاء اللغوية الصغيرة لا تسقط رسالة، لكنها تسحب انتباه اللجنة من أفكارك إلى الهوامش. جملة طويلة بلا ترقيم، أو مصطلح يكتب بثلاث صيغ في ثلاثة فصول، يكفي ليعطي انطباعًا بأن العمل لم يراجع بعناية.

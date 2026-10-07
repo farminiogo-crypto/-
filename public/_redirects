@@ -29,3 +29,25 @@
 # إن تغيّر النطاق: أضف السطر التالي بعد ضبط النطاق الجديد (واحذف علامة #)
 # https://alacadmeya.com/*  https://NEW-DOMAIN/:splat  301!
 # https://www.alacadmeya.com/*  https://NEW-DOMAIN/:splat  301!
+
+# أعمال المعرض القديمة (نماذج توضيحية حُذفت) ← صفحة الأعمال
+/work/arabic-stats-report/    /work/    301
+/work/arabic-stats-report    /work/    301
+/work/cv-banking/    /work/    301
+/work/cv-banking    /work/    301
+/work/deck-translation-rtl-ltr/    /work/    301
+/work/deck-translation-rtl-ltr    /work/    301
+/work/defense-deck-law/    /work/    301
+/work/defense-deck-law    /work/    301
+/work/lit-review-editing/    /work/    301
+/work/lit-review-editing    /work/    301
+/work/media-cultivation-survey/    /work/    301
+/work/media-cultivation-survey    /work/    301
+/work/medical-deck-figures/    /work/    301
+/work/medical-deck-figures    /work/    301
+/work/nursing-checklist-bilingual/    /work/    301
+/work/nursing-checklist-bilingual    /work/    301
+/work/phd-proposal-review/    /work/    301
+/work/phd-proposal-review    /work/    301
+/work/thesis-formatting-80p/    /work/    301
+/work/thesis-formatting-80p    /work/    301

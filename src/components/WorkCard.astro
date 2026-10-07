@@ -1,23 +1,37 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import Mock from '@/components/Mock.astro';
-import { workCategories } from '@/data/work';
-interface Props { item: CollectionEntry<'portfolio'>; class?: string; headingLevel?: 'h2' | 'h3' }
-const { item, class: cls = '', headingLevel: H = 'h3' } = Astro.props;
+import Icon from '@/components/ui/Icon.astro';
+import { workCategories, workBadge } from '@/data/work';
+import { thumb } from '@/lib/work';
+import { bidi } from '@/lib/bidi';
+// eager: للبطاقات الأولى الظاهرة عند فتح الصفحة (عنصر LCP على الجوال)
+interface Props { item: CollectionEntry<'portfolio'>; class?: string; headingLevel?: 'h2' | 'h3'; eager?: boolean }
+const { item, class: cls = '', headingLevel: H = 'h3', eager = false } = Astro.props;
 const d = item.data;
+const cover = d.images[0];
+const t = cover ? thumb(cover) : null;
+const wide = cover ? cover.width / cover.height >= 1.5 : false;
+const toAr = (n: number) => n.toLocaleString('ar-SA');
 ---
 <a class={`work-card ${cls}`} href={`/work/${item.id}/`} data-cursor="افتح" data-mock-host>
-  <div class="work-card__visual">
-    {d.image ? <img src={d.image} alt={`لقطة مموهة من عمل: ${d.title}`} loading="lazy" /> : <Mock type={d.mock} title={d.mockTitle} variant={d.mockVariant} />}
+  <div class={`work-card__visual ${cover ? 'work-card__visual--img' : ''}`}>
+    {cover && t ? (
+      <img class={wide ? 'is-wide' : undefined} src={t.src} width={t.width} height={t.height} alt={cover.alt} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : undefined} decoding="async" style={cover.position ? `object-position:${cover.position}` : undefined} />
+    ) : (
+      <Mock type={d.mock} title={d.mockTitle} variant={d.mockVariant} />
+    )}
+    {d.images.length > 1 && <span class="work-card__count"><Icon name="images" size={14} /> {d.images.length === 2 ? 'صورتان' : `${toAr(d.images.length)} صور`}</span>}
   </div>
   <div class="work-card__body">
     <p class="work-card__meta">
       <span class="chip">{d.level}</span>
       <span class="chip">{d.field}</span>
     </p>
-    <H class="work-card__title">{d.title}</H>
-    <p class="work-card__summary">{d.summary}</p>
+    <H class="work-card__title" set:html={bidi(d.title)} />
+    <p class="work-card__summary" set:html={bidi(d.summary)} />
     <p class="work-card__cats">{d.categories.map((c) => workCategories[c]).join(' · ')}</p>
+    <p class="work-badge"><Icon name="shield-check" size={14} /><span><b>{workBadge.strong}</b> · {workBadge.rest}</span></p>
   </div>
 </a>
 
@@ -35,6 +49,7 @@ const d = item.data;
   }
   .work-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2); }
   .work-card__visual {
+    position: relative;
     aspect-ratio: 4 / 3;
     display: grid;
     place-items: center;
@@ -44,10 +59,31 @@ const d = item.data;
       linear-gradient(160deg, #e9e2d3, #ddd4c2);
     overflow: hidden;
   }
-  .work-card__visual img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .work-card__visual--img { padding: 1.1rem 1.1rem 0; place-items: stretch; }
+  .work-card__visual img {
+    width: 100%; height: 100%; object-fit: cover; object-position: top;
+    border-radius: 8px 8px 0 0; background: #fff;
+    box-shadow: 0 14px 32px -18px rgba(26, 15, 43, 0.55);
+    transition: transform 0.7s var(--ease-expo);
+  }
+  .work-card__visual--img:has(.is-wide) { padding: 1.1rem; place-items: center; }
+  .work-card__visual img.is-wide { height: auto; border-radius: 8px; }
+  .work-card:hover .work-card__visual img { transform: translateY(-4px); }
+  .work-card__count {
+    position: absolute; inset-block-start: 0.75rem; inset-inline-start: 0.75rem;
+    display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-pill); background: rgba(26, 15, 43, 0.78); color: var(--cream-50);
+    font-size: var(--fs-xs); font-weight: 600;
+  }
   .work-card__body { display: grid; gap: 0.55rem; padding: 1.25rem 1.35rem 1.4rem; }
   .work-card__meta { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .work-card__title { font-size: 1.2rem; line-height: 1.55; }
   .work-card__summary { font-size: var(--fs-small); color: var(--ink-muted); line-height: 1.75; }
   .work-card__cats { font-size: var(--fs-xs); font-weight: 600; color: var(--brick-600); }
+  .work-badge {
+    display: flex; gap: 0.4rem; align-items: flex-start; margin-top: 0.15rem; padding-top: 0.6rem;
+    border-top: 1px dashed var(--line-light); font-size: var(--fs-xs); line-height: 1.6; color: var(--ink-muted);
+  }
+  .work-badge b { color: var(--indigo-900); font-weight: 600; }
+  .work-badge :global(svg) { flex-shrink: 0; margin-top: 0.15rem; color: var(--brick-600); }
 </style>
