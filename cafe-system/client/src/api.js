@@ -129,9 +129,12 @@ export const api = {
   // التقارير
   summary: () => request('/reports/summary'),
 
-  // تنزيل التقرير الشهري Excel (month بصيغة YYYY-MM)
-  async downloadMonthlyReport(month) {
-    const res = await fetch(`/api/reports/monthly.xlsx?month=${month}`, {
+  // كل الشهور المتاحة بإجمالياتها (الأحدث أولاً)
+  reportMonths: () => request('/reports/months'),
+
+  // تنزيل ملف Excel من مسار تقارير (مع اسم الملف)
+  async _downloadReport(path, filename) {
+    const res = await fetch(`/api${path}`, {
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     if (!res.ok) {
@@ -142,10 +145,21 @@ export const api = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `cafe-report-${month}.xlsx`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  },
+
+  // تنزيل التقرير الشهري Excel (month بصيغة YYYY-MM)
+  downloadMonthlyReport(month) {
+    return this._downloadReport(`/reports/monthly.xlsx?month=${month}`, `cafe-report-${month}.xlsx`);
+  },
+
+  // تنزيل كل الشهور في ملف واحد
+  downloadAllMonthsReport() {
+    const today = new Date().toISOString().slice(0, 10);
+    return this._downloadReport('/reports/all.xlsx', `cafe-report-all-${today}.xlsx`);
   },
 };

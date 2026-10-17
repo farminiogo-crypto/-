@@ -5,30 +5,41 @@ import { api } from '../api.js';
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [months, setMonths] = useState([]);
   const [error, setError] = useState('');
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [exporting, setExporting] = useState(false);
+  const [exporting, setExporting] = useState(''); // قيمة الزر اللي بيحمّل حالياً
 
   useEffect(() => {
-    Promise.all([api.summary(), api.paidOrders({ limit: 8 })])
-      .then(([s, o]) => {
+    Promise.all([api.summary(), api.paidOrders({ limit: 8 }), api.reportMonths()])
+      .then(([s, o, m]) => {
         setData(s);
         setOrders(o.rows);
+        setMonths(m.months || []);
       })
       .catch((e) => setError(e.message));
   }, []);
 
-  async function exportExcel() {
+  async function runDownload(key, fn) {
     setError('');
-    setExporting(true);
+    setExporting(key);
     try {
-      await api.downloadMonthlyReport(month);
+      await fn();
     } catch (e) {
       setError(e.message);
     } finally {
-      setExporting(false);
+      setExporting('');
     }
   }
+
+  const exportExcel = () => runDownload('picker', () => api.downloadMonthlyReport(month));
+
+  // اسم الشهر بالعربي من "2026-09"
+  const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const monthLabel = (ym) => {
+    const [y, m] = ym.split('-');
+    return `${MONTH_NAMES[+m - 1]} ${y}`;
+  };
 
   if (error && !data) return <div className="alert-error">{error}</div>;
   if (!data) return <div className="loading">جاري التحميل...</div>;
@@ -45,12 +56,59 @@ export default function Dashboard() {
         </div>
         <div className="export-bar">
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
-          <button className="btn-primary" onClick={exportExcel} disabled={exporting}>
-            {exporting ? 'جاري التحضير...' : '📥 تقرير الشهر Excel'}
+          <button className="btn-primary" onClick={exportExcel} disabled={!!exporting}>
+            {exporting === 'picker' ? 'جاري التحضير...' : '📥 تقرير الشهر Excel'}
           </button>
         </div>
       </header>
       {error && <div className="alert-error">{error}</div>}
+
+      {/* التقارير الشهرية — كل الشهور المسجّلة */}
+      <div className="panel months-panel">
+        <div className="panel-head">
+          <h3>🗓️ التقارير الشهرية</h3>
+          <button
+            className="btn-ghost small-btn"
+            onClick={() => runDownload('all', () => api.downloadAllMonthsReport())}
+            disabled={!!exporting || months.length === 0}
+          >
+            {exporting === 'all' ? 'جاري التحضير...' : '📦 كل الشهور في ملف واحد'}
+          </button>
+        </div>
+        {months.length === 0 ? (
+          <p className="muted">لا توجد بيانات مسجّلة بعد</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="orders-table months-table">
+              <thead>
+                <tr>
+                  <th>الشهر</th><th>الفواتير</th><th>المبيعات</th><th>المصروفات</th><th>الصافي</th><th>التقرير</th>
+                </tr>
+              </thead>
+              <tbody>
+                {months.map((m) => (
+                  <tr key={m.month}>
+                    <td className="strong">{monthLabel(m.month)}</td>
+                    <td>{m.orders}</td>
+                    <td>{fmt(m.revenue)} ج</td>
+                    <td>{fmt(m.expenses)} ج</td>
+                    <td className="strong">{fmt(m.net)} ج</td>
+                    <td>
+                      <button
+                        className="btn-ghost small-btn"
+                        onClick={() => runDownload(m.month, () => api.downloadMonthlyReport(m.month))}
+                        disabled={!!exporting}
+                      >
+                        {exporting === m.month ? '...' : '📥 Excel'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <div className="stat-cards">
         <div className="stat-card accent-green">

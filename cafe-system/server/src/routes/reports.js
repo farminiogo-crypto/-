@@ -65,95 +65,115 @@ router.get('/summary', requireAuth, requireAdmin, (req, res) => {
   });
 });
 
-// ===== تقرير شهري كامل بصيغة Excel (مدير) =====
-// GET /api/reports/monthly.xlsx?month=2026-07
-router.get('/monthly.xlsx', requireAuth, requireAdmin, async (req, res) => {
-  const month = /^\d{4}-\d{2}$/.test(req.query.month || '')
-    ? req.query.month
-    : new Date().toISOString().slice(0, 7);
-
-  const like = month + '%';
-
-  // البيانات
-  const totals = db
+// ===== قائمة كل الشهور المتاحة بإجمالياتها (مدير) =====
+// GET /api/reports/months  → [{ month:'2026-09', orders, revenue, expenses, net }, ...] الأحدث أولاً
+router.get('/months', requireAuth, requireAdmin, (req, res) => {
+  // الشهور من المبيعات ومن المصروفات معاً (عشان نضم أي شهر فيه حركة)
+  const salesByMonth = db
     .prepare(
-      `SELECT COUNT(*) AS orders, COALESCE(SUM(total),0) AS revenue
-       FROM orders WHERE status = 'paid' AND paid_at LIKE ?`
+      `SELECT strftime('%Y-%m', paid_at) AS month,
+              COUNT(*) AS orders, COALESCE(SUM(total),0) AS revenue
+       FROM orders WHERE status='paid' AND paid_at IS NOT NULL
+       GROUP BY month`
     )
-    .get(like);
-  const expTotal = db
-    .prepare(`SELECT COALESCE(SUM(amount),0) AS total FROM expenses WHERE created_at LIKE ?`)
-    .get(like).total;
-
-  const daily = db
+    .all();
+  const expByMonth = db
     .prepare(
-      `SELECT date(paid_at) AS day, COUNT(*) AS orders, COALESCE(SUM(total),0) AS revenue
-       FROM orders WHERE status = 'paid' AND paid_at LIKE ?
-       GROUP BY day ORDER BY day`
+      `SELECT strftime('%Y-%m', created_at) AS month, COALESCE(SUM(amount),0) AS expenses
+       FROM expenses GROUP BY month`
     )
-    .all(like);
+    .all();
 
-  const invoices = db
-    .prepare(
-      `SELECT order_no, paid_at, table_name, customer_name, cashier_name, total
-       FROM orders WHERE status = 'paid' AND paid_at LIKE ? ORDER BY id`
-    )
-    .all(like);
+  const map = new Map();
+  for (const r of salesByMonth) {
+    if (!r.month) continue;
+    map.set(r.month, { month: r.month, orders: r.orders, revenue: r.revenue, expenses: 0 });
+  }
+  for (const r of expByMonth) {
+    if (!r.month) continue;
+    const cur = map.get(r.month) || { month: r.month, orders: 0, revenue: 0, expenses: 0 };
+    cur.expenses = r.expenses;
+    map.set(r.month, cur);
+  }
 
-  const expenses = db
-    .prepare(
-      `SELECT e.created_at, e.description, e.amount, e.user_name, s.name AS shift_name
-       FROM expenses e LEFT JOIN shifts s ON s.id = e.shift_id
-       WHERE e.created_at LIKE ? ORDER BY e.id`
-    )
-    .all(like);
+  const months = [...map.values()]
+    .map((m) => ({
+      month: m.month,
+      orders: m.orders,
+      revenue: +m.revenue.toFixed(2),
+      expenses: +m.expenses.toFixed(2),
+      net: +(m.revenue - m.expenses).toFixed(2),
+    }))
+    .sort((a, b) => (a.month < b.month ? 1 : -1)); // الأحدث أولاً
 
-  const shifts = db
-    .prepare(
-      `SELECT s.*,
-        (SELECT COALESCE(SUM(total),0) FROM orders WHERE shift_id = s.id AND status='paid') AS sales_total,
-        (SELECT COALESCE(SUM(amount),0) FROM expenses WHERE shift_id = s.id) AS expenses_total
-       FROM shifts s WHERE s.opened_at LIKE ? ORDER BY s.id`
-    )
-    .all(like);
+  res.json({ months });
+});
 
-  const topProducts = db
-    .prepare(
-      `SELECT oi.name, SUM(oi.qty) AS qty, SUM(oi.qty * oi.price) AS revenue
-       FROM order_items oi JOIN orders o ON o.id = oi.order_id
-       WHERE o.status = 'paid' AND o.paid_at LIKE ?
-       GROUP BY oi.name ORDER BY qty DESC`
-    )
-    .all(like);
+// ===== أنماط الإكسيل المشتركة =====
+const HEAD_STYLE = {
+  font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 },
+  fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7B4B2A' } },
+  alignment: { horizontal: 'center', vertical: 'middle' },
+};
 
-  // بناء ملف الإكسيل
+function makeWorkbook() {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'نظام الكافيه';
-
-  const headStyle = {
-    font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 },
-    fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7B4B2A' } },
-    alignment: { horizontal: 'center', vertical: 'middle' },
-  };
-
-  function addSheet(name, columns, rows) {
+  const addSheet = (name, columns, rows) => {
     const ws = wb.addWorksheet(name, { views: [{ rightToLeft: true }] });
     ws.columns = columns;
     ws.getRow(1).height = 22;
-    columns.forEach((_, i) => Object.assign(ws.getRow(1).getCell(i + 1), headStyle));
+    columns.forEach((_, i) => Object.assign(ws.getRow(1).getCell(i + 1), HEAD_STYLE));
     rows.forEach((r) => ws.addRow(r));
     return ws;
-  }
+  };
+  return { wb, addSheet };
+}
 
-  // 1) ملخص الشهر
+// يبني صفحات التقرير لمدى زمني محدد (شهر واحد أو كل الفترة)
+// range = { label, orderWhere, orderParams, expWhere, expParams, shiftWhere, shiftParams }
+function buildReportSheets(addSheet, range, { monthlyBreakdown = false } = {}) {
+  const { label, orderWhere, orderParams, expWhere, expParams, shiftWhere, shiftParams } = range;
+
+  const totals = db
+    .prepare(`SELECT COUNT(*) AS orders, COALESCE(SUM(total),0) AS revenue
+              FROM orders WHERE status='paid' AND ${orderWhere}`)
+    .get(...orderParams);
+  const expTotal = db
+    .prepare(`SELECT COALESCE(SUM(amount),0) AS total FROM expenses WHERE ${expWhere}`)
+    .get(...expParams).total;
+
+  const invoices = db
+    .prepare(`SELECT order_no, paid_at, table_name, customer_name, cashier_name, total
+              FROM orders WHERE status='paid' AND ${orderWhere} ORDER BY id`)
+    .all(...orderParams);
+  const expenses = db
+    .prepare(`SELECT e.created_at, e.description, e.amount, e.user_name, s.name AS shift_name
+              FROM expenses e LEFT JOIN shifts s ON s.id = e.shift_id
+              WHERE ${expWhere} ORDER BY e.id`)
+    .all(...expParams);
+  const shifts = db
+    .prepare(`SELECT s.*,
+        (SELECT COALESCE(SUM(total),0) FROM orders WHERE shift_id=s.id AND status='paid') AS sales_total,
+        (SELECT COALESCE(SUM(amount),0) FROM expenses WHERE shift_id=s.id) AS expenses_total
+       FROM shifts s WHERE ${shiftWhere} ORDER BY s.id`)
+    .all(...shiftParams);
+  const topProducts = db
+    .prepare(`SELECT oi.name, SUM(oi.qty) AS qty, SUM(oi.qty*oi.price) AS revenue
+              FROM order_items oi JOIN orders o ON o.id=oi.order_id
+              WHERE o.status='paid' AND ${orderWhere.replace(/\bpaid_at\b/g, 'o.paid_at')}
+              GROUP BY oi.name ORDER BY qty DESC`)
+    .all(...orderParams);
+
+  // 1) الملخص
   const summary = addSheet(
-    'ملخص الشهر',
+    'ملخص ' + label,
     [
-      { header: 'البند', key: 'k', width: 30 },
+      { header: 'البند', key: 'k', width: 32 },
       { header: 'القيمة', key: 'v', width: 20 },
     ],
     [
-      { k: 'الشهر', v: month },
+      { k: 'الفترة', v: label },
       { k: 'إجمالي المبيعات (ج)', v: +totals.revenue.toFixed(2) },
       { k: 'عدد الفواتير', v: totals.orders },
       { k: 'متوسط الفاتورة (ج)', v: totals.orders ? +(totals.revenue / totals.orders).toFixed(2) : 0 },
@@ -164,16 +184,50 @@ router.get('/monthly.xlsx', requireAuth, requireAdmin, async (req, res) => {
   );
   summary.getColumn(2).font = { bold: true };
 
-  // 2) المبيعات اليومية
-  addSheet(
-    'مبيعات يومية',
-    [
-      { header: 'اليوم', key: 'day', width: 15 },
-      { header: 'عدد الفواتير', key: 'orders', width: 15 },
-      { header: 'الإجمالي (ج)', key: 'revenue', width: 15 },
-    ],
-    daily.map((d) => ({ ...d, revenue: +d.revenue.toFixed(2) }))
-  );
+  // 2) تفصيل شهري (في تقرير "كل الشهور" فقط) أو مبيعات يومية (تقرير الشهر الواحد)
+  if (monthlyBreakdown) {
+    const byMonth = db
+      .prepare(`SELECT strftime('%Y-%m', paid_at) AS month, COUNT(*) AS orders,
+                       COALESCE(SUM(total),0) AS revenue
+                FROM orders WHERE status='paid' AND ${orderWhere}
+                GROUP BY month ORDER BY month`)
+      .all(...orderParams);
+    const expMon = db
+      .prepare(`SELECT strftime('%Y-%m', created_at) AS month, COALESCE(SUM(amount),0) AS expenses
+                FROM expenses WHERE ${expWhere} GROUP BY month`)
+      .all(...expParams);
+    const em = new Map(expMon.map((r) => [r.month, r.expenses]));
+    addSheet(
+      'كل الشهور',
+      [
+        { header: 'الشهر', key: 'month', width: 14 },
+        { header: 'عدد الفواتير', key: 'orders', width: 14 },
+        { header: 'المبيعات (ج)', key: 'revenue', width: 16 },
+        { header: 'المصروفات (ج)', key: 'expenses', width: 16 },
+        { header: 'الصافي (ج)', key: 'net', width: 16 },
+      ],
+      byMonth.map((m) => {
+        const expenses = +(em.get(m.month) || 0).toFixed(2);
+        return { month: m.month, orders: m.orders, revenue: +m.revenue.toFixed(2),
+          expenses, net: +(m.revenue - expenses).toFixed(2) };
+      })
+    );
+  } else {
+    const daily = db
+      .prepare(`SELECT date(paid_at) AS day, COUNT(*) AS orders, COALESCE(SUM(total),0) AS revenue
+                FROM orders WHERE status='paid' AND ${orderWhere}
+                GROUP BY day ORDER BY day`)
+      .all(...orderParams);
+    addSheet(
+      'مبيعات يومية',
+      [
+        { header: 'اليوم', key: 'day', width: 15 },
+        { header: 'عدد الفواتير', key: 'orders', width: 15 },
+        { header: 'الإجمالي (ج)', key: 'revenue', width: 15 },
+      ],
+      daily.map((d) => ({ ...d, revenue: +d.revenue.toFixed(2) }))
+    );
+  }
 
   // 3) كل الفواتير
   addSheet(
@@ -238,14 +292,51 @@ router.get('/monthly.xlsx', requireAuth, requireAdmin, async (req, res) => {
     ],
     topProducts.map((p) => ({ ...p, revenue: +p.revenue.toFixed(2) }))
   );
+}
 
-  res.setHeader(
-    'Content-Type',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  );
-  res.setHeader('Content-Disposition', `attachment; filename="cafe-report-${month}.xlsx"`);
+async function sendWorkbook(res, wb, filename) {
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   await wb.xlsx.write(res);
   res.end();
+}
+
+// ===== تقرير شهري كامل بصيغة Excel (مدير) =====
+// GET /api/reports/monthly.xlsx?month=2026-07
+router.get('/monthly.xlsx', requireAuth, requireAdmin, async (req, res) => {
+  const month = /^\d{4}-\d{2}$/.test(req.query.month || '')
+    ? req.query.month
+    : new Date().toISOString().slice(0, 7);
+  const like = month + '%';
+
+  const { wb, addSheet } = makeWorkbook();
+  buildReportSheets(addSheet, {
+    label: 'الشهر ' + month,
+    orderWhere: 'paid_at LIKE ?', orderParams: [like],
+    expWhere: 'created_at LIKE ?', expParams: [like],
+    shiftWhere: 's.opened_at LIKE ?', shiftParams: [like],
+  });
+
+  await sendWorkbook(res, wb, `cafe-report-${month}.xlsx`);
+});
+
+// ===== تقرير كل الشهور في ملف واحد (مدير) =====
+// GET /api/reports/all.xlsx  — كل الفترة + صفحة تفصيل شهري
+router.get('/all.xlsx', requireAuth, requireAdmin, async (req, res) => {
+  const { wb, addSheet } = makeWorkbook();
+  buildReportSheets(
+    addSheet,
+    {
+      label: 'كل الفترة',
+      orderWhere: 'paid_at IS NOT NULL', orderParams: [],
+      expWhere: '1=1', expParams: [],
+      shiftWhere: '1=1', shiftParams: [],
+    },
+    { monthlyBreakdown: true }
+  );
+
+  const today = new Date().toISOString().slice(0, 10);
+  await sendWorkbook(res, wb, `cafe-report-all-${today}.xlsx`);
 });
 
 export default router;
