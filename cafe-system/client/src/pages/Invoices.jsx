@@ -84,7 +84,8 @@ export default function Invoices() {
       {/* ملخص النتائج */}
       <div className="results-summary">
         <span><b>{data.count}</b> فاتورة</span>
-        <span>إجمالي: <b>{fmt(data.total)} ج</b></span>
+        {data.voided > 0 && <span className="muted">منها <b>{data.voided}</b> ملغاة</span>}
+        <span>إجمالي المدفوع: <b>{fmt(data.total)} ج</b></span>
       </div>
 
       <div className="panel">
@@ -92,20 +93,25 @@ export default function Invoices() {
           <table className="orders-table clickable">
             <thead>
               <tr>
-                <th>رقم الفاتورة</th><th>الترابيزة</th><th>الزبون</th><th>الكاشير</th><th>الإجمالي</th><th>التاريخ والوقت</th>
+                <th>رقم الفاتورة</th><th>الترابيزة</th><th>الزبون</th><th>الكاشير</th><th>الإجمالي</th><th>الحالة</th><th>التاريخ والوقت</th>
               </tr>
             </thead>
             <tbody>
               {data.rows.length === 0 && (
-                <tr><td colSpan="6" className="muted center">لا توجد فواتير مطابقة</td></tr>
+                <tr><td colSpan="7" className="muted center">لا توجد فواتير مطابقة</td></tr>
               )}
               {data.rows.map((o) => (
-                <tr key={o.id} onClick={() => showDetails(o)}>
+                <tr key={o.id} onClick={() => showDetails(o)} className={o.status === 'voided' ? 'row-voided' : ''}>
                   <td className="strong">{o.order_no}</td>
                   <td>{o.table_name}</td>
                   <td>{o.customer_name || '—'}</td>
                   <td>{o.cashier_name}</td>
                   <td className="strong">{fmt(o.total)} ج</td>
+                  <td>
+                    {o.status === 'voided'
+                      ? <span className="chip chip-voided">ملغاة</span>
+                      : <span className="chip chip-paid">مدفوعة</span>}
+                  </td>
                   <td className="muted">{(o.paid_at || '').replace('T', ' ')}</td>
                 </tr>
               ))}
@@ -122,6 +128,9 @@ export default function Invoices() {
               <h3>{selected.order_no}</h3>
               <span className="muted">{(selected.paid_at || '').replace('T', ' ')}</span>
             </div>
+            {selected.status === 'voided' && (
+              <div className="voided-banner">🚫 فاتورة ملغاة — اترجّع مخزونها واتشالت من الحسابات</div>
+            )}
             <div className="inv-meta">
               <span>🍽️ {selected.table_name}</span>
               {selected.customer_name && <span>👤 {selected.customer_name}</span>}
@@ -150,9 +159,11 @@ export default function Invoices() {
               <button className="btn-primary" onClick={() => { setReprint(selected); setSelected(null); }}>
                 🖨️ إعادة طباعة
               </button>
-              <button className="btn-danger-solid" onClick={() => voidOrder(selected)}>
-                ↩️ إلغاء الفاتورة
-              </button>
+              {selected.status === 'paid' && (
+                <button className="btn-danger-solid" onClick={() => voidOrder(selected)}>
+                  ↩️ إلغاء الفاتورة
+                </button>
+              )}
               <button className="btn-ghost" onClick={() => setSelected(null)}>إغلاق</button>
             </div>
           </div>

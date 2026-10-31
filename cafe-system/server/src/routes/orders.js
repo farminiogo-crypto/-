@@ -297,12 +297,12 @@ router.post('/:id/void', requireAuth, (req, res) => {
   res.json({ ok: true, restored: soldMoves.length });
 });
 
-// سجل الفواتير المدفوعة — مع فلتر تاريخ وبحث
+// سجل الفواتير — المدفوعة + الملغاة (الملغاة تفضل ظاهرة كسجل، ولا تُحسب في الإجمالي)
 router.get('/', requireAuth, (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 100, 500);
   const { date, q } = req.query;
 
-  let sql = "SELECT * FROM orders WHERE status = 'paid'";
+  let sql = "SELECT * FROM orders WHERE status IN ('paid','voided')";
   const params = [];
   if (date) {
     sql += ' AND date(paid_at) = ?';
@@ -317,8 +317,10 @@ router.get('/', requireAuth, (req, res) => {
   params.push(limit);
 
   const rows = db.prepare(sql).all(...params);
-  const total = +rows.reduce((s, r) => s + r.total, 0).toFixed(2);
-  res.json({ rows, count: rows.length, total });
+  // الإجمالي من المدفوعة فقط — الملغاة سجل للعرض ولا تدخل الحسابات
+  const total = +rows.filter((r) => r.status === 'paid').reduce((s, r) => s + r.total, 0).toFixed(2);
+  const voided = rows.filter((r) => r.status === 'voided').length;
+  res.json({ rows, count: rows.length, total, voided });
 });
 
 export default router;
