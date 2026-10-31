@@ -371,16 +371,6 @@ h1, h2, h3 { font-weight: 800; line-height: 1.4; }
 .row-warn { background: #fffaf0; }
 .chip-low { background: #fdecea; color: var(--danger); }
 .chip-warn { background: #fdf3e0; color: #b07a18; }
-.chip-paid { background: #e3f5ec; color: var(--green); }
-.chip-voided { background: #fdecea; color: var(--danger); }
-
-/* صف فاتورة ملغاة في سجل الفواتير */
-.row-voided td { color: var(--muted); }
-.row-voided .strong { text-decoration: line-through; }
-.voided-banner {
-  background: #fdecea; color: var(--danger); font-weight: 700;
-  padding: 10px 14px; border-radius: 10px; margin: 8px 0; text-align: center;
-}
 .qty-ctrl.inline { display: inline-flex; gap: 6px; }
 
 .stat-card.accent-red { border-color: var(--danger); }
